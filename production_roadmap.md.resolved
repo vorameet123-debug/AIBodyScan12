@@ -1,0 +1,55 @@
+# Production Readiness Roadmap (Phase 4 & Beyond)
+
+This roadmap outlines the systematic path to transforming the current MVP into a secure, scalable, and enterprise-grade 100% production-ready platform.
+
+## 🛡️ Phase 4: Security & Core Infrastructure (Critical)
+**Goal:** mitigate critical vulnerabilities and enable secure cloud deployment.
+
+### 4.1 Security Hardening
+- [ ] **JWT Secret Management**: Move `SECRET_KEY` from [auth.py](file:///d:/3Dmodel/api/auth.py) to [.env](file:///d:/3Dmodel/api/.env). Implement key rotation logic.
+- [ ] **Token Expiry Strategy**:
+    - Reduce Access Token lifetime from 24h to 15 minutes.
+    - Implement Refresh Token rotation flow for seamless UX.
+- [ ] **Input Sanitization**: Add stronger Pydantic validators for AI prompts in [external_trend_analyzer.py](file:///d:/3Dmodel/integrations/external_trend_analyzer.py) to prevent injection.
+
+### 4.2 DevOps Foundation
+- [ ] **Dockerization**: Create a multi-stage `Dockerfile` optimized for Python/React production builds.
+- [ ] **Orchestration**: Create `docker-compose.yml` for local development parity (API + DB).
+- [ ] **CI Pipeline**: Set up GitHub Actions for automated testing on push/PR (`pytest`).
+
+---
+
+## 🏗️ Phase 5: Backend Refactoring & Scalability
+**Goal:** Eliminate "Monolith" debt and prepare for user scale.
+
+### 5.1 Architecture Cleanup
+- [ ] **Deconstruct [app.py](file:///d:/3Dmodel/api/app.py)**: Split the 1600+ line file into a modular `routers/` directory:
+    - `routers/auth.py`
+    - `routers/measurements.py`
+    - `routers/trends.py`
+    - `routers/wardrobe.py`
+- [ ] **Database Optimization**: Add indexing to commonly queried fields (e.g., `user_id` in measurements).
+
+### 5.2 Performance & Caching
+- [ ] **Trend Caching**: Implement `Redis` (or in-memory cache) for [external_trend_analyzer.py](file:///d:/3Dmodel/integrations/external_trend_analyzer.py) to cache API responses for 12 hours.
+- [ ] **Async Optimization**: Audit all external API calls (Groq, OpenAI) to ensure they are non-blocking.
+
+---
+
+## 🎨 Phase 6: Next-Gen Feature Upgrades
+**Goal:** Deliver "Wow" factors that justify the premium positioning.
+
+### 6.1 True 3D Visualization
+- [ ] **Engine Upgrade**: Replace the current SVG-based [Model3DViewer](file:///d:/3Dmodel/website/src/components/Model3DViewer.tsx#12-209) with `react-three-fiber` (WebGL).
+- [ ] **SMPL Integration**: Load a generic 3D human mesh (`.obj`/`.gltf`) and deform vertices based on the user's actual measurements.
+
+### 6.2 Data-Driven Fit Engine
+- [ ] **Dynamic Size Charts**: Move hardcoded dictionaries from [clothing_fit_analyzer.py](file:///d:/3Dmodel/integrations/clothing_fit_analyzer.py) to a `SizeChart` database table.
+- [ ] **Admin Interface**: Create a simple admin view to add/update brand sizing without code deploys.
+
+---
+
+## 📅 Execution Strategy
+We will execute this plan sequentially to ensure stability.
+
+**Recommended Immediate Next Step:** Start **Phase 4.1 (Security Hardening)** to patch critical vulnerabilities before adding any new features.

@@ -1,0 +1,90 @@
+# Docker ignore file for BodyScan AI
+# Prevents unnecessary files from being copied into Docker images
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+env/
+venv/
+.venv/
+ENV/
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+
+# Virtual environments
+.venv
+.env
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.DS_Store
+
+# Testing
+.pytest_cache/
+.coverage
+htmlcov/
+.tox/
+
+# Logs
+*.log
+api.log
+
+# Database (use volumes instead)
+*.db
+*.sqlite
+*.sqlite3
+
+# Node modules (for frontend)
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Build outputs
+website/build/
+website/dist/
+
+# Documentation
+docs/
+*.md
+!README.md
+
+# Git
+.git/
+.gitignore
+
+# Archives
+archive/
+
+# Demo outputs
+demo_output/
+
+# Large model files
+*.pth
+*.onnx
+*.pkl
+pare/
+smpl_anthropometry/
+
+# Test files
+tests/

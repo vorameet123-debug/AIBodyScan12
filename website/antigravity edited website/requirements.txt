@@ -1,0 +1,92 @@
+# ===============================================
+# 3D Body Measurement System - Requirements
+# ===============================================
+# Tested on: Python 3.10, 3.11, 3.13
+# Platform: Windows, Linux, MacOS
+
+# Core Dependencies
+# -----------------
+numpy>=1.21.0,<2.0.0
+scipy>=1.7.0
+pillow>=8.2.0
+pyyaml>=5.3.1
+tqdm>=4.47.0
+
+# PyTorch (CPU or GPU)
+# --------------------
+# For CPU-only:
+torch>=1.12.0
+torchvision>=0.13.0
+
+# For GPU (CUDA 11.x):
+# torch>=1.12.0+cu116
+# torchvision>=0.13.0+cu116
+
+pytorch-lightning>=1.1.8
+
+# Computer Vision
+# ---------------
+opencv-python>=4.1.1.26
+scikit-image>=0.17.2
+
+# 3D Body Model Processing
+# -------------------------
+trimesh>=3.8.12
+smplx>=0.1.28
+chumpy==0.70
+
+# Logging & Configuration
+# -----------------------
+loguru>=0.3.2
+yacs>=0.1.8
+
+# Data Processing
+# ---------------
+joblib>=0.15.1
+pandas>=1.3.5
+
+# External AI Services
+# --------------------
+replicate>=0.27.0
+
+# Optional: Rendering (can be skipped if errors)
+# -----------------------------------------------
+# pyrender>=0.1.36  # May cause issues on Windows
+# PyOpenGL>=3.1.5
+# PyOpenGL-accelerate>=3.1.5
+
+# Git Dependencies (install manually)
+# ------------------------------------
+# These must be installed separately:
+# pip install git+https://github.com/mkocabas/yolov3-pytorch.git
+# pip install git+https://github.com/mkocabas/multi-person-tracker.git
+
+# ===============================================
+# Installation Order (IMPORTANT!)
+# ===============================================
+# 1. pip install torch torchvision --index-url https://download.pytorch.org/whl/cpu
+# 2. pip install opencv-python
+# 3. pip install trimesh smplx
+# 4. pip install chumpy==0.70
+# 5. pip install -r requirements.txt
+# 6. pip install git+https://github.com/mkocabas/yolov3-pytorch.git
+# 7. pip install git+https://github.com/mkocabas/multi-person-tracker.git
+
+# ===============================================
+# Known Issues & Solutions
+# ===============================================
+# 1. If "chumpy" fails:
+#    - Python 3.13: Needs manual fixes (see SETUP_GUIDE.md)
+#    - Python 3.10-3.11: Should work fine
+#
+# 2. If "pyrender" fails (OpenGL errors):
+#    - System sets PYOPENGL_PLATFORM='osmesa' automatically
+#    - Rendering is optional, measurements work without it
+#
+# 3. If "yolov3" download fails:
+#    - System uses urllib fallback on Windows
+#    - Manual: Download from PARE repository
+#
+# 4. If PyTorch CUDA errors:
+#    - System automatically uses CPU
+#    - GPU not required for this application

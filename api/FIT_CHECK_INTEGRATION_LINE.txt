@@ -1,0 +1,4 @@
+# Quick Fix Script
+# Add this line before "return JSONResponse(content=response_dict)" in app.py (around line 620)
+
+save_fit_check_history(session, m_id, garment_analysis, size, size_analysis, fit_meters_result)

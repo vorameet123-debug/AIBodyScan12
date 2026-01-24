@@ -1,0 +1,387 @@
+import React, { useEffect, useState } from 'react';
+import { motion } from 'framer-motion';
+import { PieChart, Pie, Cell, ResponsiveContainer, Legend, Tooltip, BarChart, Bar, XAxis, YAxis, LineChart, Line, CartesianGrid } from 'recharts';
+import { Package, Palette, TrendingUp, AlertCircle, Heart, ShoppingCart } from 'lucide-react';
+import { WardrobeAPI, WardrobeAnalyticsData, WishlistItem } from '../services/wardrobeApi';
+import toast from 'react-hot-toast';
+
+interface WardrobeAnalyticsProps {
+    userId: number;
+    hideHeader?: boolean;
+}
+
+const COLORS = ['#6366F1', '#8B5CF6', '#A855F7', '#D946EF', '#EC4899', '#F43F5E', '#FB7185', '#FDA4AF'];
+
+export const WardrobeAnalytics: React.FC<WardrobeAnalyticsProps> = ({ userId, hideHeader }) => {
+    const [data, setData] = useState<WardrobeAnalyticsData | null>(null);
+    const [loading, setLoading] = useState(true);
+    const [filter, setFilter] = useState<'all' | 'purchased' | 'wishlist'>('all');
+
+    useEffect(() => {
+        loadAnalytics();
+    }, [userId, filter]);
+
+    const loadAnalytics = async () => {
+        try {
+            setLoading(true);
+            const response = await WardrobeAPI.getAnalytics(userId, filter);
+            if (response.success) {
+                setData(response.data);
+            }
+        } catch (error) {
+            console.error('Failed to load analytics:', error);
+            toast.error('Failed to load wardrobe analytics');
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    if (loading) {
+        return (
+            <div className="flex items-center justify-center p-12">
+                <div className="flex flex-col items-center gap-4">
+                    <div className="w-12 h-12 rounded-full border-2 border-indigo-200 border-t-indigo-600 animate-spin"></div>
+                    <p className="text-sm font-medium text-slate-500">Loading analytics...</p>
+                </div>
+            </div>
+        );
+    }
+
+    if (!data || data.composition.total_items === 0) {
+        return (
+            <div className="bg-white border-2 border-dashed border-slate-200 rounded-2xl p-10 text-center">
+                <div className="w-14 h-14 bg-amber-50 rounded-2xl flex items-center justify-center mx-auto mb-4">
+                    <Package className="w-7 h-7 text-amber-500" />
+                </div>
+                <h3 className="text-lg font-bold text-slate-900 mb-2">No Wardrobe Data Yet</h3>
+                <p className="text-slate-500">Complete some fit checks to see your wardrobe analytics!</p>
+            </div>
+        );
+    }
+
+    // Prepare chart data
+    const compositionData = Object.entries(data.composition.by_type).map(([name, value]) => ({
+        name: name.replace('_', ' '),
+        value,
+    }));
+
+    const colorData = Object.entries(data.colors.distribution).map(([name, value]) => ({
+        name,
+        value,
+    }));
+
+    return (
+        <div className="space-y-6">
+            {/* Filter Toggle */}
+            {!hideHeader && (
+                <div className="bg-white rounded-2xl shadow-bento border border-slate-200/60 p-4">
+                    <div className="flex items-center justify-between">
+                        <h2 className="text-lg font-bold text-slate-900">Wardrobe Analytics</h2>
+                        <div className="flex gap-2">
+                            <button
+                                onClick={() => setFilter('all')}
+                                className={`px-4 py-2 rounded-xl text-sm font-medium transition-all ${filter === 'all'
+                                    ? 'bg-slate-900 text-white'
+                                    : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
+                                    }`}
+                            >
+                                All Items
+                            </button>
+                            <button
+                                onClick={() => setFilter('purchased')}
+                                className={`px-4 py-2 rounded-xl text-sm font-medium transition-all ${filter === 'purchased'
+                                    ? 'bg-emerald-600 text-white'
+                                    : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
+                                    }`}
+                            >
+                                Purchased
+                            </button>
+                            <button
+                                onClick={() => setFilter('wishlist')}
+                                className={`px-4 py-2 rounded-xl text-sm font-medium transition-all ${filter === 'wishlist'
+                                    ? 'bg-amber-500 text-white'
+                                    : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
+                                    }`}
+                            >
+                                Wishlist
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
+
+            {/* Conversion Stats - Bento Grid */}
+            <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+                <motion.div
+                    initial={{ scale: 0.95, opacity: 0 }}
+                    animate={{ scale: 1, opacity: 1 }}
+                    className="bg-white rounded-2xl p-5 border border-slate-200/60 shadow-bento"
+                >
+                    <div className="w-10 h-10 bg-blue-50 rounded-xl flex items-center justify-center mb-3">
+                        <ShoppingCart className="w-5 h-5 text-blue-600" />
+                    </div>
+                    <div className="text-2xl font-bold text-slate-900">{data.conversion.total_checks}</div>
+                    <div className="text-sm text-slate-500">Total Checks</div>
+                </motion.div>
+
+                <motion.div
+                    initial={{ scale: 0.95, opacity: 0 }}
+                    animate={{ scale: 1, opacity: 1 }}
+                    transition={{ delay: 0.1 }}
+                    className="bg-white rounded-2xl p-5 border border-slate-200/60 shadow-bento"
+                >
+                    <div className="w-10 h-10 bg-emerald-50 rounded-xl flex items-center justify-center mb-3">
+                        <Package className="w-5 h-5 text-emerald-600" />
+                    </div>
+                    <div className="text-2xl font-bold text-slate-900">{data.conversion.purchased}</div>
+                    <div className="text-sm text-slate-500">Purchased</div>
+                </motion.div>
+
+                <motion.div
+                    initial={{ scale: 0.95, opacity: 0 }}
+                    animate={{ scale: 1, opacity: 1 }}
+                    transition={{ delay: 0.2 }}
+                    className="bg-white rounded-2xl p-5 border border-slate-200/60 shadow-bento"
+                >
+                    <div className="w-10 h-10 bg-pink-50 rounded-xl flex items-center justify-center mb-3">
+                        <Heart className="w-5 h-5 text-pink-600" />
+                    </div>
+                    <div className="text-2xl font-bold text-slate-900">{data.conversion.wishlist}</div>
+                    <div className="text-sm text-slate-500">Wishlist</div>
+                </motion.div>
+
+                <motion.div
+                    initial={{ scale: 0.95, opacity: 0 }}
+                    animate={{ scale: 1, opacity: 1 }}
+                    transition={{ delay: 0.3 }}
+                    className="bg-white rounded-2xl p-5 border border-slate-200/60 shadow-bento"
+                >
+                    <div className="w-10 h-10 bg-indigo-50 rounded-xl flex items-center justify-center mb-3">
+                        <TrendingUp className="w-5 h-5 text-indigo-600" />
+                    </div>
+                    <div className="text-2xl font-bold text-slate-900">{data.conversion.conversion_rate}%</div>
+                    <div className="text-sm text-slate-500">Conversion</div>
+                </motion.div>
+            </div>
+
+            {/* Charts Row */}
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                {/* Composition Chart */}
+                <div className="bg-white rounded-2xl shadow-bento p-6 border border-slate-200/60">
+                    <h3 className="text-base font-bold text-slate-900 mb-4 flex items-center gap-2">
+                        <Package className="w-5 h-5 text-indigo-500" />
+                        Wardrobe Composition
+                    </h3>
+                    <ResponsiveContainer width="100%" height={280}>
+                        <PieChart>
+                            <Pie
+                                data={compositionData}
+                                cx="50%"
+                                cy="50%"
+                                innerRadius={60}
+                                outerRadius={100}
+                                paddingAngle={3}
+                                labelLine={false}
+                                label={({ name, percent }) => `${name} ${(percent * 100).toFixed(0)}%`}
+                                fill="#8884d8"
+                                dataKey="value"
+                                animationDuration={800}
+                            >
+                                {compositionData.map((entry, index) => (
+                                    <Cell 
+                                        key={`cell-${index}`} 
+                                        fill={COLORS[index % COLORS.length]}
+                                        opacity={0.9}
+                                        className="cursor-pointer hover:opacity-100 transition-opacity"
+                                    />
+                                ))}
+                            </Pie>
+                            <Tooltip 
+                                contentStyle={{
+                                    backgroundColor: '#1E293B',
+                                    border: '1px solid #475569',
+                                    borderRadius: '12px',
+                                    color: '#F1F5F9'
+                                }}
+                            />
+                            <Legend 
+                                verticalAlign="bottom"
+                                height={36}
+                                iconType="circle"
+                            />
+                        </PieChart>
+                    </ResponsiveContainer>
+                </div>
+
+                {/* Color Distribution */}
+                <div className="bg-white rounded-2xl shadow-bento p-6 border border-slate-200/60">
+                    <h3 className="text-base font-bold text-slate-900 mb-4 flex items-center gap-2">
+                        <Palette className="w-5 h-5 text-pink-500" />
+                        Color Distribution
+                    </h3>
+                    <ResponsiveContainer width="100%" height={280}>
+                        <BarChart data={colorData}>
+                            <CartesianGrid strokeDasharray="3 3" stroke="#E2E8F0" />
+                            <XAxis 
+                                dataKey="name" 
+                                tick={{ fontSize: 12, fill: '#64748B' }}
+                                angle={-45}
+                                textAnchor="end"
+                                height={80}
+                            />
+                            <YAxis tick={{ fontSize: 12, fill: '#64748B' }} />
+                            <Tooltip 
+                                contentStyle={{
+                                    backgroundColor: '#1E293B',
+                                    border: '1px solid #475569',
+                                    borderRadius: '12px',
+                                    color: '#F1F5F9'
+                                }}
+                                cursor={{ fill: 'rgba(99, 102, 241, 0.1)' }}
+                            />
+                            <Bar 
+                                dataKey="value" 
+                                radius={[8, 8, 0, 0]}
+                                animationDuration={800}
+                            >
+                                {colorData.map((entry, index) => {
+                                    // Map color names to hex values
+                                    const colorMap: { [key: string]: string } = {
+                                        'black': '#000000',
+                                        'white': '#FFFFFF',
+                                        'red': '#EF4444',
+                                        'blue': '#3B82F6',
+                                        'green': '#10B981',
+                                        'yellow': '#F59E0B',
+                                        'orange': '#F97316',
+                                        'purple': '#8B5CF6',
+                                        'pink': '#EC4899',
+                                        'brown': '#92400E',
+                                        'gray': '#6B7280',
+                                        'grey': '#6B7280',
+                                        'beige': '#D4A574',
+                                        'navy': '#1E3A8A',
+                                        'khaki': '#C3B091',
+                                        'olive': '#84CC16',
+                                        'maroon': '#7F1D1D',
+                                        'teal': '#14B8A6',
+                                        'unknown': '#9CA3AF'
+                                    };
+                                    const fillColor = colorMap[entry.name.toLowerCase()] || '#EC4899';
+                                    return (
+                                        <Cell 
+                                            key={`cell-${index}`} 
+                                            fill={fillColor} 
+                                            stroke={fillColor === '#FFFFFF' ? '#334155' : 'none'} 
+                                            strokeWidth={fillColor === '#FFFFFF' ? 2 : 0}
+                                            opacity={0.9}
+                                            className="cursor-pointer hover:opacity-100 transition-opacity"
+                                        />
+                                    );
+                                })}
+                            </Bar>
+                        </BarChart>
+                    </ResponsiveContainer>
+                </div>
+            </div>
+
+            {/* Fit Score Timeline */}
+            {data.fit_history.length > 0 && (
+                <div className="bg-white rounded-2xl shadow-bento p-6 border border-slate-200/60">
+                    <h3 className="text-base font-bold text-slate-900 mb-4 flex items-center gap-2">
+                        <TrendingUp className="w-5 h-5 text-blue-500" />
+                        Fit Score Timeline (Last 30 Days)
+                    </h3>
+                    <ResponsiveContainer width="100%" height={220}>
+                        <LineChart data={data.fit_history}>
+                            <CartesianGrid strokeDasharray="3 3" stroke="#E2E8F0" />
+                            <XAxis 
+                                dataKey="date" 
+                                tick={{ fontSize: 12, fill: '#64748B' }}
+                            />
+                            <YAxis 
+                                domain={[0, 100]} 
+                                tick={{ fontSize: 12, fill: '#64748B' }}
+                            />
+                            <Tooltip 
+                                contentStyle={{
+                                    backgroundColor: '#1E293B',
+                                    border: '1px solid #475569',
+                                    borderRadius: '12px',
+                                    color: '#F1F5F9'
+                                }}
+                            />
+                            <Line 
+                                type="monotone" 
+                                dataKey="score" 
+                                stroke="url(#colorGradient)" 
+                                strokeWidth={3} 
+                                dot={{ 
+                                    fill: '#6366F1', 
+                                    strokeWidth: 2,
+                                    r: 5,
+                                    className: 'hover:r-7 transition-all cursor-pointer'
+                                }}
+                                activeDot={{ 
+                                    r: 8,
+                                    fill: '#8B5CF6',
+                                    stroke: '#FFF',
+                                    strokeWidth: 2
+                                }}
+                                animationDuration={800}
+                            />
+                            <defs>
+                                <linearGradient id="colorGradient" x1="0" y1="0" x2="1" y2="0">
+                                    <stop offset="0%" stopColor="#6366F1" />
+                                    <stop offset="100%" stopColor="#8B5CF6" />
+                                </linearGradient>
+                            </defs>
+                        </LineChart>
+                    </ResponsiveContainer>
+                </div>
+            )}
+
+            {/* Wardrobe Gaps */}
+            {data.gaps.length > 0 && (
+                <div className="bg-white rounded-2xl shadow-bento p-6 border border-slate-200/60">
+                    <h3 className="text-base font-bold text-slate-900 mb-4 flex items-center gap-2">
+                        <AlertCircle className="w-5 h-5 text-amber-500" />
+                        Wardrobe Gaps
+                    </h3>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                        {data.gaps.map((gap, idx) => (
+                            <div key={idx} className="bg-amber-50 border border-amber-200/60 rounded-xl p-4">
+                                <div className="font-semibold text-slate-900">{gap.item.replace('_', ' ')}</div>
+                                <div className="text-sm text-slate-600">{gap.reason}</div>
+                                <div className="text-xs text-amber-600 mt-1 font-medium">{gap.category}</div>
+                            </div>
+                        ))}
+                    </div>
+                </div>
+            )}
+
+            {/* Wishlist */}
+            {data.wishlist.length > 0 && (
+                <div className="bg-white rounded-2xl shadow-bento p-6 border border-slate-200/60">
+                    <h3 className="text-base font-bold text-slate-900 mb-4 flex items-center gap-2">
+                        <Heart className="w-5 h-5 text-pink-500" />
+                        Your Wishlist ({data.wishlist.length} items)
+                    </h3>
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                        {data.wishlist.slice(0, 6).map((item) => (
+                            <div key={item.id} className="bg-gradient-to-br from-pink-50 to-purple-50 border border-pink-100 rounded-xl p-4">
+                                <div className="flex justify-between items-start mb-2">
+                                    <div className="font-semibold text-slate-900">{item.garment}</div>
+                                    <div className="text-xl font-bold text-indigo-600">{item.score}</div>
+                                </div>
+                                <div className="text-sm text-slate-600">Size: {item.size}</div>
+                                <div className="text-sm text-slate-600">Color: {item.color}</div>
+                                <div className="text-xs text-slate-400 mt-2">{item.days_ago} days ago</div>
+                            </div>
+                        ))}
+                    </div>
+                </div>
+            )}
+        </div>
+    );
+};

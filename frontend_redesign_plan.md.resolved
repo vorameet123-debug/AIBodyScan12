@@ -1,0 +1,82 @@
+# Frontend Redesign Master Prompt: "Premium Tech Hybrid"
+
+## Design Philosophy: "Hyper-Clean Intelligence"
+**Core Identity:** A fusion of **Apple's** obsessive minimalism (cleanliness, white space, typography key) and **Stripe's** modern developer aesthetic (mesh gradients, glassmorphism, micro-interactions).
+
+**Goal:** Build a UI that feels "expensive", trustworthy, and effortless.
+
+---
+
+## 1. Global Stylings (Tailwind CSS)
+
+### **Color Palette & Backgrounds**
+- **Base Background:** pure white (`bg-white`) or extremely subtle off-white (`bg-slate-50`).
+- **Ambient Gradients:** Use large, blurred mesh gradients in the background for depth.
+  - *Example:* `bg-[radial-gradient(ellipse_at_top_right,_var(--tw-gradient-stops))] from-indigo-100/40 via-purple-100/40 to-transparent`
+- **Text:** High contrast.
+  - Headings: `text-slate-900`
+  - Body: `text-slate-600`
+  - Muted: `text-slate-400`
+- **Accents:** Electric Violet / Blurple (`indigo-600` for primary actions).
+
+### **Typography**
+- **Font Stack:** System Sans (`Inter`, `SF Pro Display`).
+- **Headings:** Bold, "tracking-tight" (e.g., `-0.02em`).
+  - *h1:* `text-4xl font-bold tracking-tight text-slate-900`
+- **Body:** Clean, legible, generous line height (`leading-relaxed`).
+
+### **Surfaces & Cards (The "Bento" Look)**
+- **Cards:** White background, 1px subtle border, soft shadow.
+  - *Class:* `bg-white rounded-2xl border border-slate-200/60 shadow-sm hover:shadow-md transition-all duration-300`
+- **Glassmorphism:** Used for sticky elements (Sidebar, Navbar).
+  - *Class:* `backdrop-blur-xl bg-white/80 border-b border-slate-200/50`
+
+---
+
+## 2. Key Components Implementation
+
+### **A. The Navigation (Sidebar/Navbar)**
+- **Style:** "Floating" or "Glass".
+- **Interaction:** Icons should have a subtle background fade on hover.
+- **Active State:** A pill-shaped background (`bg-slate-100`) with bold text (`text-slate-900`).
+
+### **B. The Dashboard (Bento Grid)**
+- **Layout:** CSS Grid (`grid-cols-1 md:grid-cols-3 gap-6`).
+- **Hero Card (2/3 width):** "Body Intelligence" visual. Clean 3D model on left, key stats on right.
+- **Stat Cards (1/3 width):** Single metrics (e.g., "Fit Score"). Large number, small label, mini sparkline chart.
+- **Trend Cards:** Masonry layout. High-quality images with a gradient overlay at the bottom for text.
+
+### **C. Visualizations**
+- **3D Model Container:**
+  - Placed inside a "Laboratory" card: A subtle inner shadow or gray radial gradient background to make the model pop.
+- **Charts:**
+  - Use smooth curves (Spline).
+  - Gradient fills under the line (fade to transparent).
+  - Minimal grid lines (or none).
+
+---
+
+## 3. Micro-Interactions (The "Wow" Factor)
+- **Buttons:**
+  - Primary: `bg-slate-900 text-white rounded-full hover:scale-105 transition-transform`.
+  - Secondary: `text-slate-600 hover:text-slate-900 hover:bg-slate-100 rounded-lg`.
+- **Hover States:** Cards should lift slightly (`-translate-y-1`) and shadow should grow.
+- **Loading:** Shimmer effects (`animate-pulse` on gray skeleton blocks) instead of spinners.
+
+---
+
+## 4. Discoveries & Enhancements
+*Opportunities seen during analysis*
+
+1.  **Dynamic Contextual Gradients:**
+    - Change the ambient background color subtly based on the user's "Fashion IQ".
+    - *Example:* High IQ = Subtle Gold glow; Active Trend = Blue glow.
+2.  **"Magic" Search Bar:**
+    - A `Cmd+K` style global command palette (like Linear/Stripe docs) to jump between Trends, Fit Checks, and Body Metrics instantly.
+3.  **Scroll Animations:**
+    - Elements should fade in and slide up (`motion.div` with `y: 20 -> 0, opacity: 0 -> 1`) as the user scrolls down trend feeds.
+
+---
+
+## Actionable Prompt for Agent
+**"Refactor the frontend using `Tailwind CSS`, `Framer Motion`, and `Lucide React`. Implement a layout based on a 'Bento Grid' system with a clean white aesthetic. Use a 'Slate-900' typography scale with tight tracking. Surround the main content with a subtle fixed mesh gradient background. Rebuild the Sidebar to be a glassmorphic vertical strip. Ensure all cards have a 1px border (`border-slate-200`) and a soft hover lift effect."**

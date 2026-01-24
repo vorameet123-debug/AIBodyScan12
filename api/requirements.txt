@@ -1,0 +1,10 @@
+fastapi
+uvicorn[standard]
+python-multipart
+pydantic
+loguru
+Pillow
+sqlmodel
+argon2-cffi
+python-jose
+

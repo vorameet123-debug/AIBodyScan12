@@ -1,0 +1,44 @@
+{
+  "measurements": {
+    "height": 119.0,
+    "shoulder to crotch height": 44.26,
+    "arm left length": 37.78,
+    "arm right length": 38.55,
+    "inside leg height": 50.92,
+    "shoulder breadth": 28.5,
+    "arm length (shoulder to elbow)": 21.18,
+    "crotch height": 55.96,
+    "Hip circumference max height": 61.8,
+    "arm length (spine to wrist)": 14.75,
+    "head circumference": 37.81,
+    "neck circumference": 25.83,
+    "chest circumference": 65.38,
+    "waist circumference": 59.26,
+    "hip circumference": 65.66,
+    "wrist right circumference": 12.03,
+    "bicep right circumference": 18.52,
+    "forearm right circumference": 17.3,
+    "thigh left circumference": 31.0,
+    "calf left circumference": 23.9,
+    "ankle left circumference": 16.04
+  },
+  "metadata": {
+    "user_height_cm": 119.0,
+    "measurements_extracted": 21,
+    "vertices_shape": [
+      6890,
+      3
+    ],
+    "scaled": true,
+    "scaling_info": {
+      "user_provided_height_cm": 119.0,
+      "note": "All measurements scaled to match user's actual height"
+    }
+  },
+  "summary": {
+    "total_measurements": 21,
+    "length_measurements": 9,
+    "circumference_measurements": 12,
+    "other_measurements": 0
+  }
+}

@@ -1,0 +1,49 @@
+version: '3.8'
+
+services:
+  # FastAPI Backend
+  api:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: bodyscan-api
+    ports:
+      - "8000:8000"
+    environment:
+      - GROQ_API_KEY=${GROQ_API_KEY}
+      - REPLICATE_API_TOKEN=${REPLICATE_API_TOKEN}
+      - JWT_SECRET_KEY=${JWT_SECRET_KEY}
+      - JWT_ALGORITHM=${JWT_ALGORITHM:-HS256}
+      - ACCESS_TOKEN_EXPIRE_MINUTES=${ACCESS_TOKEN_EXPIRE_MINUTES:-1440}
+    volumes:
+      # Mount code for development (hot reload)
+      - ./api:/app/api
+      - ./integrations:/app/integrations
+      # Persist database
+      - ./api/data.db:/app/api/data.db
+    restart: unless-stopped
+    networks:
+      - bodyscan-network
+
+  # React Frontend (for local development)
+  frontend:
+    image: node:18-alpine
+    container_name: bodyscan-frontend
+    working_dir: /app
+    ports:
+      - "3000:3000"
+    environment:
+      - REACT_APP_API_URL=http://localhost:8000
+    volumes:
+      - ./website:/app
+      - /app/node_modules
+    command: sh -c "npm install && npm start"
+    depends_on:
+      - api
+    restart: unless-stopped
+    networks:
+      - bodyscan-network
+
+networks:
+  bodyscan-network:
+    driver: bridge
