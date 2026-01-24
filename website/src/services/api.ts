@@ -1,6 +1,11 @@
 import axios from 'axios';
 
-const API_BASE_URL = process.env.REACT_APP_API_URL || 'http://localhost:8000';
+// Use environment variable if set, otherwise use relative URL (same domain as frontend)
+// This allows the app to work when served from ngrok (single URL for frontend + backend)
+const API_BASE_URL = import.meta.env.VITE_API_URL || (
+  // If we're in development, use localhost
+  window.location.hostname === 'localhost' ? 'http://localhost:8000' : ''
+);
 
 const api = axios.create({
   baseURL: API_BASE_URL,
