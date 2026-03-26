@@ -22,105 +22,105 @@ const CAMERA_ZONES: Record<string, {
   target: { x: number; y: number; z: number };
 }> = {
   // HEAD & NECK - Close-up, high angle
-  'head circumference': { 
-    position: { x: 0, y: 1.2, z: 0.8 }, 
-    target: { x: 0, y: 0.95, z: 0 } 
+  'head circumference': {
+    position: { x: 0, y: 1.2, z: 0.8 },
+    target: { x: 0, y: 0.95, z: 0 }
   },
-  'neck circumference': { 
-    position: { x: 0, y: 1.0, z: 0.7 }, 
-    target: { x: 0, y: 0.78, z: 0 } 
+  'neck circumference': {
+    position: { x: 0, y: 1.0, z: 0.7 },
+    target: { x: 0, y: 0.78, z: 0 }
   },
-  
+
   // TORSO - Medium shots
-  'shoulder to crotch height': { 
-    position: { x: 0, y: 0.5, z: 1.5 }, 
-    target: { x: 0, y: 0.45, z: 0 } 
+  'shoulder to crotch height': {
+    position: { x: 0, y: 0.5, z: 1.5 },
+    target: { x: 0, y: 0.45, z: 0 }
   },
-  'chest circumference': { 
-    position: { x: 0, y: 0.75, z: 1.2 }, 
-    target: { x: 0, y: 0.60, z: 0 } 
+  'chest circumference': {
+    position: { x: 0, y: 0.75, z: 1.2 },
+    target: { x: 0, y: 0.60, z: 0 }
   },
-  'waist circumference': { 
-    position: { x: 0, y: 0.5, z: 1.2 }, 
-    target: { x: 0, y: 0.35, z: 0 } 
+  'waist circumference': {
+    position: { x: 0, y: 0.5, z: 1.2 },
+    target: { x: 0, y: 0.35, z: 0 }
   },
-  'hip circumference': { 
-    position: { x: 0, y: 0.3, z: 1.2 }, 
-    target: { x: 0, y: 0.15, z: 0 } 
+  'hip circumference': {
+    position: { x: 0, y: 0.3, z: 1.2 },
+    target: { x: 0, y: 0.15, z: 0 }
   },
-  'shoulder breadth': { 
-    position: { x: 0, y: 0.85, z: 1.0 }, 
-    target: { x: 0, y: 0.70, z: 0 } 
+  'shoulder breadth': {
+    position: { x: 0, y: 0.85, z: 1.0 },
+    target: { x: 0, y: 0.70, z: 0 }
   },
-  
+
   // RIGHT ARM - Side angle
-  'bicep right circumference': { 
-    position: { x: 0.8, y: 0.65, z: 0.8 }, 
-    target: { x: 0.4, y: 0.52, z: 0 } 
+  'bicep right circumference': {
+    position: { x: 0.8, y: 0.65, z: 0.8 },
+    target: { x: 0.4, y: 0.52, z: 0 }
   },
-  'forearm right circumference': { 
-    position: { x: 0.8, y: 0.42, z: 0.8 }, 
-    target: { x: 0.4, y: 0.32, z: 0 } 
+  'forearm right circumference': {
+    position: { x: 0.8, y: 0.42, z: 0.8 },
+    target: { x: 0.4, y: 0.32, z: 0 }
   },
-  'wrist right circumference': { 
-    position: { x: 0.8, y: 0.18, z: 0.8 }, 
-    target: { x: 0.5, y: 0.08, z: 0 } 
+  'wrist right circumference': {
+    position: { x: 0.8, y: 0.18, z: 0.8 },
+    target: { x: 0.5, y: 0.08, z: 0 }
   },
-  'arm right length': { 
-    position: { x: 0.9, y: 0.5, z: 1.0 }, 
-    target: { x: 0.35, y: 0.40, z: 0 } 
+  'arm right length': {
+    position: { x: 0.9, y: 0.5, z: 1.0 },
+    target: { x: 0.35, y: 0.40, z: 0 }
   },
-  
+
   // LEFT ARM - Side angle (mirrored)
-  'arm left length': { 
-    position: { x: -0.9, y: 0.5, z: 1.0 }, 
-    target: { x: -0.35, y: 0.40, z: 0 } 
+  'arm left length': {
+    position: { x: -0.9, y: 0.5, z: 1.0 },
+    target: { x: -0.35, y: 0.40, z: 0 }
   },
-  
+
   // LEGS - Lower body focus
-  'inside leg height': { 
-    position: { x: 0, y: -0.2, z: 1.5 }, 
-    target: { x: 0, y: -0.35, z: 0 } 
+  'inside leg height': {
+    position: { x: 0, y: -0.2, z: 1.5 },
+    target: { x: 0, y: -0.35, z: 0 }
   },
-  'thigh left circumference': { 
-    position: { x: -0.5, y: 0.0, z: 1.0 }, 
-    target: { x: -0.2, y: -0.08, z: 0 } 
+  'thigh left circumference': {
+    position: { x: -0.5, y: 0.0, z: 1.0 },
+    target: { x: -0.2, y: -0.08, z: 0 }
   },
-  'calf left circumference': { 
-    position: { x: -0.5, y: -0.4, z: 1.0 }, 
-    target: { x: -0.15, y: -0.48, z: 0 } 
+  'calf left circumference': {
+    position: { x: -0.5, y: -0.4, z: 1.0 },
+    target: { x: -0.15, y: -0.48, z: 0 }
   },
-  'ankle left circumference': { 
-    position: { x: -0.4, y: -0.7, z: 0.8 }, 
-    target: { x: -0.1, y: -0.75, z: 0 } 
+  'ankle left circumference': {
+    position: { x: -0.4, y: -0.7, z: 0.8 },
+    target: { x: -0.1, y: -0.75, z: 0 }
   },
-  'outseam length': { 
-    position: { x: -0.6, y: -0.2, z: 1.5 }, 
-    target: { x: -0.15, y: -0.35, z: 0 } 
+  'outseam length': {
+    position: { x: -0.6, y: -0.2, z: 1.5 },
+    target: { x: -0.15, y: -0.35, z: 0 }
   },
-  
+
   // FULL BODY - Wide shot
-  'height': { 
-    position: { x: 0, y: 0.15, z: 2.8 }, 
-    target: { x: 0, y: 0.15, z: 0 } 
+  'height': {
+    position: { x: 0, y: 0.15, z: 2.8 },
+    target: { x: 0, y: 0.15, z: 0 }
   },
-  
+
   // Additional measurements with reasonable defaults
-  'arm length (shoulder to elbow)': { 
-    position: { x: 0.9, y: 0.6, z: 1.0 }, 
-    target: { x: 0.3, y: 0.50, z: 0 } 
+  'arm length (shoulder to elbow)': {
+    position: { x: 0.9, y: 0.6, z: 1.0 },
+    target: { x: 0.3, y: 0.50, z: 0 }
   },
-  'arm length (spine to wrist)': { 
-    position: { x: 0.7, y: 0.5, z: 1.2 }, 
-    target: { x: 0.25, y: 0.45, z: 0 } 
+  'arm length (spine to wrist)': {
+    position: { x: 0.7, y: 0.5, z: 1.2 },
+    target: { x: 0.25, y: 0.45, z: 0 }
   },
-  'crotch height': { 
-    position: { x: 0, y: 0.1, z: 1.5 }, 
-    target: { x: 0, y: 0.0, z: 0 } 
+  'crotch height': {
+    position: { x: 0, y: 0.1, z: 1.5 },
+    target: { x: 0, y: 0.0, z: 0 }
   },
-  'Hip circumference max height': { 
-    position: { x: 0, y: 0.3, z: 1.3 }, 
-    target: { x: 0, y: 0.18, z: 0 } 
+  'Hip circumference max height': {
+    position: { x: 0, y: 0.3, z: 1.3 },
+    target: { x: 0, y: 0.18, z: 0 }
   },
 };
 
@@ -180,8 +180,6 @@ export const Model3DViewerSMPL: React.FC<Model3DViewerProps> = ({
         controls.update();
       },
     });
-
-    console.log('Focusing on:', measurementKey, 'Zone:', zone);
   };
 
   useEffect(() => {
@@ -244,7 +242,7 @@ export const Model3DViewerSMPL: React.FC<Model3DViewerProps> = ({
         '/wireframe-body.mtl',
         (materials) => {
           materials.preload();
-          
+
           const objLoader = new OBJLoader();
           objLoader.setMaterials(materials);
           objLoader.load(
@@ -252,14 +250,12 @@ export const Model3DViewerSMPL: React.FC<Model3DViewerProps> = ({
             (obj) => {
               obj.scale.setScalar(1.2);
               obj.position.set(0, 0, 0);
-              
+
               scene.add(obj);
               modelRef.current = obj;
               setModelLoaded(true);
             },
-            (progress) => {
-              console.log((progress.loaded / progress.total * 100) + '% loaded');
-            },
+            undefined,
             (error) => {
               console.error('Error loading OBJ model:', error);
             }
@@ -315,9 +311,6 @@ export const Model3DViewerSMPL: React.FC<Model3DViewerProps> = ({
     }
 
     const value = measurements[selectedMeasurement];
-    
-    console.log('Selected Measurement:', selectedMeasurement);
-    console.log('Measurement value:', value);
 
     if (!value || value === undefined) {
       console.warn('Measurement value is undefined');
@@ -365,18 +358,18 @@ export const Model3DViewerSMPL: React.FC<Model3DViewerProps> = ({
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.5 }}
-      className="bg-white rounded-2xl p-6 shadow-bento border border-slate-200/60"
+      className="bg-slate-900 rounded-2xl p-6 shadow-bento border border-slate-700/60"
     >
       <div className="flex items-center justify-between mb-6">
         <div className="flex items-center gap-3">
-          <div className="w-10 h-10 bg-indigo-50 rounded-xl flex items-center justify-center">
-            <Maximize2 className="text-indigo-600" size={20} />
+          <div className="w-10 h-10 bg-accent-50 rounded-xl flex items-center justify-center">
+            <Maximize2 className="text-accent-500" size={20} />
           </div>
-          <h3 className="text-xl font-bold text-slate-900">3D Body Model</h3>
+          <h3 className="text-xl font-bold text-white">3D Body Model</h3>
         </div>
         <button
           onClick={handleResetView}
-          className="flex items-center gap-1 px-3 py-1.5 bg-indigo-100 hover:bg-indigo-200 text-indigo-600 rounded-lg transition text-sm font-medium"
+          className="flex items-center gap-1 px-3 py-1.5 bg-accent-100 hover:bg-accent-200 text-accent-500 rounded-lg transition text-sm font-medium"
         >
           <RotateCw size={14} />
           Reset View
@@ -384,16 +377,16 @@ export const Model3DViewerSMPL: React.FC<Model3DViewerProps> = ({
       </div>
 
       {/* 3D Canvas */}
-      <div className="bg-slate-50 rounded-xl overflow-hidden shadow-sm relative border border-slate-200/60">
+      <div className="bg-slate-800 rounded-xl overflow-hidden shadow-sm relative border border-slate-700/60">
         <div
           ref={containerRef}
           style={{ width: '100%', height: '700px' }}
           className="relative"
         >
           {!modelLoaded && (
-            <div className="absolute inset-0 flex items-center justify-center bg-white/80">
+            <div className="absolute inset-0 flex items-center justify-center bg-slate-900/80">
               <div className="text-center">
-                <div className="animate-spin rounded-full h-10 w-10 border-2 border-indigo-600 border-t-transparent mx-auto mb-4"></div>
+                <div className="animate-spin rounded-full h-10 w-10 border-2 border-accent-600 border-t-transparent mx-auto mb-4"></div>
                 <p className="text-slate-600 font-medium">Loading 3D Model...</p>
               </div>
             </div>

@@ -58,3 +58,4 @@ except requests.exceptions.ConnectionError:
     print("❌ Cannot connect to backend. Is it running?")
 except Exception as e:
     print(f"❌ Error: {e}")
+

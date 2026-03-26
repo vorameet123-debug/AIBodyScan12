@@ -1,5 +1,13 @@
 fastapi
 uvicorn[standard]
+slowapi  # Rate limiting for FastAPI
+# Payment Processing
+# ------------------
+razorpay==1.4.1  # Razorpay payment gateway integration
+
+
+# FastAPI Backend
+# ---------------
 python-multipart
 pydantic
 loguru

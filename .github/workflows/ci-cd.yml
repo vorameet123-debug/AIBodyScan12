@@ -69,6 +69,10 @@ jobs:
       working-directory: ./website
       run: npm run lint --if-present
     
+    - name: Run tests
+      working-directory: ./website
+      run: npx react-scripts test --watchAll=false --ci
+    
     - name: Build frontend
       working-directory: ./website
       env:

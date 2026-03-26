@@ -3,25 +3,25 @@ Input validation utilities for AI prompts and user inputs
 Prevents injection attacks and ensures data integrity
 """
 import re
-from typing import Optional
+
 from loguru import logger
 
 
 class InputValidator:
     """Validates and sanitizes user inputs for AI prompts"""
-    
+
     # Maximum lengths for different input types
     MAX_SEASON_LENGTH = 50
     MAX_CATEGORY_LENGTH = 50
     MAX_ITEM_NAME_LENGTH = 100
-    
+
     # Allowed patterns
     SEASON_PATTERN = re.compile(r'^[a-zA-Z0-9\s\-]+$')
     CATEGORY_PATTERN = re.compile(r'^[a-zA-Z\s\-]+$')
     ITEM_PATTERN = re.compile(r'^[a-zA-Z0-9\s\-\'\"]+$')
-    
+
     @staticmethod
-    def sanitize_season(season: Optional[str]) -> Optional[str]:
+    def sanitize_season(season: str | None) -> str | None:
         """
         Sanitize season input
         
@@ -33,23 +33,23 @@ class InputValidator:
         """
         if not season:
             return None
-            
+
         season = season.strip()
-        
+
         # Check length
         if len(season) > InputValidator.MAX_SEASON_LENGTH:
             logger.warning(f"Season input too long: {len(season)} chars")
             return None
-        
+
         # Check pattern
         if not InputValidator.SEASON_PATTERN.match(season):
             logger.warning(f"Invalid season pattern: {season}")
             return None
-            
+
         return season
-    
+
     @staticmethod
-    def sanitize_category(category: Optional[str]) -> Optional[str]:
+    def sanitize_category(category: str | None) -> str | None:
         """
         Sanitize category input
         
@@ -61,23 +61,23 @@ class InputValidator:
         """
         if not category:
             return None
-            
+
         category = category.strip()
-        
+
         # Check length
         if len(category) > InputValidator.MAX_CATEGORY_LENGTH:
             logger.warning(f"Category input too long: {len(category)} chars")
             return None
-        
+
         # Check pattern
         if not InputValidator.CATEGORY_PATTERN.match(category):
             logger.warning(f"Invalid category pattern: {category}")
             return None
-            
+
         return category
-    
+
     @staticmethod
-    def sanitize_item_name(item_name: Optional[str]) -> Optional[str]:
+    def sanitize_item_name(item_name: str | None) -> str | None:
         """
         Sanitize item name input
         
@@ -89,21 +89,21 @@ class InputValidator:
         """
         if not item_name:
             return None
-            
+
         item_name = item_name.strip()
-        
+
         # Check length
         if len(item_name) > InputValidator.MAX_ITEM_NAME_LENGTH:
             logger.warning(f"Item name input too long: {len(item_name)} chars")
             return None
-        
+
         # Check pattern
         if not InputValidator.ITEM_PATTERN.match(item_name):
             logger.warning(f"Invalid item name pattern: {item_name}")
             return None
-            
+
         return item_name
-    
+
     @staticmethod
     def validate_prompt_safety(prompt: str) -> bool:
         """
@@ -125,11 +125,12 @@ class InputValidator:
             r'javascript:',
             r'eval\s*\(',
         ]
-        
+
         prompt_lower = prompt.lower()
         for pattern in dangerous_patterns:
             if re.search(pattern, prompt_lower):
                 logger.warning(f"Potentially dangerous pattern detected in prompt: {pattern}")
                 return False
-        
+
         return True
+

@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
-import { motion, AnimatePresence, useAnimation } from 'framer-motion';
+import { motion, AnimatePresence } from 'framer-motion';
 import Confetti from 'react-confetti';
+import { Sparkles, ArrowRight, RotateCcw, Loader2, CheckCircle2, TrendingUp, Shirt, Target, Palette, Calendar, ShoppingBag, Star } from 'lucide-react';
 import { ClothingInputFormV2 } from './ClothingInputFormV2';
 import FitMetersDisplay from './FitMetersDisplay';
 import RoastCard from './RoastCard';
@@ -8,287 +9,464 @@ import GarmentAnalysisDisplay from './GarmentAnalysisDisplay';
 import ColorMatchDisplay from './ColorMatchDisplay';
 import StyleRecommendationDisplay from './StyleRecommendationDisplay';
 import OccasionAnalysisDisplay from './OccasionAnalysisDisplay';
-import { SizeRecommendationSlider } from './SizeRecommendationSlider';
 import { PurchaseIntent } from './PurchaseIntent';
+import { SizeRecommendationSlider } from './SizeRecommendationSlider';
 import { ApiService, NewClothingFitCheckResponse, SavedMeasurement } from '../services/api';
-import { RotateCcw, Award } from 'lucide-react';
-import { FashionIQWidget } from './FashionIQWidget';
 import toast from 'react-hot-toast';
+import { useSubscription } from '../contexts/SubscriptionContext';
+import { UpgradeModal } from './UpgradeModal';
 
-export const ClothingFitChecker: React.FC = () => {
+// ============================================
+// MAIN COMPONENT
+// ============================================
+const ClothingFitChecker: React.FC = () => {
+  // ========== STATE (PRESERVED) ==========
   const [isLoading, setIsLoading] = useState(false);
   const [result, setResult] = useState<NewClothingFitCheckResponse | null>(null);
   const [showConfetti, setShowConfetti] = useState(false);
   const [measurements, setMeasurements] = useState<SavedMeasurement[]>([]);
-  const controls = useAnimation();
   const [windowSize, setWindowSize] = useState({ width: window.innerWidth, height: window.innerHeight });
-  const [iqRefreshTrigger, setIqRefreshTrigger] = useState(0);
+  const [showUpgradeModal, setShowUpgradeModal] = useState(false);
+  const [upgradeModalData, setUpgradeModalData] = useState<{
+    currentCount: number;
+    limit: number;
+    message: string;
+  } | null>(null);
 
-  // Window resize handler
+  const { checkCanUse, trackUsage, remainingFitChecks, isPro } = useSubscription();
+
+  // ========== EFFECTS (PRESERVED) ==========
   useEffect(() => {
-    const handleResize = () => setWindowSize({ width: window.innerWidth, height: window.innerHeight });
+    const handleResize = () => {
+      setWindowSize({ width: window.innerWidth, height: window.innerHeight });
+    };
     window.addEventListener('resize', handleResize);
     return () => window.removeEventListener('resize', handleResize);
   }, []);
 
-  // Load measurements
   useEffect(() => {
-    const loadM = async () => {
+    const loadMeasurements = async () => {
       try {
         const res = await ApiService.getMyMeasurements();
         setMeasurements(res.measurements);
-      } catch (e) {
-        console.error(e);
+      } catch (error) {
+        console.error('Failed to load measurements:', error);
       }
     };
-    loadM();
+    loadMeasurements();
   }, []);
 
+  // ========== HANDLERS (PRESERVED) ==========
   const handleSubmit = async (data: {
     productImage: File;
     measurementId: number;
     size: string;
     occasion: string;
-    fitType: string;
   }) => {
+    // Check if user can use fit check feature
+    const canUseResult = await checkCanUse('fit_check');
+    if (!canUseResult.can_use) {
+      setUpgradeModalData({
+        currentCount: canUseResult.current_count,
+        limit: canUseResult.limit,
+        message: canUseResult.message,
+      });
+      setShowUpgradeModal(true);
+      return;
+    }
+
     setIsLoading(true);
+    setResult(null);
     const loadingToast = toast.loading('Consulting the fashion gods...');
+
     try {
       const res = await ApiService.checkClothingFitV2(
-        data.productImage, data.measurementId, data.size, data.occasion, data.fitType
+        data.productImage,
+        data.measurementId,
+        data.size,
+        data.occasion
       );
-
-      // Debug: Check if size recommendation data is present
-      console.log('=== FIT CHECK API RESPONSE ===');
-      console.log('Full Response:', res);
-      console.log('Has size_recommendation?', !!res.size_recommendation);
-      console.log('size_recommendation value:', res.size_recommendation);
-      console.log('Has all_sizes?', !!res.all_sizes);
-      console.log('all_sizes value:', res.all_sizes);
-      console.log('Has check_id?', !!res.check_id);
-      console.log('check_id value:', res.check_id);
-      console.log('user_selected_size:', res.user_selected_size);
-      console.log('==============================');
-
       setResult(res);
-      setIqRefreshTrigger(prev => prev + 1);
       toast.dismiss(loadingToast);
 
+      // Track usage after successful analysis
+      await trackUsage('fit_check');
+
+      // Show confetti for great fits
       if (res.overall_score >= 80) {
         setShowConfetti(true);
         setTimeout(() => setShowConfetti(false), 5000);
         toast.success('Wow! Perfect match!', { icon: '🎉' });
       } else {
-        toast.success('Analysis ready!');
+        // Show remaining checks for free users
+        if (!isPro) {
+          const remaining = remainingFitChecks - 1;
+          if (remaining > 0) {
+            toast.success(`Analysis ready! ${remaining} free check${remaining === 1 ? '' : 's'} remaining.`);
+          } else {
+            toast.success('Analysis ready! This was your last free check this month.');
+          }
+        } else {
+          toast.success('Analysis ready!');
+        }
       }
-
-      controls.start({ opacity: 1, scale: 1 });
-    } catch (e: any) {
+    } catch (error: any) {
       toast.dismiss(loadingToast);
-      toast.error(e.message || 'Analysis failed');
-      setIsLoading(false);
+      toast.error(error.message || 'Fit check failed');
+      console.error('Fit check failed:', error);
     } finally {
       setIsLoading(false);
     }
   };
 
+  const handleReset = () => {
+    setResult(null);
+    setShowConfetti(false);
+  };
+
+  // ========== SCORE HELPERS ==========
+  const getScoreColor = (score: number) => {
+    if (score >= 80) return 'from-emerald-500 to-green-400';
+    if (score >= 60) return 'from-amber-500 to-yellow-400';
+    return 'from-red-500 to-orange-400';
+  };
+
+  const getScoreLabel = (score: number) => {
+    if (score >= 90) return 'Perfect Match!';
+    if (score >= 80) return 'Great Fit!';
+    if (score >= 70) return 'Good Fit';
+    if (score >= 60) return 'Decent Fit';
+    return 'Needs Work';
+  };
+
+  // ========================================
+  // RENDER
+  // ========================================
   return (
-    <div className="min-h-screen bg-white relative">
-      {/* Premium Mesh Gradient Background */}
-      <div className="fixed inset-0 overflow-hidden pointer-events-none">
-        <div className="absolute -top-40 -right-40 w-[600px] h-[600px] bg-gradient-to-br from-indigo-200/40 to-purple-200/40 rounded-full blur-3xl" />
-        <div className="absolute -bottom-40 -left-40 w-[500px] h-[500px] bg-gradient-to-br from-pink-200/30 to-rose-200/30 rounded-full blur-3xl" />
-        <div className="absolute top-1/3 left-1/3 w-[400px] h-[400px] bg-gradient-to-br from-violet-200/20 to-fuchsia-200/20 rounded-full blur-3xl" />
-      </div>
+    <>
+      {/* Upgrade Modal */}
+      <UpgradeModal
+        isOpen={showUpgradeModal}
+        onClose={() => setShowUpgradeModal(false)}
+        feature="fit_check"
+        currentCount={upgradeModalData?.currentCount}
+        limit={upgradeModalData?.limit}
+        message={upgradeModalData?.message}
+      />
 
-      {showConfetti && <Confetti width={windowSize.width} height={windowSize.height} recycle={false} numberOfPieces={500} />}
-
-      <div className="max-w-7xl mx-auto px-6 py-12 relative z-10">
-        {/* Hero Header - Premium */}
-        <div className="text-center mb-14">
-          <motion.div
-            initial={{ opacity: 0, y: -10 }}
-            animate={{ opacity: 1, y: 0 }}
-            className="inline-flex items-center gap-2 px-4 py-1.5 bg-slate-100 rounded-full mb-6"
-          >
-            <span className="w-2 h-2 bg-emerald-500 rounded-full animate-pulse" />
-            <span className="text-sm font-medium text-slate-600">AI-Powered Analysis</span>
-          </motion.div>
-          
-          <motion.h1
-            initial={{ opacity: 0, y: -20 }}
-            animate={{ opacity: 1, y: 0 }}
-            className="text-5xl md:text-6xl font-bold tracking-tight text-slate-900 mb-4"
-          >
-            FitChecker{' '}
-            <span className="bg-gradient-to-r from-indigo-600 via-purple-600 to-pink-600 bg-clip-text text-transparent">
-              AI
-            </span>
-          </motion.h1>
-          <motion.p
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ delay: 0.2 }}
-            className="text-lg text-slate-600 max-w-xl mx-auto"
-          >
-            Fashion analysis that roasts your fit before you buy 🔥
-          </motion.p>
+      <div className="min-h-screen bg-gradient-to-br from-slate-950 via-slate-900 to-slate-950 relative overflow-hidden">
+        {/* Animated Background */}
+        <div className="absolute inset-0 overflow-hidden pointer-events-none">
+          <div className="absolute top-0 left-1/4 w-96 h-96 bg-accent-500/10 rounded-full blur-3xl animate-float" />
+          <div className="absolute bottom-1/4 right-1/4 w-80 h-80 bg-purple-500/10 rounded-full blur-3xl animate-float" style={{ animationDelay: '-2s' }} />
+          <div className="absolute top-1/3 right-1/3 w-64 h-64 bg-blue-500/10 rounded-full blur-3xl animate-float" style={{ animationDelay: '-4s' }} />
         </div>
 
-        <AnimatePresence mode="wait">
-          {!result ? (
-            <motion.div
-              key="form"
-              initial={{ opacity: 0, scale: 0.98 }}
-              animate={{ opacity: 1, scale: 1 }}
-              exit={{ opacity: 0, scale: 0.98 }}
-              className="max-w-2xl mx-auto"
-            >
-              <div className="bg-white rounded-2xl shadow-bento border border-slate-200/60 p-8">
-                <ClothingInputFormV2
-                  onSubmit={handleSubmit}
-                  measurements={measurements}
-                  isLoading={isLoading}
-                />
-              </div>
-            </motion.div>
-          ) : (
-            <motion.div
-              key="results"
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              className="space-y-6"
-            >
-              {/* Score Card - Premium Bento Hero */}
-              <div className="flex justify-center">
-                <motion.div
-                  initial={{ scale: 0.9, opacity: 0 }}
-                  animate={{ scale: 1, opacity: 1 }}
-                  transition={{ type: "spring", stiffness: 200 }}
-                  className="w-full max-w-4xl"
-                >
-                  <div className="bg-white rounded-2xl shadow-bento-hover border border-slate-200/60 p-6 flex items-center justify-between">
-                    <motion.button
-                      whileHover={{ scale: 1.02 }}
-                      whileTap={{ scale: 0.98 }}
-                      onClick={() => setResult(null)}
-                      className="group flex items-center gap-3 px-6 py-3 bg-slate-900 hover:bg-slate-800 text-white font-semibold rounded-full transition-all shadow-lg shadow-slate-900/10"
-                    >
-                      <RotateCcw className="w-5 h-5 group-hover:rotate-180 transition-transform duration-500" />
-                      New Check
-                    </motion.button>
+        {/* Confetti */}
+        {showConfetti && (
+          <Confetti
+            width={windowSize.width}
+            height={windowSize.height}
+            recycle={false}
+            numberOfPieces={300}
+            gravity={0.2}
+            colors={['#10b981', '#6366f1', '#f59e0b', '#ec4899', '#8b5cf6']}
+          />
+        )}
 
-                    <div className="flex items-center gap-6">
-                      <div className="text-right">
-                        <div className="text-xs text-slate-500 uppercase tracking-wider font-semibold mb-1">Your Score</div>
-                        <div className={`text-5xl font-bold tracking-tight ${
-                          result.overall_score >= 80 ? 'text-emerald-600' :
-                          result.overall_score >= 60 ? 'text-amber-600' : 'text-rose-600'
-                        }`}>
-                          {result.overall_score}
-                        </div>
-                      </div>
-                      <div className={`w-20 h-20 rounded-2xl flex items-center justify-center text-3xl border-2 ${
-                        result.overall_score >= 80 ? 'border-emerald-200 bg-emerald-50' :
-                        result.overall_score >= 60 ? 'border-amber-200 bg-amber-50' :
-                        'border-rose-200 bg-rose-50'
-                      }`}>
-                        {result.overall_score >= 80 ? '🔥' : result.overall_score >= 60 ? '👌' : '😬'}
-                      </div>
+        <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+
+          {/* ========== HERO SECTION ========== */}
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="text-center mb-12"
+          >
+            <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-accent-500/10 border border-accent-500/20 mb-6">
+              <Sparkles className="w-4 h-4 text-accent-400" />
+              <span className="text-sm font-medium text-accent-300">AI-Powered Fit Analysis</span>
+            </div>
+
+            <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold mb-4">
+              <span className="text-white">Will It </span>
+              <span className="bg-gradient-to-r from-accent-400 via-purple-400 to-pink-400 bg-clip-text text-transparent">
+                Fit?
+              </span>
+            </h1>
+
+            <p className="text-lg text-slate-300 max-w-2xl mx-auto">
+              Upload any clothing item and get instant AI analysis on how it'll fit your body.
+              No more guessing, no more returns.
+            </p>
+          </motion.div>
+
+          {/* ========== MAIN CONTENT ========== */}
+          <AnimatePresence mode="wait">
+            {!result ? (
+              // ========== FORM STATE ==========
+              <motion.div
+                key="form"
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -20 }}
+                className="max-w-3xl mx-auto"
+              >
+                <div className="bento-card-premium p-8">
+                  <div className="flex items-center gap-3 mb-6">
+                    <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-accent-500 to-purple-500 flex items-center justify-center">
+                      <Target className="w-6 h-6 text-white" />
+                    </div>
+                    <div>
+                      <h2 className="text-xl font-semibold text-white">Fit Check Form</h2>
+                      <p className="text-sm text-slate-300">Enter clothing details for analysis</p>
                     </div>
                   </div>
-                </motion.div>
-              </div>
 
-              {/* Size Recommendation Slider */}
-              {result.size_recommendation && result.all_sizes && Object.keys(result.all_sizes).length > 0 ? (
-                <motion.div
-                  initial={{ y: 20, opacity: 0 }}
-                  animate={{ y: 0, opacity: 1 }}
-                  transition={{ delay: 0.15 }}
-                  className="mb-6"
-                >
+                  <ClothingInputFormV2
+                    onSubmit={handleSubmit}
+                    isLoading={isLoading}
+                    measurements={measurements}
+                  />
+
+                  {/* Loading State */}
+                  {isLoading && (
+                    <motion.div
+                      initial={{ opacity: 0 }}
+                      animate={{ opacity: 1 }}
+                      className="mt-8 flex flex-col items-center justify-center py-12"
+                    >
+                      <div className="relative">
+                        <div className="w-20 h-20 rounded-full border-4 border-accent-500/20" />
+                        <div className="absolute inset-0 w-20 h-20 rounded-full border-4 border-accent-500 border-t-transparent animate-spin" />
+                        <Shirt className="absolute inset-0 m-auto w-8 h-8 text-accent-400" />
+                      </div>
+                      <p className="mt-6 text-lg font-medium text-white">Analyzing your fit...</p>
+                      <p className="text-sm text-slate-400 mt-2">Our AI is measuring every detail</p>
+                    </motion.div>
+                  )}
+                </div>
+
+                {/* Feature Cards */}
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-8">
+                  {[
+                    { icon: Target, title: 'Precise Fit', desc: 'Measurements down to the cm' },
+                    { icon: Palette, title: 'Color Match', desc: 'See how colors complement you' },
+                    { icon: Calendar, title: 'Occasion Ready', desc: 'Style tips for any event' },
+                  ].map((feature, i) => (
+                    <motion.div
+                      key={feature.title}
+                      initial={{ opacity: 0, y: 20 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={{ delay: i * 0.1 }}
+                      className="bento-card p-5 text-center group hover:border-accent-500/30 transition-colors"
+                    >
+                      <div className="w-10 h-10 mx-auto mb-3 rounded-lg bg-accent-500/10 flex items-center justify-center group-hover:bg-accent-500/20 transition-colors">
+                        <feature.icon className="w-5 h-5 text-accent-400" />
+                      </div>
+                      <h3 className="font-medium text-white mb-1">{feature.title}</h3>
+                      <p className="text-sm text-slate-400">{feature.desc}</p>
+                    </motion.div>
+                  ))}
+                </div>
+              </motion.div>
+            ) : (
+              // ========== RESULTS STATE ==========
+              <motion.div
+                key="results"
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -20 }}
+                className="space-y-6"
+              >
+                {/* ===== ROW 1: Header + Roast Card ===== */}
+                <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
+                  {/* Score & Header */}
+                  <div className="lg:col-span-1 bento-card p-5 flex items-center gap-4">
+                    {/* Compact Score Circle */}
+                    {result.overall_score !== undefined && (
+                      <div className="relative flex-shrink-0">
+                        <svg className="w-20 h-20 -rotate-90">
+                          <circle cx="40" cy="40" r="34" fill="none" stroke="currentColor" strokeWidth="6" className="text-slate-700" />
+                          <motion.circle
+                            cx="40" cy="40" r="34" fill="none"
+                            stroke="url(#scoreGradient)" strokeWidth="6" strokeLinecap="round"
+                            initial={{ strokeDasharray: '0 213.6' }}
+                            animate={{ strokeDasharray: `${(result.overall_score / 100) * 213.6} 213.6` }}
+                            transition={{ duration: 1.5, ease: 'easeOut' }}
+                          />
+                          <defs>
+                            <linearGradient id="scoreGradient" x1="0%" y1="0%" x2="100%" y2="0%">
+                              <stop offset="0%" stopColor={result.overall_score >= 70 ? '#10b981' : '#f59e0b'} />
+                              <stop offset="100%" stopColor={result.overall_score >= 70 ? '#34d399' : '#fbbf24'} />
+                            </linearGradient>
+                          </defs>
+                        </svg>
+                        <div className="absolute inset-0 flex flex-col items-center justify-center">
+                          <span className="text-xl font-bold text-white">{result.overall_score}</span>
+                          <span className="text-[10px] text-slate-400">/ 100</span>
+                        </div>
+                      </div>
+                    )}
+                    <div className="flex-1 min-w-0">
+                      <h2 className="text-lg font-bold text-white truncate">
+                        {result.overall_score !== undefined && getScoreLabel(result.overall_score)}
+                      </h2>
+                      <p className="text-sm text-slate-400">Your fit analysis is ready</p>
+                      <motion.button
+                        onClick={handleReset}
+                        whileHover={{ scale: 1.02 }}
+                        whileTap={{ scale: 0.98 }}
+                        className="mt-2 text-xs text-violet-400 hover:text-violet-300 flex items-center gap-1"
+                      >
+                        <RotateCcw className="w-3 h-3" />
+                        Check Another
+                      </motion.button>
+                    </div>
+                  </div>
+
+                  {/* Roast Card - Takes 2 columns */}
+                  {result.roast && (
+                    <div className="lg:col-span-2">
+                      <RoastCard roast={result.roast} garmentType={result.garment_analysis?.garment_type} />
+                    </div>
+                  )}
+                </div>
+
+                {/* ===== ROW 2: Size Slider (Full Width if exists) ===== */}
+                {result.all_sizes && result.size_recommendation && (
                   <SizeRecommendationSlider
                     allSizes={result.all_sizes}
-                    sizeDetails={result.size_recommendation.all_size_details || {}}
+                    sizeDetails={(result.size_recommendation.all_size_details || {}) as any}
                     recommendedSize={result.size_recommendation.recommended_size}
                     recommendedScore={result.size_recommendation.recommended_score}
                     userSelectedSize={result.user_selected_size}
                   />
-                </motion.div>
-              ) : (
-                <div className="bg-amber-50 rounded-2xl border border-amber-200/60 p-4 mb-6">
-                  <p className="text-amber-700 text-sm">
-                    ⚠️ Size recommendation data not available.
-                  </p>
-                </div>
-              )}
+                )}
 
-              {/* Purchase Intent */}
-              {result.check_id !== undefined && result.check_id !== null ? (
-                <motion.div
-                  initial={{ y: 20, opacity: 0 }}
-                  animate={{ y: 0, opacity: 1 }}
-                  transition={{ delay: 0.25 }}
-                  className="mb-6"
-                >
-                  <PurchaseIntent checkId={result.check_id} />
-                </motion.div>
-              ) : (
-                <div className="bg-amber-50 rounded-2xl border border-amber-200/60 p-4 mb-6">
-                  <p className="text-amber-700 text-sm">
-                    ⚠️ Purchase tracking not available.
-                  </p>
-                </div>
-              )}
+                {/* ===== ROW 3: Main Analysis Grid (Bento Style) ===== */}
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                  {/* Fit Meters - Larger card */}
+                  {result.fit_meters && (
+                    <motion.div
+                      initial={{ opacity: 0, y: 15 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={{ delay: 0.1 }}
+                      className="lg:col-span-2 bento-card p-5"
+                    >
+                      <div className="flex items-center gap-2 mb-3">
+                        <div className="w-8 h-8 rounded-lg bg-emerald-500/20 flex items-center justify-center">
+                          <TrendingUp className="w-4 h-4 text-emerald-400" />
+                        </div>
+                        <h3 className="font-semibold text-white">Fit Breakdown</h3>
+                      </div>
+                      <FitMetersDisplay fitMeters={result.fit_meters} />
+                    </motion.div>
+                  )}
 
-              {/* Main Content Grid - Bento */}
-              <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-                {/* Left Column - Metrics */}
-                <motion.div
-                  initial={{ x: -30, opacity: 0 }}
-                  animate={{ x: 0, opacity: 1 }}
-                  transition={{ delay: 0.1 }}
-                >
-                  <div className="bg-white rounded-2xl shadow-bento border border-slate-200/60 overflow-hidden hover:-translate-y-1 hover:shadow-bento-hover transition-all">
-                    <GarmentAnalysisDisplay analysis={result.garment_analysis} />
-                  </div>
-                </motion.div>
+                  {/* Garment Details - Compact card */}
+                  {result.garment_analysis && (
+                    <motion.div
+                      initial={{ opacity: 0, y: 15 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={{ delay: 0.15 }}
+                      className="bento-card p-5"
+                    >
+                      <div className="flex items-center gap-2 mb-3">
+                        <div className="w-8 h-8 rounded-lg bg-purple-500/20 flex items-center justify-center">
+                          <Shirt className="w-4 h-4 text-purple-400" />
+                        </div>
+                        <h3 className="font-semibold text-white">Garment Info</h3>
+                      </div>
+                      <GarmentAnalysisDisplay analysis={result.garment_analysis} />
+                    </motion.div>
+                  )}
 
-                {/* Center Column - Hero Roast */}
-                <motion.div
-                  initial={{ y: 30, opacity: 0 }}
-                  animate={{ y: 0, opacity: 1 }}
-                  transition={{ delay: 0.2 }}
-                  className="lg:col-span-2"
-                >
-                  <div className="bg-white rounded-2xl shadow-bento border border-slate-200/60 overflow-hidden h-full hover:-translate-y-1 hover:shadow-bento-hover transition-all">
-                    <RoastCard roast={result.roast} garmentType={result.garment_analysis.garment_type} />
-                  </div>
-                </motion.div>
-              </div>
+                  {/* Color Analysis */}
+                  {result.color_analysis && (
+                    <motion.div
+                      initial={{ opacity: 0, y: 15 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={{ delay: 0.2 }}
+                      className="bento-card p-5"
+                    >
+                      <div className="flex items-center gap-2 mb-3">
+                        <div className="w-8 h-8 rounded-lg bg-pink-500/20 flex items-center justify-center">
+                          <Palette className="w-4 h-4 text-pink-400" />
+                        </div>
+                        <h3 className="font-semibold text-white">Color Match</h3>
+                      </div>
+                      <ColorMatchDisplay colorAnalysis={result.color_analysis} />
+                    </motion.div>
+                  )}
 
-              {/* Bottom Row - Analysis Cards Bento Grid */}
-              <motion.div
-                initial={{ y: 30, opacity: 0 }}
-                animate={{ y: 0, opacity: 1 }}
-                transition={{ delay: 0.3 }}
-                className="grid grid-cols-1 md:grid-cols-3 gap-6"
-              >
-                <div className="bg-white rounded-2xl shadow-bento border border-slate-200/60 overflow-hidden hover:-translate-y-1 hover:shadow-bento-hover transition-all">
-                  <ColorMatchDisplay colorAnalysis={result.color_analysis} />
+                  {/* Style Tips */}
+                  {result.style_recommendations && (
+                    <motion.div
+                      initial={{ opacity: 0, y: 15 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={{ delay: 0.25 }}
+                      className="bento-card p-5"
+                    >
+                      <div className="flex items-center gap-2 mb-3">
+                        <div className="w-8 h-8 rounded-lg bg-amber-500/20 flex items-center justify-center">
+                          <Star className="w-4 h-4 text-amber-400" />
+                        </div>
+                        <h3 className="font-semibold text-white">Style Tips</h3>
+                      </div>
+                      <StyleRecommendationDisplay styleRecs={result.style_recommendations} />
+                    </motion.div>
+                  )}
+
+                  {/* Occasion Suitability */}
+                  {result.occasion_analysis && (
+                    <motion.div
+                      initial={{ opacity: 0, y: 15 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={{ delay: 0.3 }}
+                      className="bento-card p-5"
+                    >
+                      <div className="flex items-center gap-2 mb-3">
+                        <div className="w-8 h-8 rounded-lg bg-blue-500/20 flex items-center justify-center">
+                          <Calendar className="w-4 h-4 text-blue-400" />
+                        </div>
+                        <h3 className="font-semibold text-white">Occasion Check</h3>
+                      </div>
+                      <OccasionAnalysisDisplay occasionAnalysis={result.occasion_analysis} />
+                    </motion.div>
+                  )}
                 </div>
-                <div className="bg-white rounded-2xl shadow-bento border border-slate-200/60 overflow-hidden hover:-translate-y-1 hover:shadow-bento-hover transition-all">
-                  <StyleRecommendationDisplay styleRecs={result.style_recommendations} />
-                </div>
-                <div className="bg-white rounded-2xl shadow-bento border border-slate-200/60 overflow-hidden hover:-translate-y-1 hover:shadow-bento-hover transition-all">
-                  <OccasionAnalysisDisplay occasionAnalysis={result.occasion_analysis} />
+
+                {/* ===== ROW 4: Purchase Intent + CTA ===== */}
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+                  {/* Purchase Intent */}
+                  {result.check_id && (
+                    <PurchaseIntent checkId={result.check_id} />
+                  )}
+
+                  {/* CTA Button */}
+                  <motion.div
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    transition={{ delay: 0.4 }}
+                    className="flex items-center justify-center lg:justify-end"
+                  >
+                    <button
+                      onClick={handleReset}
+                      className="btn-gradient inline-flex items-center gap-2 px-6 py-3"
+                    >
+                      <Shirt className="w-4 h-4" />
+                      Check Another Item
+                      <ArrowRight className="w-4 h-4" />
+                    </button>
+                  </motion.div>
                 </div>
               </motion.div>
-            </motion.div>
-          )}
-        </AnimatePresence>
+            )}
+          </AnimatePresence>
+        </div>
       </div>
-    </div>
+    </>
   );
 };
+
+export default ClothingFitChecker;

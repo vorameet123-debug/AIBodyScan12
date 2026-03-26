@@ -1,36 +1,60 @@
 import React from 'react';
 import { StyleRecommendationResponse } from '../services/api';
-import { Sparkles } from 'lucide-react';
+import { motion } from 'framer-motion';
+import { Sparkles, Lightbulb } from 'lucide-react';
 
 interface Props { styleRecs: StyleRecommendationResponse; }
 
-const StyleRecommendationDisplay: React.FC<Props> = ({ styleRecs }) => (
-    <div className="bg-white p-5 rounded-2xl shadow-bento border border-slate-200/60 h-full">
-        <h3 className="text-base font-bold text-slate-900 mb-4 flex items-center gap-2">
-            <div className="w-8 h-8 bg-indigo-50 rounded-lg flex items-center justify-center">
-                <Sparkles className="text-indigo-600" size={16} />
+const StyleRecommendationDisplay: React.FC<Props> = ({ styleRecs }) => {
+    const getScoreColor = (score: number) => {
+        if (score >= 70) return { bar: 'bg-violet-500', text: 'text-violet-400' };
+        if (score >= 50) return { bar: 'bg-amber-500', text: 'text-amber-400' };
+        return { bar: 'bg-rose-500', text: 'text-rose-400' };
+    };
+
+    const scoreColors = getScoreColor(styleRecs.style_score);
+
+    return (
+        <div className="space-y-4">
+            {/* Score Section */}
+            <div>
+                <div className="flex justify-between items-center mb-2">
+                    <span className="text-sm font-medium text-slate-300">Style Score</span>
+                    <span className={`text-sm font-bold ${scoreColors.text}`}>{styleRecs.style_score}/100</span>
+                </div>
+                <div className="h-2 bg-slate-700/50 rounded-full overflow-hidden">
+                    <motion.div
+                        initial={{ width: 0 }}
+                        animate={{ width: `${styleRecs.style_score}%` }}
+                        transition={{ duration: 0.8, ease: "easeOut" }}
+                        className={`h-full ${scoreColors.bar} rounded-full`}
+                    />
+                </div>
             </div>
-            Style AI
-        </h3>
-        <div className="mb-4">
-            <div className="flex justify-between items-center mb-2">
-                <span className="text-sm font-medium text-slate-600">Style Score</span>
-                <span className="text-sm font-bold text-slate-900">{styleRecs.style_score}/100</span>
-            </div>
-            <div className="h-2 bg-slate-100 rounded-full overflow-hidden">
-                <div className="h-full bg-indigo-500" style={{ width: `${styleRecs.style_score}%` }}></div>
+
+            {/* Outfit Ideas */}
+            <div>
+                <h4 className="text-xs uppercase text-slate-400 font-semibold tracking-wider mb-3 flex items-center gap-2">
+                    <Lightbulb size={12} className="text-amber-400" />
+                    Outfit Ideas
+                </h4>
+                <ul className="space-y-2">
+                    {styleRecs.outfit_suggestions.map((suggestion: string, idx: number) => (
+                        <motion.li
+                            key={idx}
+                            initial={{ opacity: 0, x: -10 }}
+                            animate={{ opacity: 1, x: 0 }}
+                            transition={{ delay: idx * 0.1 }}
+                            className="text-sm text-slate-200 bg-slate-700/30 p-3 rounded-xl border border-white/5 flex items-start hover:border-violet-500/30 transition-colors"
+                        >
+                            <span className="mr-2 text-violet-400">•</span>
+                            {suggestion}
+                        </motion.li>
+                    ))}
+                </ul>
             </div>
         </div>
+    );
+};
 
-        <h4 className="text-xs text-slate-500 font-medium mb-2">Outfit Ideas:</h4>
-        <ul className="space-y-2">
-            {styleRecs.outfit_suggestions.map((suggestion: string, idx: number) => (
-                <li key={idx} className="text-sm text-slate-700 bg-slate-50 p-2.5 rounded-xl border border-slate-100 flex items-start">
-                    <span className="mr-2 text-indigo-500">•</span>
-                    {suggestion}
-                </li>
-            ))}
-        </ul>
-    </div>
-);
 export default StyleRecommendationDisplay;

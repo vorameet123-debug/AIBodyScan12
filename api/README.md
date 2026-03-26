@@ -121,6 +121,34 @@ response = requests.post(
 print(response.json())
 ```
 
+## Database
+
+The API uses **SQLite** for local development. Database files are auto-created on first run.
+
+### Files (auto-generated, git-ignored)
+| File | Purpose |
+|------|---------|
+| `data.db` | Main application DB (users, fit checks, wardrobe, payments) |
+| `body_measurements.db` | Body measurement history & tracking |
+
+### First-Time Setup
+No manual setup required — databases are created automatically when the server starts.
+Tables are defined via SQLModel and created in `app.py` startup.
+
+### Reset Database
+```bash
+# Delete existing DBs to start fresh
+rm api/data.db api/body_measurements.db
+
+# Restart the server — tables will be recreated
+python app.py
+```
+
+### Production Considerations
+- Migrate to **PostgreSQL** for production deployments
+- Set `DATABASE_URL` environment variable to override SQLite
+- Database files (`.db`) are git-ignored and must not be committed
+
 ## CORS Configuration
 
 The API is configured to allow requests from:

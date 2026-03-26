@@ -1,15 +1,13 @@
-from datetime import datetime, timedelta
-from typing import Optional
 import os
+from datetime import UTC, datetime, timedelta
 
+from db import User, get_session
+from dotenv import load_dotenv
 from fastapi import Depends, HTTPException, Request, status
 from fastapi.security import OAuth2PasswordBearer
 from jose import JWTError, jwt
 from passlib.context import CryptContext
 from sqlmodel import Session, select
-from dotenv import load_dotenv
-
-from db import User, get_session
 
 # Load environment variables
 load_dotenv()
@@ -36,9 +34,9 @@ def get_password_hash(password: str) -> str:
     return pwd_context.hash(password)
 
 
-def create_access_token(data: dict, expires_delta: Optional[timedelta] = None) -> str:
+def create_access_token(data: dict, expires_delta: timedelta | None = None) -> str:
     to_encode = data.copy()
-    expire = datetime.utcnow() + (expires_delta or timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES))
+    expire = datetime.now(UTC) + (expires_delta or timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES))
     to_encode.update({"exp": expire, "type": "access"})
     encoded_jwt = jwt.encode(to_encode, SECRET_KEY, algorithm=ALGORITHM)
     return encoded_jwt
@@ -55,15 +53,16 @@ def create_refresh_token(user_id: int, session: Session) -> str:
     Returns:
         Refresh token string
     """
-    from db import RefreshToken
     import secrets
-    
+
+    from db import RefreshToken
+
     # Generate a secure random token
     token = secrets.token_urlsafe(32)
-    
+
     # Set expiration
-    expires_at = datetime.utcnow() + timedelta(days=REFRESH_TOKEN_EXPIRE_DAYS)
-    
+    expires_at = datetime.now(UTC) + timedelta(days=REFRESH_TOKEN_EXPIRE_DAYS)
+
     # Store in database
     refresh_token = RefreshToken(
         user_id=user_id,
@@ -72,11 +71,11 @@ def create_refresh_token(user_id: int, session: Session) -> str:
     )
     session.add(refresh_token)
     session.commit()
-    
+
     return token
 
 
-def verify_refresh_token(token: str, session: Session) -> Optional[int]:
+def verify_refresh_token(token: str, session: Session) -> int | None:
     """
     Verify a refresh token and return the user ID if valid
     
@@ -88,7 +87,7 @@ def verify_refresh_token(token: str, session: Session) -> Optional[int]:
         User ID if token is valid, None otherwise
     """
     from db import RefreshToken
-    
+
     # Find token in database
     db_token = session.exec(
         select(RefreshToken).where(
@@ -96,14 +95,14 @@ def verify_refresh_token(token: str, session: Session) -> Optional[int]:
             RefreshToken.revoked == False
         )
     ).first()
-    
+
     if not db_token:
         return None
-    
+
     # Check if expired
-    if db_token.expires_at < datetime.utcnow():
+    if db_token.expires_at < datetime.now(UTC):
         return None
-    
+
     return db_token.user_id
 
 
@@ -119,14 +118,14 @@ def revoke_refresh_token(token: str, session: Session) -> bool:
         True if token was revoked, False otherwise
     """
     from db import RefreshToken
-    
+
     db_token = session.exec(
         select(RefreshToken).where(RefreshToken.token == token)
     ).first()
-    
+
     if not db_token:
         return False
-    
+
     db_token.revoked = True
     session.add(db_token)
     session.commit()
@@ -159,7 +158,7 @@ async def get_current_user(
 async def get_current_user_optional(
     request: Request,
     session: Session = Depends(get_session),
-) -> Optional[User]:
+) -> User | None:
     auth_header = request.headers.get("Authorization")
     if not auth_header or not auth_header.lower().startswith("bearer "):
         return None
@@ -173,3 +172,5 @@ async def get_current_user_optional(
         return user
     except JWTError:
         return None
+
+

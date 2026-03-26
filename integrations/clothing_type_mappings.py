@@ -14,7 +14,7 @@ CLOTHING_TYPES = {
     'blazer': {'category': 'tops', 'chart': 'generic_tops', 'primary': 'chest_circumference', 'secondary': 'height'},
     'coat': {'category': 'tops', 'chart': 'generic_tops', 'primary': 'chest_circumference', 'secondary': 'height'},
     'cardigan': {'category': 'tops', 'chart': 'generic_tops', 'primary': 'chest_circumference', 'secondary': 'height'},
-    
+
     # Bottoms
     'jeans': {'category': 'bottoms', 'chart': 'numeric_pants', 'primary': 'waist_circumference', 'secondary': 'inside leg height'},
     'pants': {'category': 'bottoms', 'chart': 'generic_bottoms', 'primary': 'waist_circumference', 'secondary': 'height'},
@@ -22,12 +22,12 @@ CLOTHING_TYPES = {
     'trousers': {'category': 'bottoms', 'chart': 'generic_bottoms', 'primary': 'waist_circumference', 'secondary': 'height'},
     'skirt': {'category': 'bottoms', 'chart': 'generic_bottoms', 'primary': 'waist_circumference', 'secondary': 'height'},
     'leggings': {'category': 'bottoms', 'chart': 'generic_bottoms', 'primary': 'waist_circumference', 'secondary': 'height'},
-    
+
     # Dresses
     'dress': {'category': 'dresses', 'chart': 'dresses', 'primary': 'chest_circumference', 'secondary': 'waist_circumference'},
     'gown': {'category': 'dresses', 'chart': 'dresses', 'primary': 'chest_circumference', 'secondary': 'waist_circumference'},
     'jumpsuit': {'category': 'dresses', 'chart': 'dresses', 'primary': 'chest_circumference', 'secondary': 'waist_circumference'},
-    
+
     # Activewear
     'sports top': {'category': 'tops', 'chart': 'generic_tops', 'primary': 'chest_circumference', 'secondary': 'height'},
     'athletic shorts': {'category': 'bottoms', 'chart': 'generic_bottoms', 'primary': 'waist_circumference', 'secondary': 'height'},
@@ -41,6 +41,7 @@ OCCASIONS = ['Casual', 'Formal', 'Sports', 'Party', 'Business', 'Wedding', 'Beac
 
 # Materials
 MATERIALS = [
-    'Cotton', 'Polyester', 'Wool', 'Linen', 'Silk', 'Denim', 
+    'Cotton', 'Polyester', 'Wool', 'Linen', 'Silk', 'Denim',
     'Spandex', 'Nylon', 'Rayon', 'Viscose', 'Leather', 'Synthetic Blend'
 ]
+

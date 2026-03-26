@@ -1,0 +1,21 @@
+# AIBodyScan Robots.txt
+# https://aibodyscan.com/robots.txt
+
+User-agent: *
+Allow: /
+
+# Disallow private areas
+Disallow: /api/
+Disallow: /dashboard/
+Disallow: /profile/
+Disallow: /settings/
+Disallow: /admin/
+
+# Disallow auth pages from indexing
+Disallow: /auth/callback
+
+# Sitemap location
+Sitemap: https://aibodyscan.com/sitemap.xml
+
+# Crawl delay (be nice to our servers)
+Crawl-delay: 1

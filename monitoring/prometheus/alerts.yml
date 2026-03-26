@@ -1,0 +1,142 @@
+# Prometheus Alert Rules for AIBodyScan
+
+groups:
+  - name: aibodyscan-api-alerts
+    rules:
+      # High Error Rate (>5% for 5 minutes)
+      - alert: HighErrorRate
+        expr: |
+          sum(rate(http_requests_total{status_code=~"5.."}[5m])) 
+          / sum(rate(http_requests_total[5m])) > 0.05
+        for: 5m
+        labels:
+          severity: critical
+          service: aibodyscan-api
+        annotations:
+          summary: "High error rate detected ({{ $value | humanizePercentage }})"
+          description: "Error rate is above 5% for the last 5 minutes. Current rate: {{ $value | humanizePercentage }}"
+          runbook_url: "https://docs.aibodyscan.com/runbooks/high-error-rate"
+
+      # Very High Error Rate (>10% for 2 minutes) - P1
+      - alert: CriticalErrorRate
+        expr: |
+          sum(rate(http_requests_total{status_code=~"5.."}[2m])) 
+          / sum(rate(http_requests_total[2m])) > 0.10
+        for: 2m
+        labels:
+          severity: critical
+          priority: P1
+          service: aibodyscan-api
+        annotations:
+          summary: "Critical error rate - immediate action required"
+          description: "Error rate is above 10%. Service may be down."
+
+      # Slow Response Time (p95 > 2s)
+      - alert: SlowResponseTime
+        expr: |
+          histogram_quantile(0.95, 
+            sum(rate(http_request_duration_seconds_bucket[5m])) by (le)
+          ) > 2
+        for: 5m
+        labels:
+          severity: warning
+          service: aibodyscan-api
+        annotations:
+          summary: "Slow response times detected"
+          description: "95th percentile response time is above 2 seconds. Current: {{ $value | humanizeDuration }}"
+
+      # High Request Latency per endpoint
+      - alert: EndpointSlowdown
+        expr: |
+          histogram_quantile(0.95, 
+            sum(rate(http_request_duration_seconds_bucket[5m])) by (le, endpoint)
+          ) > 3
+        for: 5m
+        labels:
+          severity: warning
+          service: aibodyscan-api
+        annotations:
+          summary: "Endpoint {{ $labels.endpoint }} is slow"
+          description: "Endpoint {{ $labels.endpoint }} has p95 latency above 3s"
+
+      # No requests received
+      - alert: NoTraffic
+        expr: sum(rate(http_requests_total[5m])) == 0
+        for: 5m
+        labels:
+          severity: warning
+          service: aibodyscan-api
+        annotations:
+          summary: "No traffic to API"
+          description: "No HTTP requests received in the last 5 minutes"
+
+  - name: aibodyscan-database-alerts
+    rules:
+      # High Database Latency
+      - alert: HighDatabaseLatency
+        expr: |
+          histogram_quantile(0.95, 
+            sum(rate(db_query_duration_seconds_bucket[5m])) by (le)
+          ) > 0.5
+        for: 5m
+        labels:
+          severity: warning
+          service: aibodyscan-db
+        annotations:
+          summary: "High database latency"
+          description: "Database query latency (p95) is above 500ms. Current: {{ $value | humanizeDuration }}"
+
+      # Database query errors (if tracked)
+      - alert: DatabaseErrors
+        expr: rate(db_queries_total{status="error"}[5m]) > 0.1
+        for: 5m
+        labels:
+          severity: warning
+          service: aibodyscan-db
+        annotations:
+          summary: "Database query errors detected"
+          description: "Database is returning errors"
+
+  - name: aibodyscan-cache-alerts
+    rules:
+      # Low Cache Hit Rate
+      - alert: LowCacheHitRate
+        expr: |
+          sum(rate(cache_hits_total[10m])) 
+          / (sum(rate(cache_hits_total[10m])) + sum(rate(cache_misses_total[10m]))) < 0.7
+        for: 10m
+        labels:
+          severity: warning
+          service: aibodyscan-cache
+        annotations:
+          summary: "Low cache hit rate"
+          description: "Cache hit rate is below 70%. Current: {{ $value | humanizePercentage }}"
+
+  - name: aibodyscan-business-alerts
+    rules:
+      # Payment Failures
+      - alert: PaymentFailures
+        expr: |
+          sum(rate(payment_transactions_total{status="failure"}[1h])) 
+          / sum(rate(payment_transactions_total[1h])) > 0.1
+        for: 10m
+        labels:
+          severity: critical
+          priority: P1
+          service: aibodyscan-payments
+        annotations:
+          summary: "High payment failure rate"
+          description: "More than 10% of payments are failing. Investigate immediately."
+
+      # Drop in Body Scans
+      - alert: BodyScanDropoff
+        expr: |
+          sum(rate(body_scans_processed_total[1h])) 
+          < sum(rate(body_scans_processed_total[1h] offset 1d)) * 0.5
+        for: 30m
+        labels:
+          severity: warning
+          service: aibodyscan-api
+        annotations:
+          summary: "Significant drop in body scan usage"
+          description: "Body scan rate is less than 50% of yesterday's rate"

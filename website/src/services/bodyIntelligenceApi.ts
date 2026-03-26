@@ -2,8 +2,10 @@
  * Body Intelligence TypeScript Interfaces and API Methods
  */
 import axios from 'axios';
+import { API_BASE_URL } from '../config/apiConfig';
 
-const API_BASE_URL = process.env.REACT_APP_API_URL || 'http://localhost:8000';
+// Configure axios to skip ngrok browser warning
+axios.defaults.headers.common['ngrok-skip-browser-warning'] = 'true';
 
 // Interfaces
 export interface MeasurementPoint {
@@ -24,6 +26,12 @@ export interface TrendData {
     latest: number;
     oldest: number;
 }
+
+export type SizeData = string | {
+    recommended_size?: string;
+    size?: string;
+    [key: string]: string | number | undefined;
+};
 
 export interface TrendsResponse {
     period: string;
@@ -80,8 +88,8 @@ export interface TrendVelocity {
 }
 
 export interface SizeChange {
-    before: string | { recommended_size?: string; size?: string; [key: string]: any };
-    after: string | { recommended_size?: string; size?: string; [key: string]: any };
+    before: SizeData;
+    after: SizeData;
     changed: boolean;
     date?: string;
 }

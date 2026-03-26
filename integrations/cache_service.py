@@ -2,10 +2,10 @@
 Redis Cache Service
 Provides caching layer for expensive operations like AI trend analysis
 """
-import json
 import hashlib
-from typing import Optional, Any
-from datetime import timedelta
+import json
+from typing import Any
+
 from loguru import logger
 
 try:
@@ -18,7 +18,7 @@ except ImportError:
 
 class CacheService:
     """Simple cache service with Redis backend"""
-    
+
     def __init__(self, host: str = 'localhost', port: int = 6379, db: int = 0):
         """
         Initialize cache service
@@ -30,7 +30,7 @@ class CacheService:
         """
         self.enabled = REDIS_AVAILABLE
         self.client = None
-        
+
         if self.enabled:
             try:
                 self.client = redis.Redis(
@@ -48,7 +48,7 @@ class CacheService:
                 logger.warning(f"Redis connection failed: {e}. Caching disabled.")
                 self.enabled = False
                 self.client = None
-    
+
     def _generate_key(self, prefix: str, *args, **kwargs) -> str:
         """
         Generate a cache key from prefix and arguments
@@ -69,8 +69,8 @@ class CacheService:
         key_str = json.dumps(key_data, sort_keys=True)
         key_hash = hashlib.md5(key_str.encode()).hexdigest()[:12]
         return f"{prefix}:{key_hash}"
-    
-    def get(self, key: str) -> Optional[Any]:
+
+    def get(self, key: str) -> Any | None:
         """
         Get value from cache
         
@@ -82,7 +82,7 @@ class CacheService:
         """
         if not self.enabled or not self.client:
             return None
-        
+
         try:
             value = self.client.get(key)
             if value:
@@ -93,7 +93,7 @@ class CacheService:
         except Exception as e:
             logger.error(f"Cache get error: {e}")
             return None
-    
+
     def set(self, key: str, value: Any, ttl_seconds: int = 43200) -> bool:
         """
         Set value in cache
@@ -108,7 +108,7 @@ class CacheService:
         """
         if not self.enabled or not self.client:
             return False
-        
+
         try:
             value_str = json.dumps(value)
             self.client.setex(key, ttl_seconds, value_str)
@@ -117,7 +117,7 @@ class CacheService:
         except Exception as e:
             logger.error(f"Cache set error: {e}")
             return False
-    
+
     def delete(self, key: str) -> bool:
         """
         Delete value from cache
@@ -130,7 +130,7 @@ class CacheService:
         """
         if not self.enabled or not self.client:
             return False
-        
+
         try:
             self.client.delete(key)
             logger.debug(f"Cache DELETE: {key}")
@@ -138,7 +138,7 @@ class CacheService:
         except Exception as e:
             logger.error(f"Cache delete error: {e}")
             return False
-    
+
     def clear_pattern(self, pattern: str) -> int:
         """
         Clear all keys matching a pattern
@@ -151,7 +151,7 @@ class CacheService:
         """
         if not self.enabled or not self.client:
             return 0
-        
+
         try:
             keys = self.client.keys(pattern)
             if keys:
@@ -174,3 +174,73 @@ def get_cache() -> CacheService:
     if _cache_instance is None:
         _cache_instance = CacheService()
     return _cache_instance
+
+
+def cached(prefix: str, ttl_seconds: int = 3600):
+    """
+    Decorator for caching function results.
+    
+    Usage:
+        @cached("user_analytics", ttl_seconds=1800)
+        async def get_user_analytics(user_id: int):
+            ...
+    
+    Args:
+        prefix: Cache key prefix
+        ttl_seconds: Time to live in seconds
+    """
+    import functools
+    
+    def decorator(func):
+        @functools.wraps(func)
+        async def async_wrapper(*args, **kwargs):
+            cache = get_cache()
+            cache_key = cache._generate_key(prefix, *args, **kwargs)
+            
+            # Try to get from cache
+            cached_result = cache.get(cache_key)
+            if cached_result is not None:
+                return cached_result
+            
+            # Execute function and cache result
+            result = await func(*args, **kwargs)
+            cache.set(cache_key, result, ttl_seconds)
+            return result
+        
+        @functools.wraps(func)
+        def sync_wrapper(*args, **kwargs):
+            cache = get_cache()
+            cache_key = cache._generate_key(prefix, *args, **kwargs)
+            
+            # Try to get from cache
+            cached_result = cache.get(cache_key)
+            if cached_result is not None:
+                return cached_result
+            
+            # Execute function and cache result
+            result = func(*args, **kwargs)
+            cache.set(cache_key, result, ttl_seconds)
+            return result
+        
+        # Return appropriate wrapper based on function type
+        import asyncio
+        if asyncio.iscoroutinefunction(func):
+            return async_wrapper
+        return sync_wrapper
+    
+    return decorator
+
+
+def invalidate_cache(prefix: str) -> int:
+    """
+    Invalidate all cache entries matching a prefix.
+    
+    Args:
+        prefix: Cache key prefix pattern (e.g., 'user_analytics')
+    
+    Returns:
+        Number of keys deleted
+    """
+    cache = get_cache()
+    return cache.clear_pattern(f"{prefix}:*")
+

@@ -20,19 +20,18 @@ if str(API_DIR) not in sys.path:
 # Now import and run app
 if __name__ == "__main__":
     # Import app after path is set
-    from app import app
     import uvicorn
-    
+
     print("=" * 60)
     print("Fashion Intelligence API")
     print("=" * 60)
     print(f"Python: {sys.executable}")
     print(f"Working Directory: {os.getcwd()}")
-    print(f"API will be available at: http://localhost:8000")
-    print(f"API docs at: http://localhost:8000/docs")
+    print("API will be available at: http://localhost:8000")
+    print("API docs at: http://localhost:8000/docs")
     print("=" * 60)
     print()
-    
+
     uvicorn.run(
         "app:app",
         host="0.0.0.0",
@@ -40,3 +39,4 @@ if __name__ == "__main__":
         reload=True,
         log_level="info"
     )
+

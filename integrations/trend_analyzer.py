@@ -4,20 +4,21 @@ Analyzes fit check data to detect trending items, styles, and colors
 Uses real user data to identify what's actually trending
 Also integrates external trend analysis from Groq AI
 """
-from datetime import datetime, timedelta
-from typing import Dict, List, Optional, Any
 from collections import Counter
-from sqlmodel import Session, select, func
-from fashion_iq_models import FitCheckHistory, ExternalTrend
+from datetime import datetime, timedelta
+from typing import Any
+
+from fashion_iq_models import ExternalTrend, FitCheckHistory
 from loguru import logger
+from sqlmodel import Session, func, select
 
 
 class TrendAnalyzer:
     """Analyzes trends in fit check data"""
-    
+
     def __init__(self, session: Session):
         self.session = session
-    
+
     def is_item_trending(self, garment_type: str, days: int = 7, threshold: float = 20.0) -> bool:
         """
         Check if an item type is currently trending
@@ -33,7 +34,7 @@ class TrendAnalyzer:
         try:
             cutoff = datetime.utcnow() - timedelta(days=days)
             previous_cutoff = datetime.utcnow() - timedelta(days=days * 2)
-            
+
             # Count checks in current period
             current_count = self.session.exec(
                 select(func.count(FitCheckHistory.id))
@@ -42,7 +43,7 @@ class TrendAnalyzer:
                     FitCheckHistory.checked_at >= cutoff
                 )
             ).one() or 0
-            
+
             # Count checks in previous period
             previous_count = self.session.exec(
                 select(func.count(FitCheckHistory.id))
@@ -52,24 +53,24 @@ class TrendAnalyzer:
                     FitCheckHistory.checked_at < cutoff
                 )
             ).one() or 0
-            
+
             # If no previous data, consider it trending if 3+ checks in current period
             if previous_count == 0:
                 return current_count >= 3
-            
+
             # Calculate velocity
             velocity = ((current_count - previous_count) / previous_count) * 100 if previous_count > 0 else 0
-            
+
             is_trending = velocity >= threshold
             logger.debug(f"Trend check: {garment_type} - current={current_count}, previous={previous_count}, velocity={velocity:.1f}%, trending={is_trending}")
-            
+
             return is_trending
-            
+
         except Exception as e:
             logger.error(f"Error checking if item is trending: {e}")
             return False
-    
-    def detect_trending_items(self, days: int = 7, min_velocity: float = 20.0) -> List[Dict]:
+
+    def detect_trending_items(self, days: int = 7, min_velocity: float = 20.0) -> list[dict]:
         """
         Detect all currently trending items
         
@@ -83,13 +84,13 @@ class TrendAnalyzer:
         try:
             cutoff = datetime.utcnow() - timedelta(days=days)
             previous_cutoff = datetime.utcnow() - timedelta(days=days * 2)
-            
+
             # Get all checks in current period
             current_checks = self.session.exec(
                 select(FitCheckHistory)
                 .where(FitCheckHistory.checked_at >= cutoff)
             ).all()
-            
+
             # Get all checks in previous period
             previous_checks = self.session.exec(
                 select(FitCheckHistory)
@@ -98,22 +99,22 @@ class TrendAnalyzer:
                     FitCheckHistory.checked_at < cutoff
                 )
             ).all()
-            
+
             # Count by garment type
             current_counts = Counter(c.garment_type for c in current_checks)
             previous_counts = Counter(c.garment_type for c in previous_checks)
-            
+
             trending = []
             for garment_type, current_count in current_counts.items():
                 previous_count = previous_counts.get(garment_type, 0)
-                
+
                 # Calculate velocity
                 if previous_count > 0:
                     velocity = ((current_count - previous_count) / previous_count) * 100
                 else:
                     # New trend if 3+ checks and no previous data
                     velocity = 100 if current_count >= 3 else 0
-                
+
                 if velocity >= min_velocity or (previous_count == 0 and current_count >= 3):
                     trending.append({
                         'item': garment_type,
@@ -123,18 +124,18 @@ class TrendAnalyzer:
                         'trend': 'rising' if velocity > 0 else 'stable',
                         'change': current_count - previous_count
                     })
-            
+
             # Sort by velocity (highest first)
             trending.sort(key=lambda x: x['velocity'], reverse=True)
-            
+
             logger.info(f"Detected {len(trending)} trending items in last {days} days")
             return trending
-            
+
         except Exception as e:
             logger.error(f"Error detecting trending items: {e}")
             return []
-    
-    def detect_style_trends(self, days: int = 30) -> Dict:
+
+    def detect_style_trends(self, days: int = 30) -> dict:
         """
         Detect trending styles and colors
         
@@ -146,27 +147,27 @@ class TrendAnalyzer:
         """
         try:
             cutoff = datetime.utcnow() - timedelta(days=days)
-            
+
             checks = self.session.exec(
                 select(FitCheckHistory)
                 .where(FitCheckHistory.checked_at >= cutoff)
             ).all()
-            
+
             style_counts = Counter(c.style for c in checks if c.style and c.style != 'unknown')
             color_counts = Counter(c.color for c in checks if c.color and c.color != 'unknown')
-            
+
             return {
                 'trending_styles': dict(style_counts.most_common(5)),
                 'trending_colors': dict(color_counts.most_common(5)),
                 'total_checks': len(checks),
                 'period_days': days
             }
-            
+
         except Exception as e:
             logger.error(f"Error detecting style trends: {e}")
             return {'trending_styles': {}, 'trending_colors': {}, 'total_checks': 0, 'period_days': days}
-    
-    def calculate_trend_alignment(self, user_id: int, days: int = 7) -> Dict:
+
+    def calculate_trend_alignment(self, user_id: int, days: int = 7) -> dict:
         """
         Calculate how aligned a user is with current trends
         
@@ -181,7 +182,7 @@ class TrendAnalyzer:
             # Get current trending items
             trending_items = self.detect_trending_items(days=days)
             trending_types = {t['item'] for t in trending_items}
-            
+
             if not trending_types:
                 return {
                     'alignment_score': 0,
@@ -191,7 +192,7 @@ class TrendAnalyzer:
                     'total_trending': 0,
                     'user_checked': 0
                 }
-            
+
             # Get user's recent checks
             cutoff = datetime.utcnow() - timedelta(days=30)
             user_checks = self.session.exec(
@@ -201,13 +202,13 @@ class TrendAnalyzer:
                     FitCheckHistory.checked_at >= cutoff
                 )
             ).all()
-            
+
             user_types = {c.garment_type for c in user_checks}
-            
+
             # Calculate alignment
             aligned_items = trending_types.intersection(user_types)
             alignment_score = (len(aligned_items) / len(trending_types)) * 100 if trending_types else 0
-            
+
             return {
                 'alignment_score': round(alignment_score, 1),
                 'trending_items_checked': list(aligned_items),
@@ -216,19 +217,19 @@ class TrendAnalyzer:
                 'user_checked': len(aligned_items),
                 'user_total_checks': len(user_checks)
             }
-            
+
         except Exception as e:
             logger.error(f"Error calculating trend alignment: {e}")
             return {
                 'alignment_score': 0,
-                'message': f'Error calculating alignment: {str(e)}',
+                'message': f'Error calculating alignment: {e!s}',
                 'trending_items_checked': [],
                 'trending_items_missed': [],
                 'total_trending': 0,
                 'user_checked': 0
             }
-    
-    def forecast_trends(self, days: int = 7) -> List[Dict]:
+
+    def forecast_trends(self, days: int = 7) -> list[dict]:
         """
         Forecast trends based on acceleration
         
@@ -241,11 +242,11 @@ class TrendAnalyzer:
         try:
             # Get trends for current period
             current_trends = self.detect_trending_items(days=days)
-            
+
             # Get trends for previous period (for comparison)
             previous_cutoff = datetime.utcnow() - timedelta(days=days * 2)
             previous_previous_cutoff = datetime.utcnow() - timedelta(days=days * 3)
-            
+
             previous_checks = self.session.exec(
                 select(FitCheckHistory)
                 .where(
@@ -253,7 +254,7 @@ class TrendAnalyzer:
                     FitCheckHistory.checked_at < previous_cutoff
                 )
             ).all()
-            
+
             previous_previous_checks = self.session.exec(
                 select(FitCheckHistory)
                 .where(
@@ -261,27 +262,27 @@ class TrendAnalyzer:
                     FitCheckHistory.checked_at < previous_previous_cutoff
                 )
             ).all()
-            
+
             previous_counts = Counter(c.garment_type for c in previous_checks)
             previous_previous_counts = Counter(c.garment_type for c in previous_previous_checks)
-            
+
             forecasts = []
             for current in current_trends:
                 item = current['item']
                 current_velocity = current['velocity']
-                
+
                 # Calculate previous velocity
                 prev_count = previous_counts.get(item, 0)
                 prev_prev_count = previous_previous_counts.get(item, 0)
-                
+
                 if prev_prev_count > 0:
                     previous_velocity = ((prev_count - prev_prev_count) / prev_prev_count) * 100
                 else:
                     previous_velocity = 100 if prev_count >= 3 else 0
-                
+
                 # Calculate acceleration
                 acceleration = current_velocity - previous_velocity
-                
+
                 if abs(acceleration) > 10:  # Significant acceleration
                     forecasts.append({
                         'item': item,
@@ -291,17 +292,17 @@ class TrendAnalyzer:
                         'forecast': 'rising' if acceleration > 0 else 'falling',
                         'confidence': min(abs(acceleration) / 50, 1.0)  # 0-1
                     })
-            
+
             # Sort by acceleration
             forecasts.sort(key=lambda x: abs(x['acceleration']), reverse=True)
-            
+
             return forecasts
-            
+
         except Exception as e:
             logger.error(f"Error forecasting trends: {e}")
             return []
-    
-    def get_external_trends(self, days: int = 7) -> Dict[str, Any]:
+
+    def get_external_trends(self, days: int = 7) -> dict[str, Any]:
         """
         Get external trends from AI analysis (stored in database)
         
@@ -312,18 +313,15 @@ class TrendAnalyzer:
             Dictionary with external trends
         """
         try:
-            cutoff = datetime.utcnow() - timedelta(days=days)
-            
-            # Get active external trends
+            # Get active external trends - order by popularity, no date filter
+            # (trends stay valid until expires_at, not just for `days` window)
             trends = self.session.exec(
                 select(ExternalTrend)
-                .where(
-                    ExternalTrend.is_active == True,
-                    ExternalTrend.created_at >= cutoff
-                )
+                .where(ExternalTrend.is_active == True)
                 .order_by(ExternalTrend.popularity_score.desc())
+                .limit(50)
             ).all()
-            
+
             # Group by trend type
             result = {
                 "trending_items": [],
@@ -334,8 +332,15 @@ class TrendAnalyzer:
                 "source": "external_ai",
                 "total_trends": len(trends)
             }
-            
+
+            # Deduplicate by trend_name (keep highest popularity_score)
+            seen_names: dict[str, bool] = {}
             for trend in trends:
+                key = f"{trend.trend_type}:{trend.trend_name.lower()}"
+                if key in seen_names:
+                    continue
+                seen_names[key] = True
+
                 trend_entry = {
                     "name": trend.trend_name,
                     "popularity_score": trend.popularity_score,
@@ -344,7 +349,7 @@ class TrendAnalyzer:
                     "data": trend.trend_data,
                     "source": trend.source
                 }
-                
+
                 if trend.trend_type == "item":
                     result["trending_items"].append(trend_entry)
                 elif trend.trend_type == "color":
@@ -355,9 +360,9 @@ class TrendAnalyzer:
                     result["trending_patterns"].append(trend_entry)
                 elif trend.trend_type == "material":
                     result["trending_materials"].append(trend_entry)
-            
+
             return result
-            
+
         except Exception as e:
             logger.error(f"Error getting external trends: {e}")
             return {
@@ -370,8 +375,8 @@ class TrendAnalyzer:
                 "total_trends": 0,
                 "error": str(e)
             }
-    
-    def get_combined_trends(self, days: int = 7) -> Dict[str, Any]:
+
+    def get_combined_trends(self, days: int = 7) -> dict[str, Any]:
         """
         Get combined internal and external trends
         
@@ -384,10 +389,10 @@ class TrendAnalyzer:
         try:
             # Get internal trends
             internal_trends = self.detect_trending_items(days=days)
-            
+
             # Get external trends
             external_trends = self.get_external_trends(days=days)
-            
+
             # Combine results
             return {
                 "internal_trends": {
@@ -399,40 +404,42 @@ class TrendAnalyzer:
                 "combined_insights": self._generate_combined_insights(internal_trends, external_trends),
                 "analysis_date": datetime.utcnow().isoformat()
             }
-            
+
         except Exception as e:
             logger.error(f"Error getting combined trends: {e}")
             return {"error": str(e)}
-    
+
     def _generate_combined_insights(
         self,
-        internal_trends: List[Dict],
-        external_trends: Dict[str, Any]
-    ) -> List[str]:
+        internal_trends: list[dict],
+        external_trends: dict[str, Any]
+    ) -> list[str]:
         """Generate insights by combining internal and external trends"""
         insights = []
-        
+
         # Get internal item names
         internal_items = {t["item"].lower() for t in internal_trends}
-        
+
         # Get external item names
         external_items = {
             item["name"].lower()
             for item in external_trends.get("trending_items", [])
         }
-        
+
         # Find matches
         matches = internal_items.intersection(external_items)
         if matches:
             insights.append(
                 f"🔥 {len(matches)} items are trending both on our platform AND externally: {', '.join(list(matches)[:3])}"
             )
-        
+
         # Find external trends not yet checked
         external_only = external_items - internal_items
         if external_only:
             insights.append(
                 f"💡 {len(external_only)} trending items haven't been checked yet on our platform"
             )
-        
+
         return insights
+
+

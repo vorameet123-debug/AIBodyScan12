@@ -2,7 +2,7 @@
 Brand Size Charts Database
 Stores brand-specific size charts and fit characteristics
 """
-from typing import Dict, Optional
+
 from loguru import logger
 
 
@@ -10,7 +10,7 @@ class BrandSizeCharts:
     """
     Database of brand-specific size charts and fit characteristics
     """
-    
+
     def __init__(self):
         """Initialize brand size charts"""
         self.brand_fits = {
@@ -76,8 +76,8 @@ class BrandSizeCharts:
             }
         }
         logger.info("BrandSizeCharts initialized")
-    
-    def get_brand_fit_info(self, brand: str) -> Optional[Dict]:
+
+    def get_brand_fit_info(self, brand: str) -> dict | None:
         """
         Get fit information for a brand
         
@@ -88,18 +88,18 @@ class BrandSizeCharts:
             Dictionary with brand fit information or None if not found
         """
         brand_lower = brand.lower().strip()
-        
+
         # Try exact match
         if brand_lower in self.brand_fits:
             return self.brand_fits[brand_lower]
-        
+
         # Try partial match (e.g., "Nike Air" -> "nike")
         for brand_key, fit_info in self.brand_fits.items():
             if brand_key in brand_lower or brand_lower in brand_key:
                 return fit_info
-        
+
         return None
-    
+
     def get_size_adjustment(self, brand: str) -> float:
         """
         Get size adjustment in cm for a brand
@@ -114,7 +114,7 @@ class BrandSizeCharts:
         if fit_info:
             return fit_info.get('adjustment_cm', 0)
         return 0
-    
+
     def add_brand(self, brand: str, runs: str, adjustment_cm: float, description: str = None):
         """
         Add or update brand fit information
@@ -133,3 +133,4 @@ class BrandSizeCharts:
             'size_chart': 'standard'
         }
         logger.info(f"Added/updated brand fit info for {brand}")
+

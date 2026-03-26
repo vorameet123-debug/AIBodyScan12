@@ -10,7 +10,8 @@ import {
     Target,
     ChevronLeft,
     ChevronRight,
-    LayoutDashboard
+    LayoutDashboard,
+    Clock
 } from 'lucide-react';
 
 export type WardrobeSection =
@@ -18,6 +19,7 @@ export type WardrobeSection =
     | 'items'
     | 'colors'
     | 'analytics'
+    | 'history'
     | 'trending'
     | 'foryou';
 
@@ -44,25 +46,25 @@ const SidebarItem: React.FC<SidebarItemProps> = ({
             whileTap={{ scale: 0.98 }}
             onClick={() => onClick(id)}
             className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl transition-all duration-200 group relative ${active
-                ? 'bg-slate-900 text-white'
-                : 'text-slate-600 hover:bg-slate-100 hover:text-slate-900'
+                ? 'bg-gradient-to-r from-accent-500/20 to-purple-500/20 text-white border border-accent-500/30'
+                : 'text-slate-400 hover:bg-slate-800/50 hover:text-white'
                 }`}
         >
-            <Icon size={18} className={active ? 'text-white' : 'text-slate-400 group-hover:text-indigo-500'} />
+            <Icon size={18} className={active ? 'text-accent-400' : 'text-slate-500 group-hover:text-accent-400'} />
             {!collapsed && (
                 <span className="font-medium text-sm whitespace-nowrap overflow-hidden transition-all duration-300">
                     {label}
                 </span>
             )}
             {collapsed && (
-                <div className="absolute left-14 bg-slate-900 text-white px-2 py-1 rounded-lg text-xs opacity-0 group-hover:opacity-100 pointer-events-none transition-opacity z-50 whitespace-nowrap shadow-lg">
+                <div className="absolute left-14 bg-slate-800 text-white px-2 py-1 rounded-lg text-xs opacity-0 group-hover:opacity-100 pointer-events-none transition-opacity z-50 whitespace-nowrap shadow-lg border border-slate-700">
                     {label}
                 </div>
             )}
             {active && !collapsed && (
                 <motion.div
                     layoutId="activePill"
-                    className="absolute right-3 w-1.5 h-1.5 rounded-full bg-indigo-400"
+                    className="absolute right-3 w-1.5 h-1.5 rounded-full bg-accent-400"
                 />
             )}
         </motion.button>
@@ -89,7 +91,8 @@ export const WardrobeSidebar: React.FC<WardrobeSidebarProps> = ({
                 { id: 'overview' as const, label: 'Overview', icon: LayoutDashboard },
                 { id: 'items' as const, label: 'My Items', icon: ShoppingBag },
                 { id: 'colors' as const, label: 'Color Palette', icon: Palette },
-                { id: 'analytics' as const, label: 'Analytics', icon: BarChart3 }
+                { id: 'analytics' as const, label: 'Analytics', icon: BarChart3 },
+                { id: 'history' as const, label: 'Activity History', icon: Clock }
             ]
         },
         {
@@ -104,21 +107,21 @@ export const WardrobeSidebar: React.FC<WardrobeSidebarProps> = ({
     return (
         <motion.aside
             animate={{ width: collapsed ? 72 : 240 }}
-            className="h-full bg-white border-r border-slate-200/60 flex flex-col p-3 shadow-bento z-20"
+            className="sticky top-0 h-screen bg-slate-900/80 backdrop-blur-xl border-r border-slate-800/50 flex flex-col p-3 z-20"
         >
             <div className="flex items-center justify-between mb-6 px-1">
                 {!collapsed && (
                     <motion.h2
                         initial={{ opacity: 0 }}
                         animate={{ opacity: 1 }}
-                        className="text-[10px] font-semibold tracking-wider text-slate-400 uppercase"
+                        className="text-[10px] font-semibold tracking-wider text-slate-500 uppercase"
                     >
                         Dashboard
                     </motion.h2>
                 )}
                 <button
                     onClick={onToggleCollapse}
-                    className="p-1.5 rounded-lg bg-slate-50 text-slate-400 hover:text-indigo-600 hover:bg-indigo-50 transition-colors"
+                    className="p-1.5 rounded-lg bg-slate-800/50 text-slate-500 hover:text-accent-400 hover:bg-slate-800 transition-colors"
                 >
                     {collapsed ? <ChevronRight size={16} /> : <ChevronLeft size={16} />}
                 </button>
@@ -128,7 +131,7 @@ export const WardrobeSidebar: React.FC<WardrobeSidebarProps> = ({
                 {groups.map((group) => (
                     <div key={group.title} className="flex flex-col gap-1">
                         {!collapsed && (
-                            <h3 className="text-[10px] font-semibold text-slate-400 px-3 mb-2 tracking-wide">
+                            <h3 className="text-[10px] font-semibold text-slate-600 px-3 mb-2 tracking-wide">
                                 {group.title}
                             </h3>
                         )}

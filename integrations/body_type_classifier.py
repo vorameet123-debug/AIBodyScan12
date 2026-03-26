@@ -2,7 +2,7 @@
 Body Type Classification
 Classifies body type from measurements for style recommendations
 """
-from typing import Dict, Optional
+
 from loguru import logger
 
 
@@ -10,12 +10,12 @@ class BodyTypeClassifier:
     """
     Classifies body type based on measurements
     """
-    
+
     def __init__(self):
         """Initialize body type classifier"""
         logger.info("BodyTypeClassifier initialized")
-    
-    def classify(self, measurements: Dict[str, float], gender: Optional[str] = None) -> Dict:
+
+    def classify(self, measurements: dict[str, float], gender: str | None = None) -> dict:
         """
         Classify body type from measurements
         
@@ -32,21 +32,21 @@ class BodyTypeClassifier:
             hip = measurements.get('hip_circumference', 0)
             chest = measurements.get('chest_circumference', 0)
             shoulder = measurements.get('shoulder_breadth', 0)
-            
+
             # Calculate ratios
             waist_hip_ratio = waist / hip if hip > 0 else 0
             shoulder_hip_ratio = shoulder / hip if hip > 0 else 0
             chest_waist_ratio = chest / waist if waist > 0 else 0
-            
+
             # Classify body type
             body_type = self._determine_body_type(
                 waist_hip_ratio, shoulder_hip_ratio, chest_waist_ratio,
                 waist, hip, chest, shoulder, gender
             )
-            
+
             # Get style recommendations for this body type
             style_recommendations = self._get_style_recommendations(body_type)
-            
+
             return {
                 'body_type': body_type,
                 'description': self._get_body_type_description(body_type),
@@ -66,7 +66,7 @@ class BodyTypeClassifier:
                 'style_recommendations': self._get_style_recommendations('rectangle'),
                 'confidence': 0.5
             }
-    
+
     def _determine_body_type(
         self,
         waist_hip_ratio: float,
@@ -76,34 +76,34 @@ class BodyTypeClassifier:
         hip: float,
         chest: float,
         shoulder: float,
-        gender: Optional[str]
+        gender: str | None
     ) -> str:
         """Determine body type from ratios and measurements"""
-        
+
         # Hourglass: Waist significantly smaller than both chest and hip
         if waist_hip_ratio < 0.75 and chest_waist_ratio > 1.1:
             return 'hourglass'
-        
+
         # Inverted Triangle: Shoulders/chest wider than hips
         if shoulder_hip_ratio > 1.05 or (chest > hip and chest > waist):
             return 'inverted_triangle'
-        
+
         # Triangle/Pear: Hips wider than shoulders/chest
         if hip > chest and hip > shoulder and waist_hip_ratio < 0.85:
             return 'triangle'
-        
+
         # Rectangle: Similar measurements across chest, waist, hip
-        if (0.85 <= waist_hip_ratio <= 0.95 and 
+        if (0.85 <= waist_hip_ratio <= 0.95 and
             0.9 <= chest_waist_ratio <= 1.1):
             return 'rectangle'
-        
+
         # Oval/Apple: Waist is largest measurement
         if waist >= chest and waist >= hip:
             return 'oval'
-        
+
         # Default to rectangle
         return 'rectangle'
-    
+
     def _get_body_type_description(self, body_type: str) -> str:
         """Get description for body type"""
         descriptions = {
@@ -114,8 +114,8 @@ class BodyTypeClassifier:
             'oval': 'Oval/Apple - Waist is the widest point'
         }
         return descriptions.get(body_type, 'Rectangle')
-    
-    def _get_style_recommendations(self, body_type: str) -> Dict:
+
+    def _get_style_recommendations(self, body_type: str) -> dict:
         """Get style recommendations for body type"""
         recommendations = {
             'hourglass': {
@@ -170,3 +170,4 @@ class BodyTypeClassifier:
             }
         }
         return recommendations.get(body_type, recommendations['rectangle'])
+

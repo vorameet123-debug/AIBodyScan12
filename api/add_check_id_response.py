@@ -4,7 +4,7 @@ Script to add check_id to the fit check API response in app.py
 import re
 
 # Read app.py
-with open('d:/3Dmodel/api/app.py', 'r', encoding='utf-8') as f:
+with open('d:/3Dmodel/api/app.py', encoding='utf-8') as f:
     content = f.read()
 
 # Find where save_fit_check_history is called and capture the return value
@@ -23,25 +23,25 @@ match = re.search(pattern, content)
 if match:
     indent = match.group(1)
     params = match.group(2)
-    
+
     # Replace with check_id = save_fit_check_history(...)
     old_call = match.group(0)
     new_call = f'{indent}check_id = save_fit_check_history({params})'
-    
+
     content = content.replace(old_call, new_call)
     print("SUCCESS: Updated save_fit_check_history call to capture check_id")
-    
+
     # Now find where the response is returned and add check_id to it
     # Look for return statements after the save_fit_check_history call
     # Pattern: return {...}
-    
+
     # Find the position after the save_fit_check_history call
     pos = content.find(new_call) + len(new_call)
-    
+
     # Find the next return statement
     return_pattern = r'return\s+\{[^}]+\}'
     return_match = re.search(return_pattern, content[pos:pos+5000])
-    
+
     if return_match:
         return_stmt = return_match.group(0)
         # Add check_id to the return dict
@@ -54,12 +54,13 @@ if match:
             print("INFO: check_id already in response")
     else:
         print("WARNING: Could not find return statement")
-    
+
     # Write back
     with open('d:/3Dmodel/api/app.py', 'w', encoding='utf-8') as f:
         f.write(content)
-    
+
     print("SUCCESS: Updated app.py")
 else:
     print("ERROR: Could not find save_fit_check_history call")
     exit(1)
+

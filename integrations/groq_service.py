@@ -1,12 +1,13 @@
-import os
-import json
 import base64
+import json
 import time
-from groq import Groq, BadRequestError, RateLimitError
-from loguru import logger
-from typing import Dict, Any, List, Optional
 from functools import wraps
-from requests.exceptions import Timeout, RequestException
+from typing import Any
+
+from groq import BadRequestError, Groq, RateLimitError
+from loguru import logger
+from requests.exceptions import RequestException, Timeout
+
 
 class GroqServiceError(Exception):
     """Custom exception for Groq service errors"""
@@ -36,22 +37,22 @@ def retry_with_backoff(max_retries: int = 3, base_delay: float = 1.0, timeout: f
                     if attempt < max_retries - 1:
                         delay = base_delay * (2 ** attempt)  # Exponential backoff
                         logger.warning(
-                            f"Groq API call failed (attempt {attempt + 1}/{max_retries}): {str(e)}. "
+                            f"Groq API call failed (attempt {attempt + 1}/{max_retries}): {e!s}. "
                             f"Retrying in {delay:.1f}s..."
                         )
                         time.sleep(delay)
                     else:
-                        logger.error(f"Groq API call failed after {max_retries} attempts: {str(e)}")
-                        raise GroqServiceError(f"API call failed after {max_retries} attempts: {str(e)}") from e
-            
+                        logger.error(f"Groq API call failed after {max_retries} attempts: {e!s}")
+                        raise GroqServiceError(f"API call failed after {max_retries} attempts: {e!s}") from e
+
             # Should never reach here, but just in case
-            raise GroqServiceError(f"API call failed: {str(last_exception)}") from last_exception
+            raise GroqServiceError(f"API call failed: {last_exception!s}") from last_exception
         return wrapper
     return decorator
 
 class GroqService:
     """Wrapper for Groq API (Llama 4) for Vision and Text generation with retry logic and timeout handling."""
-    
+
     def __init__(self, api_key: str, timeout: float = 30.0, max_retries: int = 3):
         self.api_key = api_key
         self.client = Groq(api_key=self.api_key)
@@ -64,7 +65,7 @@ class GroqService:
         logger.info(f"Groq service initialized with primary model: {self.model}, fallback: {self.fallback_model} (timeout: {timeout}s, retries: {max_retries})")
 
     @retry_with_backoff(max_retries=3, base_delay=1.0, timeout=30.0)
-    def analyze_garment_image(self, image_data: bytes, timeout: float = 30.0) -> Dict[str, Any]:
+    def analyze_garment_image(self, image_data: bytes, timeout: float = 30.0) -> dict[str, Any]:
         """
         Analyze garment image using Groq Vision (Llama 4 Scout).
         Extracts type, material, color, style, etc.
@@ -140,32 +141,32 @@ Output JSON ONLY. No markdown blocks."""
                     )
                 else:
                     raise
-            
+
             response_text = completion.choices[0].message.content.strip()
             result = json.loads(response_text)
             logger.debug(f"Groq Vision analysis complete using {model_to_use}: {result.get('garment_type', 'unknown')}")
             return result
-            
+
         except (Timeout, RequestException) as e:
             logger.error(f"Timeout/Network error in Groq Vision analysis: {e}")
-            raise GroqServiceError(f"API request timed out after {timeout}s: {str(e)}") from e
+            raise GroqServiceError(f"API request timed out after {timeout}s: {e!s}") from e
         except json.JSONDecodeError as e:
             logger.error(f"Failed to parse JSON response from Groq: {e}")
-            raise GroqServiceError(f"Invalid JSON response from API: {str(e)}") from e
+            raise GroqServiceError(f"Invalid JSON response from API: {e!s}") from e
         except Exception as e:
             logger.error(f"Unexpected error in Groq Vision analysis: {e}")
-            raise GroqServiceError(f"Unexpected error: {str(e)}") from e
-    
+            raise GroqServiceError(f"Unexpected error: {e!s}") from e
+
     @retry_with_backoff(max_retries=3, base_delay=1.0, timeout=30.0)
     def generate_comprehensive_advice(
         self,
-        fit_meters_result: Dict[str, Any],
-        garment_analysis: Dict[str, Any],
+        fit_meters_result: dict[str, Any],
+        garment_analysis: dict[str, Any],
         occasion: str,
         skin_tone: str,
         user_size: str,
         timeout: float = 30.0
-    ) -> Dict[str, Any]:
+    ) -> dict[str, Any]:
         """
         Generate comprehensive fit advice using Groq (Fast Text LLM).
         
@@ -188,16 +189,16 @@ Output JSON ONLY. No markdown blocks."""
             fit_data = fit_meters_result.get('fit_meters', {})
             worst_metric = fit_meters_result.get('worst_metric', 'unknown')
             fit_summary = ", ".join([f"{k}: {v.get('ease',0)}cm ease ({v.get('status','unknown')})" for k,v in fit_data.items()])
-            
+
             # Get worst metric ease value explicitly
             worst_ease = fit_data.get(worst_metric, {}).get('ease', 0) if worst_metric in fit_data else 0
-            
+
             garment_colors = [c.get('name') for c in garment_analysis.get('colors', [])]
-            
+
             # Get list of actual measurements being analyzed
             measured_parts = list(fit_data.keys())
             measured_parts_str = ", ".join(measured_parts)
-            
+
             prompt = f"""You are a savage but helpful fashion AI. Analyze this fit data and provide a comprehensive report in JSON.
 
 INPUT DATA:
@@ -286,7 +287,7 @@ RESPONSE FORMAT (JSON ONLY):
                     )
                 else:
                     raise
-            
+
             response_text = completion.choices[0].message.content.strip()
             result = json.loads(response_text)
             logger.debug(f"Groq comprehensive advice generated successfully using {model_to_use}")
@@ -294,10 +295,11 @@ RESPONSE FORMAT (JSON ONLY):
 
         except (Timeout, RequestException) as e:
             logger.error(f"Timeout/Network error generating Groq advice: {e}")
-            raise GroqServiceError(f"API request timed out after {timeout}s: {str(e)}") from e
+            raise GroqServiceError(f"API request timed out after {timeout}s: {e!s}") from e
         except json.JSONDecodeError as e:
             logger.error(f"Failed to parse JSON response from Groq: {e}")
-            raise GroqServiceError(f"Invalid JSON response from API: {str(e)}") from e
+            raise GroqServiceError(f"Invalid JSON response from API: {e!s}") from e
         except Exception as e:
             logger.error(f"Unexpected error generating Groq advice: {e}")
-            raise GroqServiceError(f"Unexpected error: {str(e)}") from e
+            raise GroqServiceError(f"Unexpected error: {e!s}") from e
+

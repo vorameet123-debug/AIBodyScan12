@@ -13,7 +13,7 @@ export const FitAnalysisDisplay: React.FC<FitAnalysisDisplayProps> = ({ analysis
       case 'perfect':
         return 'from-emerald-500 to-emerald-600';
       case 'good':
-        return 'from-blue-500 to-indigo-500';
+        return 'from-blue-500 to-accent-500';
       case 'fair':
         return 'from-amber-500 to-orange-500';
       case 'tight':
@@ -53,13 +53,13 @@ export const FitAnalysisDisplay: React.FC<FitAnalysisDisplayProps> = ({ analysis
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.4 }}
-      className="bg-white rounded-2xl p-6 shadow-bento border border-slate-200/60"
+      className="bg-slate-900 rounded-2xl p-6 shadow-bento border border-slate-700/60"
     >
       <div className="relative z-10">
         {/* Header */}
         <div className="flex items-center gap-3 mb-6">
-          <div className="w-10 h-10 bg-indigo-50 rounded-xl flex items-center justify-center">
-            <Ruler className="text-indigo-600" size={20} />
+          <div className="w-10 h-10 bg-accent-50 rounded-xl flex items-center justify-center">
+            <Ruler className="text-accent-500" size={20} />
           </div>
           <div>
             <h3 className="text-lg font-bold text-slate-900">Fit Analysis</h3>
@@ -163,7 +163,7 @@ export const FitAnalysisDisplay: React.FC<FitAnalysisDisplayProps> = ({ analysis
         {analysis.alternative_sizes.length > 0 && (
           <div>
             <h4 className="text-sm font-bold text-slate-900 mb-3 flex items-center gap-2">
-              <TrendingUp className="text-indigo-500" size={16} />
+              <TrendingUp className="text-accent-500" size={16} />
               Alternative Sizes
             </h4>
             <div className="grid grid-cols-3 gap-3">
@@ -178,7 +178,7 @@ export const FitAnalysisDisplay: React.FC<FitAnalysisDisplayProps> = ({ analysis
                   <p className="text-xl font-bold text-slate-900 mb-1">
                     {alt.size}
                   </p>
-                  <p className="text-xs font-semibold text-indigo-600">
+                  <p className="text-xs font-semibold text-accent-500">
                     {alt.fit_confidence.toFixed(0)}% fit
                   </p>
                   <p className="text-[10px] text-slate-400 mt-1">

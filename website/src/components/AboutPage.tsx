@@ -42,13 +42,13 @@ export const AboutPage: React.FC = () => {
         animate={{ opacity: 1, y: 0 }}
         className="text-center py-8"
       >
-        <div className="inline-flex items-center justify-center w-16 h-16 bg-slate-900 rounded-2xl mb-5">
+        <div className="inline-flex items-center justify-center w-16 h-16 bg-gradient-to-br from-accent-500 to-purple-500 rounded-2xl mb-5">
           <Brain className="text-white" size={32} />
         </div>
-        <h1 className="text-4xl font-bold text-slate-900 mb-3">
+        <h1 className="text-4xl font-bold text-white mb-3">
           About BodyScan AI
         </h1>
-        <p className="text-lg text-slate-500 max-w-2xl mx-auto">
+        <p className="text-lg text-slate-400 max-w-2xl mx-auto">
           Revolutionizing body measurements with AI-powered technology
         </p>
       </motion.div>
@@ -58,15 +58,15 @@ export const AboutPage: React.FC = () => {
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ delay: 0.2 }}
-        className="bg-white rounded-2xl p-8 shadow-bento border border-slate-200/60"
+        className="bento-card p-8"
       >
-        <h2 className="text-xl font-bold text-slate-900 mb-4">Our Mission</h2>
-        <p className="text-slate-600 leading-relaxed mb-4">
+        <h2 className="text-xl font-bold text-white mb-4">Our Mission</h2>
+        <p className="text-slate-400 leading-relaxed mb-4">
           BodyScan AI was created to make accurate body measurements accessible to everyone. 
           We believe that everyone should have access to precise body measurements without the 
           need for expensive equipment or professional assistance.
         </p>
-        <p className="text-slate-600 leading-relaxed">
+        <p className="text-slate-400 leading-relaxed">
           Using state-of-the-art AI technology, we provide accurate, fast, and convenient 
           body measurements that help you make informed decisions about clothing, fitness, 
           and health.
@@ -79,7 +79,7 @@ export const AboutPage: React.FC = () => {
         animate={{ opacity: 1 }}
         transition={{ delay: 0.4 }}
       >
-        <h2 className="text-xl font-bold text-center mb-6 text-slate-900">
+        <h2 className="text-xl font-bold text-center mb-6 text-white">
           Our Values
         </h2>
         <div className="grid md:grid-cols-2 gap-4">
@@ -89,13 +89,13 @@ export const AboutPage: React.FC = () => {
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.5 + index * 0.1 }}
-              className="bg-white rounded-2xl p-5 shadow-bento border border-slate-200/60 hover:shadow-lg transition-shadow"
+              className="bento-card p-5 hover:border-slate-600 transition-all"
             >
-              <div className="w-11 h-11 bg-indigo-50 rounded-xl flex items-center justify-center mb-3">
-                <value.icon className="text-indigo-600" size={22} />
+              <div className="w-11 h-11 bg-accent-500/20 rounded-xl flex items-center justify-center mb-3">
+                <value.icon className="text-accent-400" size={22} />
               </div>
-              <h3 className="text-base font-bold text-slate-900 mb-1">{value.title}</h3>
-              <p className="text-sm text-slate-600">{value.description}</p>
+              <h3 className="text-base font-bold text-white mb-1">{value.title}</h3>
+              <p className="text-sm text-slate-400">{value.description}</p>
             </motion.div>
           ))}
         </div>
@@ -106,10 +106,10 @@ export const AboutPage: React.FC = () => {
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ delay: 0.8 }}
-        className="bg-slate-900 rounded-2xl p-8 text-white"
+        className="bg-gradient-to-br from-slate-800 to-slate-900 rounded-2xl p-8 text-white border border-slate-700/50"
       >
         <div className="flex items-center gap-3 mb-5">
-          <Code className="text-indigo-400" size={24} />
+          <Code className="text-accent-400" size={24} />
           <h2 className="text-xl font-bold">Technology Stack</h2>
         </div>
         <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-3">
@@ -119,10 +119,10 @@ export const AboutPage: React.FC = () => {
               initial={{ opacity: 0, x: -20 }}
               animate={{ opacity: 1, x: 0 }}
               transition={{ delay: 0.9 + index * 0.1 }}
-              className="bg-white/10 rounded-xl p-4"
+              className="bg-slate-700/50 rounded-xl p-4 border border-slate-600/50"
             >
-              <h3 className="font-semibold text-sm mb-1">{tech.name}</h3>
-              <p className="text-white/70 text-xs">{tech.description}</p>
+              <h3 className="font-semibold text-sm mb-1 text-white">{tech.name}</h3>
+              <p className="text-slate-400 text-xs">{tech.description}</p>
             </motion.div>
           ))}
         </div>
@@ -133,20 +133,20 @@ export const AboutPage: React.FC = () => {
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ delay: 1 }}
-        className="bg-white rounded-2xl p-8 shadow-bento border border-slate-200/60 text-center"
+        className="bento-card p-8 text-center"
       >
-        <h2 className="text-xl font-bold text-slate-900 mb-3">Get in Touch</h2>
-        <p className="text-slate-600 mb-5">
+        <h2 className="text-xl font-bold text-white mb-3">Get in Touch</h2>
+        <p className="text-slate-400 mb-5">
           Have questions or feedback? We'd love to hear from you!
         </p>
         <div className="flex flex-col md:flex-row gap-4 justify-center">
-          <div className="bg-slate-50 rounded-xl p-4 border border-slate-200/60">
-            <p className="font-semibold text-sm text-slate-900">Email</p>
-            <p className="text-indigo-600 text-sm">support@bodyscan.ai</p>
+          <div className="bg-slate-800/50 rounded-xl p-4 border border-slate-700/50">
+            <p className="font-semibold text-sm text-white">Email</p>
+            <p className="text-accent-400 text-sm">support@bodyscan.ai</p>
           </div>
-          <div className="bg-slate-50 rounded-xl p-4 border border-slate-200/60">
-            <p className="font-semibold text-sm text-slate-900">Version</p>
-            <p className="text-indigo-600 text-sm">1.0.0</p>
+          <div className="bg-slate-800/50 rounded-xl p-4 border border-slate-700/50">
+            <p className="font-semibold text-sm text-white">Version</p>
+            <p className="text-accent-400 text-sm">1.0.0</p>
           </div>
         </div>
       </motion.section>

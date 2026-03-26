@@ -4,21 +4,22 @@ Analyzes fashion trends from external sources using AI
 """
 from __future__ import annotations
 
-import os
 import json
-from datetime import datetime, timedelta
-from typing import Dict, List, Optional, Any
+import os
+from datetime import UTC, datetime
+from typing import Any
+
+from groq import BadRequestError, Groq, RateLimitError
 from loguru import logger
-from groq import Groq
-from groq import BadRequestError, RateLimitError
-from .input_validator import InputValidator
+
 from .cache_service import get_cache
+from .input_validator import InputValidator
 
 
 class ExternalTrendAnalyzer:
     """Analyzes external fashion trends using Groq AI"""
-    
-    def __init__(self, api_key: Optional[str] = None):
+
+    def __init__(self, api_key: str | None = None):
         """
         Initialize external trend analyzer
         
@@ -28,7 +29,7 @@ class ExternalTrendAnalyzer:
         self.api_key = api_key or os.getenv("GROQ_API_KEY")
         if not self.api_key:
             raise ValueError("GROQ_API_KEY not found in environment variables")
-        
+
         self.client = Groq(api_key=self.api_key)
         # Primary model: Llama 3.3 for text analysis
         self.model = "llama-3.3-70b-versatile"
@@ -37,12 +38,12 @@ class ExternalTrendAnalyzer:
         # Initialize cache
         self.cache = get_cache()
         logger.info(f"External Trend Analyzer initialized with primary: {self.model}, fallback: {self.fallback_model}")
-    
+
     def analyze_fashion_trends(
         self,
-        season: Optional[str] = None,
-        category: Optional[str] = None
-    ) -> Dict[str, Any]:
+        season: str | None = None,
+        category: str | None = None
+    ) -> dict[str, Any]:
         """
         Analyze current fashion trends using Groq AI
         
@@ -56,18 +57,18 @@ class ExternalTrendAnalyzer:
         # Sanitize inputs to prevent injection attacks
         season = InputValidator.sanitize_season(season)
         category = InputValidator.sanitize_category(category)
-        
+
         # Try cache first
         cache_key = self.cache._generate_key('trend_analysis', season=season, category=category)
         cached_result = self.cache.get(cache_key)
         if cached_result:
             logger.info(f"Returning cached trend analysis for season={season}, category={category}")
             return cached_result
-        
+
         try:
             season_context = f" for {season}" if season else ""
             category_context = f" in {category}" if category else ""
-            
+
             prompt = f"""You are a fashion trend analyst. Analyze current fashion trends{season_context}{category_context} and provide a comprehensive trend report.
 
 Based on current fashion trends from social media (Instagram, TikTok), fashion blogs, and runway shows, identify:
@@ -150,7 +151,7 @@ Provide your analysis in JSON format with the following structure:
         }}
     ],
     "season": "{season or 'current'}",
-    "analysis_date": "{datetime.utcnow().strftime('%Y-%m-%d')}",
+    "analysis_date": "{datetime.now(UTC).strftime('%Y-%m-%d')}",
     "confidence": 0.85
 }}
 
@@ -204,9 +205,9 @@ Output JSON ONLY, no markdown blocks."""
                     )
                 else:
                     raise
-            
+
             response_text = completion.choices[0].message.content.strip()
-            
+
             # Clean up response if it has markdown
             if response_text.startswith("```json"):
                 response_text = response_text[7:]
@@ -214,14 +215,14 @@ Output JSON ONLY, no markdown blocks."""
                 response_text = response_text[3:]
             if response_text.endswith("```"):
                 response_text = response_text[:-3]
-            
+
             result = json.loads(response_text.strip())
-            
+
             # CRITICAL FIX: Ensure we have AT LEAST 12 trending items
             trending_items = result.get('trending_items', [])
             if len(trending_items) < 12:
                 logger.warning(f"AI returned only {len(trending_items)} items, padding to 12 minimum")
-                
+
                 # Fallback items to ensure variety
                 fallback_items = [
                     {"item": "Wide-Leg Jeans", "description": "Comfortable and stylish denim with a relaxed fit", "popularity_score": 82, "trend_direction": "rising"},
@@ -237,7 +238,7 @@ Output JSON ONLY, no markdown blocks."""
                     {"item": "Chunky Loafers", "description": "Comfortable and trendy footwear", "popularity_score": 77, "trend_direction": "rising"},
                     {"item": "Statement Belts", "description": "Accessory to cinch and define waistlines", "popularity_score": 73, "trend_direction": "stable"},
                 ]
-                
+
                 # Add fallback items until we have at least 12
                 existing_items = {item.get('item', '').lower() for item in trending_items}
                 for fallback in fallback_items:
@@ -246,16 +247,16 @@ Output JSON ONLY, no markdown blocks."""
                     if fallback['item'].lower() not in existing_items:
                         trending_items.append(fallback)
                         logger.info(f"Added fallback item: {fallback['item']}")
-                
+
                 result['trending_items'] = trending_items
-            
+
             # Add metadata
             result["source"] = "groq_ai_analysis"
-            result["analyzed_at"] = datetime.utcnow().isoformat()
-            
+            result["analyzed_at"] = datetime.now(UTC).isoformat()
+
             logger.info(f"External trend analysis complete: {len(result.get('trending_items', []))} items, {len(result.get('trending_colors', []))} colors")
             return result
-            
+
         except json.JSONDecodeError as e:
             logger.error(f"Failed to parse Groq trend analysis JSON: {e}")
             logger.error(f"Response was: {response_text[:200]}")
@@ -263,8 +264,8 @@ Output JSON ONLY, no markdown blocks."""
         except Exception as e:
             logger.error(f"Error analyzing external trends with Groq: {e}")
             return self._get_fallback_trends()
-    
-    def analyze_specific_trend(self, item_name: str) -> Dict[str, Any]:
+
+    def analyze_specific_trend(self, item_name: str) -> dict[str, Any]:
         """
         Get detailed analysis of a specific fashion item/trend
         
@@ -280,9 +281,9 @@ Output JSON ONLY, no markdown blocks."""
             logger.error("Invalid item name provided")
             return {
                 "error": "Invalid item name",
-                "analyzed_at": datetime.utcnow().isoformat()
+                "analyzed_at": datetime.now(UTC).isoformat()
             }
-        
+
         try:
             prompt = f"""Analyze the fashion trend for "{item_name}" in detail.
 
@@ -353,9 +354,9 @@ Output JSON format:
                     )
                 else:
                     raise
-            
+
             response_text = completion.choices[0].message.content.strip()
-            
+
             # Clean up response
             if response_text.startswith("```json"):
                 response_text = response_text[7:]
@@ -363,22 +364,22 @@ Output JSON format:
                 response_text = response_text[3:]
             if response_text.endswith("```"):
                 response_text = response_text[:-3]
-            
+
             result = json.loads(response_text.strip())
-            result["analyzed_at"] = datetime.utcnow().isoformat()
-            
+            result["analyzed_at"] = datetime.now(UTC).isoformat()
+
             logger.info(f"Detailed trend analysis for '{item_name}' complete")
             return result
-            
+
         except Exception as e:
             logger.error(f"Error analyzing specific trend '{item_name}': {e}")
             return {
                 "item": item_name,
                 "error": str(e),
-                "analyzed_at": datetime.utcnow().isoformat()
+                "analyzed_at": datetime.now(UTC).isoformat()
             }
-    
-    def compare_trends(self, item1: str, item2: str) -> Dict[str, Any]:
+
+    def compare_trends(self, item1: str, item2: str) -> dict[str, Any]:
         """
         Compare two fashion trends
         
@@ -392,11 +393,11 @@ Output JSON format:
         # Sanitize inputs
         item1 = InputValidator.sanitize_item_name(item1)
         item2 = InputValidator.sanitize_item_name(item2)
-        
+
         if not item1 or not item2:
             logger.error("Invalid item names provided for comparison")
             return {"error": "Invalid item names"}
-        
+
         try:
             prompt = f"""Compare these two fashion trends: "{item1}" vs "{item2}".
 
@@ -459,7 +460,7 @@ Output JSON:
                     )
                 else:
                     raise
-            
+
             response_text = completion.choices[0].message.content.strip()
             if response_text.startswith("```json"):
                 response_text = response_text[7:]
@@ -467,17 +468,17 @@ Output JSON:
                 response_text = response_text[3:]
             if response_text.endswith("```"):
                 response_text = response_text[:-3]
-            
+
             result = json.loads(response_text.strip())
-            result["compared_at"] = datetime.utcnow().isoformat()
-            
+            result["compared_at"] = datetime.now(UTC).isoformat()
+
             return result
-            
+
         except Exception as e:
             logger.error(f"Error comparing trends: {e}")
             return {"error": str(e)}
-    
-    def _get_fallback_trends(self) -> Dict[str, Any]:
+
+    def _get_fallback_trends(self) -> dict[str, Any]:
         """Return fallback trends if API fails"""
         return {
             "trending_items": [
@@ -507,6 +508,8 @@ Output JSON:
             "trending_materials": [],
             "key_trends": [],
             "source": "fallback",
-            "analyzed_at": datetime.utcnow().isoformat(),
+            "analyzed_at": datetime.now(UTC).isoformat(),
             "confidence": 0.5
         }
+
+

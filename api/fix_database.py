@@ -5,7 +5,6 @@ Script to fix database schema issue
 3. Instructions to restart
 """
 import os
-import sys
 
 db_path = 'd:/3Dmodel/api/data.db'
 
@@ -33,3 +32,4 @@ else:
     print("It will be created when you start the backend.")
 
 print("=" * 60)
+

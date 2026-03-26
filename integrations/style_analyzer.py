@@ -2,7 +2,7 @@
 Style Compatibility Analyzer
 Analyzes style compatibility based on body type, occasion, and clothing type
 """
-from typing import Dict, Optional
+
 from loguru import logger
 
 
@@ -10,7 +10,7 @@ class StyleAnalyzer:
     """
     Analyzes style compatibility and provides recommendations
     """
-    
+
     def __init__(self):
         """Initialize style analyzer"""
         # Style compatibility rules
@@ -46,7 +46,7 @@ class StyleAnalyzer:
                 'avoid': ['Tight', 'Clingy', 'High-waisted']
             }
         }
-        
+
         # Occasion style requirements
         self.occasion_styles = {
             'Sports': {
@@ -95,16 +95,16 @@ class StyleAnalyzer:
                 'description': 'Loose, breathable styles'
             }
         }
-        
+
         logger.info("StyleAnalyzer initialized")
-    
+
     def analyze_style(
         self,
         body_type: str,
         clothing_type: str,
-        occasion: Optional[str] = None,
-        fit_preference: Optional[str] = None
-    ) -> Dict:
+        occasion: str | None = None,
+        fit_preference: str | None = None
+    ) -> dict:
         """
         Analyze style compatibility
         
@@ -120,9 +120,9 @@ class StyleAnalyzer:
         # Get body type recommendations
         if body_type not in self.style_rules:
             body_type = 'rectangle'  # Default
-        
+
         body_recommendations = self.style_rules[body_type]
-        
+
         # Determine fit preference
         if not fit_preference:
             # Infer from occasion
@@ -130,7 +130,7 @@ class StyleAnalyzer:
                 fit_preference = self.occasion_styles[occasion]['fit']
             else:
                 fit_preference = 'fitted'  # Default
-        
+
         # Get style score based on fit preference
         if fit_preference in body_recommendations:
             style_score = body_recommendations[fit_preference]['score']
@@ -138,11 +138,11 @@ class StyleAnalyzer:
         else:
             style_score = 75  # Neutral
             style_description = 'Style compatibility is good'
-        
+
         # Check occasion appropriateness
         occasion_score = 100
         occasion_notes = []
-        
+
         if occasion and occasion in self.occasion_styles:
             occasion_style = self.occasion_styles[occasion]
             if fit_preference != occasion_style['fit']:
@@ -154,14 +154,14 @@ class StyleAnalyzer:
                 occasion_notes.append(
                     f"Perfect fit style for {occasion} - {occasion_style['description']}"
                 )
-        
+
         # Calculate overall style compatibility
         overall_score = (style_score * 0.7 + occasion_score * 0.3)
-        
+
         # Get recommendations
         recommendations = body_recommendations.get('recommended', [])
         avoid = body_recommendations.get('avoid', [])
-        
+
         return {
             'style_compatibility': round(overall_score, 1),
             'body_type_score': style_score,
@@ -173,7 +173,7 @@ class StyleAnalyzer:
             'occasion_notes': occasion_notes,
             'overall_recommendation': self._get_overall_recommendation(overall_score)
         }
-    
+
     def _get_overall_recommendation(self, score: float) -> str:
         """Get overall style recommendation based on score"""
         if score >= 85:
@@ -184,3 +184,4 @@ class StyleAnalyzer:
             return 'Fair - This style can work with some adjustments'
         else:
             return 'Consider alternatives - This style may not be ideal'
+

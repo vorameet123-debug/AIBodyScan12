@@ -2,10 +2,12 @@
 Script to restore fit check history from logs
 Re-inserts known previous checks and recalculates IQ
 """
-from sqlmodel import Session, create_engine, select
-from fashion_iq_models import FitCheckHistory
+from datetime import UTC, datetime, timedelta
+
 from db import engine
-from datetime import datetime, timedelta
+from fashion_iq_models import FitCheckHistory
+from sqlmodel import Session, select
+
 
 def restore_data():
     with Session(engine) as session:
@@ -15,7 +17,7 @@ def restore_data():
             return
 
         print("Restoring data from logs...")
-        
+
         # 1. Shirt check (from logs)
         check1 = FitCheckHistory(
             user_id=1,
@@ -26,12 +28,12 @@ def restore_data():
             style="casual",
             formality_level=4,
             is_trending=False,
-            checked_at=datetime.utcnow() - timedelta(hours=2),
+            checked_at=datetime.now(UTC) - timedelta(hours=2),
             purchased=True,
             purchase_intent="yes",
-            purchased_at=datetime.utcnow()
+            purchased_at=datetime.now(UTC)
         )
-        
+
         # 2. Pants check (from logs)
         check2 = FitCheckHistory(
             user_id=1,
@@ -42,11 +44,11 @@ def restore_data():
             style="casual",
             formality_level=5,
             is_trending=False,
-            checked_at=datetime.utcnow() - timedelta(minutes=30),
+            checked_at=datetime.now(UTC) - timedelta(minutes=30),
             purchased=False,
             purchase_intent="maybe"
         )
-        
+
         # 3. Jacket (bonus data to populate charts)
         check3 = FitCheckHistory(
             user_id=1,
@@ -57,7 +59,7 @@ def restore_data():
             style="formal",
             formality_level=8,
             is_trending=True,
-            checked_at=datetime.utcnow() - timedelta(days=2),
+            checked_at=datetime.now(UTC) - timedelta(days=2),
             purchased=False,
             purchase_intent="no"
         )
@@ -67,7 +69,7 @@ def restore_data():
         session.add(check3)
         session.commit()
         print("✅ Restored 3 fit checks")
-        
+
         # Recalculate IQ
         try:
             from integrations.fashion_iq_calculator import FashionIQCalculator
@@ -80,3 +82,5 @@ def restore_data():
 
 if __name__ == "__main__":
     restore_data()
+
+

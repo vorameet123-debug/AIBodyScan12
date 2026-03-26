@@ -53,18 +53,18 @@ export const Model3DViewer: React.FC<Model3DViewerProps> = ({
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.5 }}
-      className="bg-white rounded-2xl p-6 shadow-bento border border-slate-200/60 overflow-hidden"
+      className="bg-slate-900 rounded-2xl p-6 shadow-bento border border-slate-700/60 overflow-hidden"
     >
       <div className="flex items-center gap-2 mb-6">
-        <div className="w-10 h-10 bg-indigo-50 rounded-xl flex items-center justify-center">
-          <Maximize2 className="text-indigo-600" size={20} />
+        <div className="w-10 h-10 bg-accent-50 rounded-xl flex items-center justify-center">
+          <Maximize2 className="text-accent-500" size={20} />
         </div>
-        <h3 className="text-xl font-bold text-slate-900">3D Body Model</h3>
+        <h3 className="text-xl font-bold text-white">3D Body Model</h3>
       </div>
 
       <div className="grid md:grid-cols-3 gap-6">
         {/* Left: SVG 3D Body Visualization */}
-        <div className="md:col-span-2 flex justify-center items-center bg-white rounded-xl p-6">
+        <div className="md:col-span-2 flex justify-center items-center bg-slate-800 rounded-xl p-6">
           <svg viewBox="0 0 200 400" className="w-full max-w-xs h-auto" xmlns="http://www.w3.org/2000/svg">
             {/* Head */}
             <circle
@@ -184,11 +184,10 @@ export const Model3DViewer: React.FC<Model3DViewerProps> = ({
                   onClick={() => setSelectedPart(selectedPart === part ? null : part)}
                   whileHover={{ scale: 1.02 }}
                   whileTap={{ scale: 0.98 }}
-                  className={`w-full px-3 py-2 rounded-lg transition-all text-left text-sm ${
-                    selectedPart === part
-                      ? 'bg-indigo-100 border border-indigo-400 font-semibold text-indigo-700'
-                      : 'bg-white border border-slate-200 hover:border-indigo-300 text-slate-700'
-                  }`}
+                  className={`w-full px-3 py-2 rounded-lg transition-all text-left text-sm ${selectedPart === part
+                    ? 'bg-indigo-100 border border-indigo-400 font-semibold text-indigo-700'
+                    : 'bg-white border border-slate-200 hover:border-indigo-300 text-slate-700'
+                    }`}
                 >
                   <div className="flex justify-between items-center">
                     <span>{measure.label}</span>

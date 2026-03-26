@@ -1,9 +1,9 @@
 """
 Script to clear duplicate trends from database
 """
-from sqlmodel import Session, select, delete
-from db import engine, ExternalTrend
-from datetime import datetime
+from db import ExternalTrend, engine
+from sqlmodel import Session, delete
+
 
 def clear_duplicate_trends():
     """Clear all external trends to force fresh analysis"""
@@ -17,3 +17,4 @@ def clear_duplicate_trends():
 
 if __name__ == "__main__":
     clear_duplicate_trends()
+

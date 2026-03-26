@@ -32,7 +32,7 @@ export const FashionIQDashboard: React.FC<FashionIQDashboardProps> = ({ userId }
 
     const getLevelGradient = (level: string) => {
         switch (level) {
-            case 'Master': return 'from-indigo-600 to-indigo-700';
+            case 'Master': return 'from-accent-600 to-accent-700';
             case 'Expert': return 'from-blue-600 to-blue-700';
             case 'Learner': return 'from-emerald-600 to-emerald-700';
             default: return 'from-slate-600 to-slate-700';
@@ -54,18 +54,18 @@ export const FashionIQDashboard: React.FC<FashionIQDashboardProps> = ({ userId }
     if (loading) {
         return (
             <div className="flex items-center justify-center p-12">
-                <div className="w-10 h-10 border-2 border-slate-200 border-t-indigo-600 rounded-full animate-spin" />
+                <div className="w-10 h-10 border-2 border-slate-200 border-t-accent-600 rounded-full animate-spin" />
             </div>
         );
     }
 
     if (error || !iqData) {
         return (
-            <div className="bg-slate-50 rounded-2xl p-8 border border-slate-200/60 text-center">
-                <div className="w-12 h-12 bg-slate-100 rounded-xl flex items-center justify-center mx-auto mb-4">
+            <div className="bg-slate-900 rounded-2xl p-8 border border-slate-700/60 text-center">
+                <div className="w-12 h-12 bg-slate-800 rounded-xl flex items-center justify-center mx-auto mb-4">
                     <Star className="w-6 h-6 text-slate-400" />
                 </div>
-                <p className="text-slate-600">No Fashion IQ data yet. Complete some fit checks to build your score!</p>
+                <p className="text-slate-400">No Fashion IQ data yet. Complete some fit checks to build your score!</p>
             </div>
         );
     }
@@ -80,7 +80,7 @@ export const FashionIQDashboard: React.FC<FashionIQDashboardProps> = ({ userId }
             >
                 {/* Background pattern */}
                 <div className="absolute inset-0 bg-[linear-gradient(rgba(255,255,255,0.03)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,0.03)_1px,transparent_1px)] bg-[size:40px_40px]" />
-                
+
                 <div className="relative flex items-center justify-between">
                     <div>
                         <p className="text-white/70 text-sm font-medium uppercase tracking-wider mb-1">Your Fashion IQ</p>
@@ -101,9 +101,9 @@ export const FashionIQDashboard: React.FC<FashionIQDashboardProps> = ({ userId }
             </motion.div>
 
             {/* Score Breakdown - Bento Grid */}
-            <div className="bg-white rounded-2xl shadow-bento border border-slate-200/60 p-6">
-                <h3 className="text-lg font-semibold text-slate-900 mb-6 flex items-center gap-2">
-                    <Sparkles className="w-5 h-5 text-indigo-600" />
+            <div className="bg-slate-900 rounded-2xl shadow-bento border border-slate-700/60 p-6">
+                <h3 className="text-lg font-semibold text-white mb-6 flex items-center gap-2">
+                    <Sparkles className="w-5 h-5 text-accent-500" />
                     Score Breakdown
                 </h3>
 
@@ -111,7 +111,7 @@ export const FashionIQDashboard: React.FC<FashionIQDashboardProps> = ({ userId }
                     {/* Fit Knowledge */}
                     <div>
                         <div className="flex justify-between mb-2">
-                            <span className="font-medium text-slate-700 flex items-center gap-2 text-sm">
+                            <span className="font-medium text-slate-300 flex items-center gap-2 text-sm">
                                 <Target className="w-4 h-4 text-slate-400" />
                                 Fit Knowledge
                             </span>
@@ -119,7 +119,7 @@ export const FashionIQDashboard: React.FC<FashionIQDashboardProps> = ({ userId }
                                 {iqData.fit_knowledge}/100
                             </span>
                         </div>
-                        <div className="h-2 bg-slate-100 rounded-full overflow-hidden">
+                        <div className="h-2 bg-slate-800 rounded-full overflow-hidden">
                             <motion.div
                                 initial={{ width: 0 }}
                                 animate={{ width: `${iqData.fit_knowledge}%` }}
@@ -132,7 +132,7 @@ export const FashionIQDashboard: React.FC<FashionIQDashboardProps> = ({ userId }
                     {/* Style Consistency */}
                     <div>
                         <div className="flex justify-between mb-2">
-                            <span className="font-medium text-slate-700 flex items-center gap-2 text-sm">
+                            <span className="font-medium text-slate-300 flex items-center gap-2 text-sm">
                                 <Sparkles className="w-4 h-4 text-slate-400" />
                                 Style Consistency
                             </span>
@@ -140,7 +140,7 @@ export const FashionIQDashboard: React.FC<FashionIQDashboardProps> = ({ userId }
                                 {iqData.style_consistency}/100
                             </span>
                         </div>
-                        <div className="h-2 bg-slate-100 rounded-full overflow-hidden">
+                        <div className="h-2 bg-slate-800 rounded-full overflow-hidden">
                             <motion.div
                                 initial={{ width: 0 }}
                                 animate={{ width: `${iqData.style_consistency}%` }}
@@ -153,7 +153,7 @@ export const FashionIQDashboard: React.FC<FashionIQDashboardProps> = ({ userId }
                     {/* Trend Awareness */}
                     <div>
                         <div className="flex justify-between mb-2">
-                            <span className="font-medium text-slate-700 flex items-center gap-2 text-sm">
+                            <span className="font-medium text-slate-300 flex items-center gap-2 text-sm">
                                 <TrendingUp className="w-4 h-4 text-slate-400" />
                                 Trend Awareness
                             </span>
@@ -161,7 +161,7 @@ export const FashionIQDashboard: React.FC<FashionIQDashboardProps> = ({ userId }
                                 {iqData.trend_awareness}/100
                             </span>
                         </div>
-                        <div className="h-2 bg-slate-100 rounded-full overflow-hidden">
+                        <div className="h-2 bg-slate-800 rounded-full overflow-hidden">
                             <motion.div
                                 initial={{ width: 0 }}
                                 animate={{ width: `${iqData.trend_awareness}%` }}
@@ -175,8 +175,8 @@ export const FashionIQDashboard: React.FC<FashionIQDashboardProps> = ({ userId }
 
             {/* Badges - Bento Grid */}
             {iqData.badges && iqData.badges.length > 0 && (
-                <div className="bg-white rounded-2xl shadow-bento border border-slate-200/60 p-6">
-                    <h3 className="text-lg font-semibold text-slate-900 mb-5 flex items-center gap-2">
+                <div className="bg-slate-900 rounded-2xl shadow-bento border border-slate-700/60 p-6">
+                    <h3 className="text-lg font-semibold text-white mb-5 flex items-center gap-2">
                         <Award className="w-5 h-5 text-amber-500" />
                         Earned Badges
                     </h3>
@@ -187,11 +187,11 @@ export const FashionIQDashboard: React.FC<FashionIQDashboardProps> = ({ userId }
                                 initial={{ scale: 0, opacity: 0 }}
                                 animate={{ scale: 1, opacity: 1 }}
                                 transition={{ delay: idx * 0.1 }}
-                                className="bg-gradient-to-br from-amber-50 to-orange-50 rounded-2xl p-4 text-center border border-amber-200/50 hover:-translate-y-1 transition-transform"
+                                className="bg-gradient-to-br from-amber-900/40 to-orange-900/40 rounded-2xl p-4 text-center border border-amber-700/50 hover:-translate-y-1 transition-transform"
                             >
                                 <div className="text-3xl mb-2">{badge.icon}</div>
-                                <div className="font-semibold text-slate-900 text-sm">{badge.name}</div>
-                                <div className="text-xs text-slate-500 mt-1">{badge.description}</div>
+                                <div className="font-semibold text-white text-sm">{badge.name}</div>
+                                <div className="text-xs text-slate-400 mt-1">{badge.description}</div>
                             </motion.div>
                         ))}
                     </div>
@@ -199,11 +199,11 @@ export const FashionIQDashboard: React.FC<FashionIQDashboardProps> = ({ userId }
             )}
 
             {/* Next Level Progress */}
-            <div className="bg-gradient-to-br from-indigo-50 to-purple-50 rounded-2xl p-5 border border-indigo-100/50">
+            <div className="bg-gradient-to-br from-accent-900/40 to-purple-900/40 rounded-2xl p-5 border border-accent-700/50">
                 <div className="flex items-center justify-between">
                     <div>
-                        <div className="text-sm text-slate-500 font-medium">Next Level</div>
-                        <div className="font-bold text-slate-900 mt-0.5">
+                        <div className="text-sm text-slate-400 font-medium">Next Level</div>
+                        <div className="font-bold text-white mt-0.5">
                             {iqData.level === 'Master' ? 'Max Level!' :
                                 iqData.level === 'Expert' ? 'Master (81+)' :
                                     iqData.level === 'Learner' ? 'Expert (61+)' : 'Learner (41+)'}
@@ -211,7 +211,7 @@ export const FashionIQDashboard: React.FC<FashionIQDashboardProps> = ({ userId }
                     </div>
                     {iqData.level !== 'Master' && (
                         <div className="text-right">
-                            <div className="text-2xl font-bold text-indigo-600">
+                            <div className="text-2xl font-bold text-accent-400">
                                 {iqData.level === 'Expert' ? 81 - iqData.overall_score :
                                     iqData.level === 'Learner' ? 61 - iqData.overall_score :
                                         41 - iqData.overall_score} pts

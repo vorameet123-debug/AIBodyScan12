@@ -1,6 +1,6 @@
 import React from 'react';
 import { motion } from 'framer-motion';
-import { ShoppingBag, Package, Shirt, Scissors } from 'lucide-react';
+import { ShoppingBag, Package, Shirt, Scissors, Sparkles } from 'lucide-react';
 import { SizeRecommendation } from '../services/api';
 
 interface SizeRecommendationsProps {
@@ -12,12 +12,18 @@ export const SizeRecommendations: React.FC<SizeRecommendationsProps> = ({
 }) => {
   const categories = Object.entries(recommendations);
 
-  const getCategoryIcon = (category: string) => {
+  const getCategoryConfig = (category: string) => {
     const lower = category.toLowerCase();
-    if (lower.includes('top') || lower.includes('shirt')) return <Shirt size={16} />;
-    if (lower.includes('pant') || lower.includes('bottom') || lower.includes('trouser')) return <Scissors size={16} />;
-    if (lower.includes('dress')) return <ShoppingBag size={16} />;
-    return <Package size={16} />;
+    if (lower.includes('top') || lower.includes('shirt')) {
+      return { icon: Shirt, gradient: 'from-violet-500 to-purple-600', glow: 'shadow-violet-500/20' };
+    }
+    if (lower.includes('pant') || lower.includes('bottom') || lower.includes('trouser')) {
+      return { icon: Scissors, gradient: 'from-cyan-500 to-blue-600', glow: 'shadow-cyan-500/20' };
+    }
+    if (lower.includes('dress')) {
+      return { icon: ShoppingBag, gradient: 'from-fuchsia-500 to-pink-600', glow: 'shadow-fuchsia-500/20' };
+    }
+    return { icon: Package, gradient: 'from-emerald-500 to-teal-600', glow: 'shadow-emerald-500/20' };
   };
 
   // Extract the actual size string from the value (could be string or object)
@@ -44,44 +50,64 @@ export const SizeRecommendations: React.FC<SizeRecommendationsProps> = ({
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.5 }}
-      className="bg-white rounded-2xl p-6 shadow-bento border border-slate-200/60"
+      className="space-y-6"
     >
-      <div className="flex items-center gap-2 mb-6">
-        <div className="w-9 h-9 bg-indigo-50 rounded-xl flex items-center justify-center">
-          <ShoppingBag className="text-indigo-600" size={18} />
+      {/* Header */}
+      <div className="flex items-center gap-3">
+        <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-fuchsia-500 to-pink-600 flex items-center justify-center shadow-lg shadow-fuchsia-500/25">
+          <ShoppingBag className="text-white" size={20} />
         </div>
-        <h2 className="text-lg font-bold text-slate-900">Size Recommendations</h2>
+        <div>
+          <h2 className="text-xl font-bold text-white">Size Recommendations</h2>
+          <p className="text-sm text-slate-400">AI-powered sizing across {categories.length} categories</p>
+        </div>
       </div>
 
-      <div className="grid md:grid-cols-2 gap-4">
+      {/* Size Cards Grid */}
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
         {categories.map(([category, sizeData], index) => {
           const sizeString = getSizeString(sizeData);
           const confidence = getConfidence(sizeData);
-          
+          const config = getCategoryConfig(category);
+          const IconComponent = config.icon;
+
           return (
             <motion.div
               key={category}
-              initial={{ opacity: 0, scale: 0.95 }}
-              animate={{ opacity: 1, scale: 1 }}
-              transition={{ delay: index * 0.1 }}
-              className="bg-slate-900 p-5 rounded-xl text-white hover:bg-slate-800 transition-colors"
+              initial={{ opacity: 0, scale: 0.9, y: 20 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              transition={{ delay: index * 0.1, type: 'spring', bounce: 0.3 }}
+              whileHover={{ scale: 1.03, y: -4 }}
+              className={`relative overflow-hidden bg-slate-800/60 backdrop-blur-sm p-5 rounded-2xl border border-white/10 hover:border-white/20 transition-all duration-300 group`}
             >
-              <div className="flex items-center justify-between mb-2">
-                <h3 className="text-sm font-medium text-slate-300 capitalize">
-                  {category.replace(/_/g, ' ')}
-                </h3>
-                <div className="text-slate-400">
-                  {getCategoryIcon(category)}
+              {/* Gradient Background Glow */}
+              <div className={`absolute -top-10 -right-10 w-32 h-32 bg-gradient-to-br ${config.gradient} opacity-20 blur-3xl rounded-full group-hover:opacity-30 transition-opacity`} />
+
+              <div className="relative z-10">
+                <div className="flex items-center justify-between mb-4">
+                  <span className="text-xs font-semibold text-slate-400 uppercase tracking-wider">
+                    {category.replace(/_/g, ' ')}
+                  </span>
+                  <div className={`w-8 h-8 rounded-lg bg-gradient-to-br ${config.gradient} flex items-center justify-center shadow-lg ${config.glow}`}>
+                    <IconComponent size={14} className="text-white" />
+                  </div>
                 </div>
-              </div>
-              <p className="text-3xl font-bold">{sizeString}</p>
-              <div className="flex items-center justify-between mt-2">
-                <p className="text-slate-400 text-xs">Recommended size</p>
-                {confidence !== null && (
-                  <p className="text-indigo-400 text-xs font-medium">
-                    {(confidence > 1 ? confidence : confidence * 100).toFixed(0)}% confidence
-                  </p>
-                )}
+
+                <div className="mb-3">
+                  <span className="text-4xl font-bold text-white tracking-tight">{sizeString}</span>
+                </div>
+
+                <div className="flex items-center justify-between">
+                  <span className="text-xs text-slate-500">Recommended</span>
+                  {confidence !== null && (
+                    <div className="flex items-center gap-1">
+                      <Sparkles size={10} className="text-violet-400" />
+                      <span className="text-xs font-medium text-violet-400">
+                        {(confidence > 1 ? confidence : confidence * 100).toFixed(0)}%
+                      </span>
+                    </div>
+                  )}
+                </div>
               </div>
             </motion.div>
           );
@@ -90,4 +116,3 @@ export const SizeRecommendations: React.FC<SizeRecommendationsProps> = ({
     </motion.div>
   );
 };
-

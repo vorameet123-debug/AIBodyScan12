@@ -144,11 +144,10 @@ export const ClothingInputForm: React.FC<ClothingInputFormProps> = ({
         {!imagePreview ? (
           <div
             {...getRootProps()}
-            className={`border-2 border-dashed rounded-xl p-8 text-center cursor-pointer transition-all ${
-              isDragActive
+            className={`border-2 border-dashed rounded-xl p-8 text-center cursor-pointer transition-all ${isDragActive
                 ? 'border-indigo-500 bg-indigo-50'
                 : 'border-slate-200 hover:border-indigo-300 hover:bg-slate-50'
-            }`}
+              }`}
           >
             <input {...getInputProps()} />
             <Upload className="mx-auto mb-3 text-indigo-500" size={40} />
@@ -332,7 +331,7 @@ export const ClothingInputForm: React.FC<ClothingInputFormProps> = ({
       <button
         type="submit"
         disabled={isLoading}
-        className="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-medium py-3 px-6 rounded-xl transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+        className="w-full bg-accent-500 hover:bg-accent-600 text-white font-medium py-3 px-6 rounded-xl transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
       >
         {isLoading ? (
           <>

@@ -14,12 +14,9 @@ const FitMetersDisplay: React.FC<FitMetersDisplayProps> = ({ fitMeters }) => {
     const sortedMeters = Object.entries(fitMeters.fit_meters).sort((a, b) => {
         const idxA = priorityOrder.indexOf(a[0]);
         const idxB = priorityOrder.indexOf(b[0]);
-        // If both in priority list, sort by index
         if (idxA !== -1 && idxB !== -1) return idxA - idxB;
-        // If valid meter vs unknown, valid first
         if (idxA !== -1) return -1;
         if (idxB !== -1) return 1;
-        // Alphabetical otherwise
         return a[0].localeCompare(b[0]);
     });
 
@@ -32,37 +29,43 @@ const FitMetersDisplay: React.FC<FitMetersDisplayProps> = ({ fitMeters }) => {
         }
     };
 
+    const getStatusBadge = (zone: string, status: string) => {
+        const statusText = status.split('_').map(word => word.charAt(0).toUpperCase() + word.slice(1)).join(' ');
+        switch (zone) {
+            case 'green': return { bg: 'bg-emerald-500/20', text: 'text-emerald-400', border: 'border-emerald-500/30' };
+            case 'red': return { bg: 'bg-rose-500/20', text: 'text-rose-400', border: 'border-rose-500/30' };
+            case 'blue': return { bg: 'bg-blue-500/20', text: 'text-blue-400', border: 'border-blue-500/30' };
+            default: return { bg: 'bg-slate-500/20', text: 'text-slate-400', border: 'border-slate-500/30' };
+        }
+    };
+
     const getStatusText = (status: string) => {
         return status.split('_').map(word => word.charAt(0).toUpperCase() + word.slice(1)).join(' ');
     };
 
     return (
-        <div className="bg-white rounded-2xl p-5 shadow-bento border border-slate-200/60 h-full">
-            <h3 className="text-base font-bold text-slate-900 mb-4 flex items-center gap-2">
-                <div className="w-8 h-8 bg-indigo-50 rounded-lg flex items-center justify-center">
-                    <Ruler className="text-indigo-600" size={16} />
-                </div>
-                Fit Meters
-            </h3>
-
-            <div className="space-y-4">
-                {sortedMeters.map(([key, meter]) => (
-                    <div key={key}>
+        <div className="space-y-4">
+            {sortedMeters.map(([key, meter], index) => {
+                const badge = getStatusBadge(meter.zone, meter.status);
+                return (
+                    <motion.div
+                        key={key}
+                        initial={{ opacity: 0, x: -10 }}
+                        animate={{ opacity: 1, x: 0 }}
+                        transition={{ delay: index * 0.05 }}
+                    >
                         {/* Header */}
                         <div className="flex justify-between items-center mb-2">
-                            <span className="font-medium text-slate-700 capitalize text-sm">{key.replace('_', ' ')}</span>
-                            <span className={`text-xs font-medium px-2 py-0.5 rounded-full
-                  ${meter.zone === 'green' ? 'bg-emerald-50 text-emerald-700' :
-                                        meter.zone === 'red' ? 'bg-rose-50 text-rose-700' :
-                                            'bg-blue-50 text-blue-700'}`}>
-                                    {getStatusText(meter.status)}
+                            <span className="font-medium text-white capitalize text-sm">{key.replace('_', ' ')}</span>
+                            <span className={`text-xs font-medium px-2 py-0.5 rounded-full border ${badge.bg} ${badge.text} ${badge.border}`}>
+                                {getStatusText(meter.status)}
                             </span>
                         </div>
 
-                        {/* Progress Bar Container */}
-                        <div className="h-2 bg-slate-100 rounded-full overflow-hidden relative">
-                            {/* Zone Markers (Background) */}
-                            <div className="absolute inset-0 flex opacity-20">
+                        {/* Progress Bar */}
+                        <div className="h-2 bg-slate-700/50 rounded-full overflow-hidden relative">
+                            {/* Zone Markers */}
+                            <div className="absolute inset-0 flex opacity-30">
                                 <div className="w-[30%] bg-rose-500 h-full"></div>
                                 <div className="w-[40%] bg-emerald-500 h-full"></div>
                                 <div className="w-[30%] bg-blue-500 h-full"></div>
@@ -80,15 +83,17 @@ const FitMetersDisplay: React.FC<FitMetersDisplayProps> = ({ fitMeters }) => {
                         {/* Measurements Detail */}
                         <div className="flex justify-between text-xs text-slate-400 mt-1.5 font-mono">
                             <span>You: {meter.user_measurement}cm</span>
-                            <span>Ease: {meter.ease > 0 ? '+' : ''}{meter.ease}cm</span>
+                            <span className={meter.ease > 0 ? 'text-emerald-400' : meter.ease < 0 ? 'text-rose-400' : 'text-slate-400'}>
+                                Ease: {meter.ease > 0 ? '+' : ''}{meter.ease}cm
+                            </span>
                             <span>Item: {meter.garment_measurement}cm</span>
                         </div>
-                    </div>
-                ))}
-            </div>
+                    </motion.div>
+                );
+            })}
 
-            <div className="mt-4 pt-3 border-t border-slate-100 text-xs text-slate-500 text-center font-medium">
-                Fit Score: {fitMeters.overall_fit_score}/100
+            <div className="mt-4 pt-3 border-t border-white/10 text-sm text-slate-300 text-center font-medium">
+                Overall Fit Score: <span className="text-white font-bold">{fitMeters.overall_fit_score}/100</span>
             </div>
         </div>
     );

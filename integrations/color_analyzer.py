@@ -2,9 +2,9 @@
 Color Analysis Engine
 Extracts clothing color from image and analyzes compatibility with skin tone
 """
+
 import cv2
 import numpy as np
-from typing import Dict, List, Tuple, Optional
 from loguru import logger
 from sklearn.cluster import KMeans
 
@@ -13,7 +13,7 @@ class ColorAnalyzer:
     """
     Analyzes clothing colors and their compatibility with skin tones
     """
-    
+
     def __init__(self):
         """Initialize color analyzer"""
         # Color compatibility rules based on skin tone
@@ -44,7 +44,7 @@ class ColorAnalyzer:
                 'avoid': ['Light Colors', 'Pastel Colors', 'Neon']
             }
         }
-        
+
         # Color name mapping from RGB ranges
         self.color_names = {
             'Navy': {'r': (0, 50), 'g': (0, 50), 'b': (80, 150)},
@@ -63,10 +63,10 @@ class ColorAnalyzer:
             'Crimson': {'r': (150, 200), 'g': (0, 50), 'b': (0, 50)},
             'Deep Red': {'r': (150, 200), 'g': (0, 50), 'b': (0, 50)},
         }
-        
+
         logger.info("ColorAnalyzer initialized")
-    
-    def extract_dominant_colors(self, image: np.ndarray, n_colors: int = 3) -> List[Dict]:
+
+    def extract_dominant_colors(self, image: np.ndarray, n_colors: int = 3) -> list[dict]:
         """
         Extract dominant colors from clothing image
         
@@ -80,24 +80,24 @@ class ColorAnalyzer:
         try:
             # Convert BGR to RGB
             rgb_image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
-            
+
             # Reshape image to be a list of pixels
             pixels = rgb_image.reshape(-1, 3)
-            
+
             # Use KMeans to find dominant colors
             kmeans = KMeans(n_clusters=n_colors, random_state=42, n_init=10)
             kmeans.fit(pixels)
-            
+
             # Get cluster centers (dominant colors)
             colors = kmeans.cluster_centers_.astype(int)
-            
+
             # Get color labels for each pixel
             labels = kmeans.labels_
-            
+
             # Calculate percentage of each color
             unique, counts = np.unique(labels, return_counts=True)
             percentages = (counts / len(labels)) * 100
-            
+
             # Create color list with names
             color_list = []
             for i, color in enumerate(colors):
@@ -107,12 +107,12 @@ class ColorAnalyzer:
                     'name': color_name,
                     'percentage': round(percentages[i], 1)
                 })
-            
+
             # Sort by percentage (most dominant first)
             color_list.sort(key=lambda x: x['percentage'], reverse=True)
-            
+
             return color_list
-            
+
         except Exception as e:
             logger.error(f"Error extracting colors: {e}")
             return [{
@@ -120,37 +120,37 @@ class ColorAnalyzer:
                 'name': 'Unknown',
                 'percentage': 100
             }]
-    
+
     def _identify_color_name(self, rgb: np.ndarray) -> str:
         """Identify color name from RGB values"""
         r, g, b = rgb
-        
+
         best_match = 'Unknown'
         best_score = float('inf')
-        
+
         for color_name, ranges in self.color_names.items():
             r_min, r_max = ranges['r']
             g_min, g_max = ranges['g']
             b_min, b_max = ranges['b']
-            
+
             # Calculate distance from color range
             r_dist = min(abs(r - r_min), abs(r - r_max)) if not (r_min <= r <= r_max) else 0
             g_dist = min(abs(g - g_min), abs(g - g_max)) if not (g_min <= g <= g_max) else 0
             b_dist = min(abs(b - b_min), abs(b - b_max)) if not (b_min <= b <= b_max) else 0
-            
+
             total_dist = r_dist + g_dist + b_dist
-            
+
             if total_dist < best_score:
                 best_score = total_dist
                 best_match = color_name
-        
+
         return best_match
-    
+
     def analyze_color_compatibility(
         self,
-        clothing_colors: List[Dict],
+        clothing_colors: list[dict],
         skin_tone: str
-    ) -> Dict:
+    ) -> dict:
         """
         Analyze how well clothing colors match skin tone
         
@@ -168,16 +168,16 @@ class ColorAnalyzer:
                 'primary_color': None,
                 'recommendation': 'Unable to analyze color compatibility'
             }
-        
+
         primary_color = clothing_colors[0]  # Most dominant color
         color_name = primary_color['name']
-        
+
         # Get compatibility rules for this skin tone
         if skin_tone not in self.color_compatibility:
             skin_tone = 'medium'  # Default
-        
+
         compatibility_rules = self.color_compatibility[skin_tone]
-        
+
         # Determine compatibility
         if color_name in compatibility_rules['excellent']:
             match_score = 95
@@ -195,10 +195,10 @@ class ColorAnalyzer:
             match_score = 65
             compatibility = 'fair'
             recommendation = f'{color_name} is a neutral choice.'
-        
+
         # Get alternative color suggestions
         alternative_colors = self._get_alternative_colors(skin_tone, color_name)
-        
+
         return {
             'match_score': match_score,
             'compatibility': compatibility,
@@ -207,23 +207,23 @@ class ColorAnalyzer:
             'recommendation': recommendation,
             'alternative_colors': alternative_colors
         }
-    
-    def _get_alternative_colors(self, skin_tone: str, current_color: str) -> List[Dict]:
+
+    def _get_alternative_colors(self, skin_tone: str, current_color: str) -> list[dict]:
         """Get alternative color suggestions based on skin tone"""
         if skin_tone not in self.color_compatibility:
             skin_tone = 'medium'
-        
+
         compatibility_rules = self.color_compatibility[skin_tone]
-        
+
         # Get excellent colors (excluding current)
         excellent_colors = [c for c in compatibility_rules['excellent'] if c != current_color]
-        
+
         # Get good colors
         good_colors = [c for c in compatibility_rules['good'] if c != current_color]
-        
+
         # Combine and limit to top 5
         alternatives = (excellent_colors[:3] + good_colors[:2])[:5]
-        
+
         # Create color swatches with RGB approximations
         color_swatches = []
         for color_name in alternatives:
@@ -237,11 +237,12 @@ class ColorAnalyzer:
                 }
             else:
                 rgb = {'r': 128, 'g': 128, 'b': 128}
-            
+
             color_swatches.append({
                 'name': color_name,
                 'rgb': rgb,
                 'match_score': 95 if color_name in compatibility_rules['excellent'] else 80
             })
-        
+
         return color_swatches
+

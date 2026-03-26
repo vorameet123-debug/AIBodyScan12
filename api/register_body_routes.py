@@ -4,7 +4,7 @@ Script to register body intelligence routes in app.py
 import sys
 
 # Read app.py
-with open('d:/3Dmodel/api/app.py', 'r', encoding='utf-8') as f:
+with open('d:/3Dmodel/api/app.py', encoding='utf-8') as f:
     lines = f.readlines()
 
 # Check if already registered
@@ -46,3 +46,4 @@ with open('d:/3Dmodel/api/app.py', 'w', encoding='utf-8') as f:
     f.writelines(lines)
 
 print("SUCCESS: Registered body intelligence routes")
+

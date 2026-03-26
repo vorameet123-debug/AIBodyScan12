@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { motion } from 'framer-motion';
-import { TrendingUp, TrendingDown, Minus, Sparkles } from 'lucide-react';
+import { TrendingUp, TrendingDown, Minus, Sparkles, Check } from 'lucide-react';
 
 interface SizeData {
     overall_fit_score: number;
@@ -31,15 +31,6 @@ export const SizeRecommendationSlider: React.FC<SizeRecommendationSliderProps> =
     userSelectedSize,
     onSizeSelect
 }) => {
-    // Debug logging
-    console.log('SizeRecommendationSlider props:', {
-        allSizes,
-        sizeDetails,
-        recommendedSize,
-        recommendedScore,
-        userSelectedSize
-    });
-
     const [currentSize, setCurrentSize] = useState(recommendedSize);
     const sizes = Object.keys(allSizes).sort(); // XS, S, M, L, XL, XXL, XXXL
 
@@ -54,31 +45,40 @@ export const SizeRecommendationSlider: React.FC<SizeRecommendationSliderProps> =
     };
 
     const getScoreColor = (score: number) => {
-        if (score >= 85) return 'text-green-500';
-        if (score >= 70) return 'text-yellow-500';
-        return 'text-red-500';
+        if (score >= 85) return 'text-emerald-400';
+        if (score >= 70) return 'text-amber-400';
+        return 'text-rose-400';
     };
 
     const getScoreBgColor = (score: number) => {
-        if (score >= 85) return 'bg-green-500';
-        if (score >= 70) return 'bg-yellow-500';
-        return 'bg-red-500';
+        if (score >= 85) return 'bg-emerald-500';
+        if (score >= 70) return 'bg-amber-500';
+        return 'bg-rose-500';
     };
 
     const getScoreIcon = (score: number) => {
-        if (score >= 85) return <TrendingUp className="inline" size={16} />;
-        if (score >= 70) return <Minus className="inline" size={16} />;
-        return <TrendingDown className="inline" size={16} />;
+        if (score >= 85) return <TrendingUp className="inline" size={14} />;
+        if (score >= 70) return <Minus className="inline" size={14} />;
+        return <TrendingDown className="inline" size={14} />;
+    };
+
+    const getSizeButtonStyles = (size: string, score: number, isCurrent: boolean, isUserSelected: boolean) => {
+        if (isCurrent) {
+            return 'bg-gradient-to-br from-violet-500 to-purple-600 text-white shadow-lg shadow-violet-500/25 scale-110';
+        }
+        if (score >= 85) return 'bg-emerald-500/20 text-emerald-400 hover:bg-emerald-500/30 border border-emerald-500/30';
+        if (score >= 70) return 'bg-amber-500/20 text-amber-400 hover:bg-amber-500/30 border border-amber-500/30';
+        return 'bg-rose-500/20 text-rose-400 hover:bg-rose-500/30 border border-rose-500/30';
     };
 
     return (
-        <div className="w-full max-w-4xl mx-auto p-6 bg-white rounded-2xl shadow-bento border border-slate-200/60">
+        <div className="w-full max-w-4xl mx-auto p-6 bg-slate-800/50 backdrop-blur-sm rounded-2xl border border-white/10">
             {/* Header */}
             <div className="text-center mb-8">
-                <h2 className="text-2xl font-bold text-slate-900 mb-2">
+                <h2 className="text-2xl font-bold text-white mb-2">
                     Find Your Perfect Size
                 </h2>
-                <p className="text-slate-500">Drag or click to compare all sizes</p>
+                <p className="text-slate-400">Click to compare all sizes</p>
             </div>
 
             {/* Size Slider */}
@@ -98,7 +98,7 @@ export const SizeRecommendationSlider: React.FC<SizeRecommendationSliderProps> =
                                     <motion.div
                                         initial={{ scale: 0 }}
                                         animate={{ scale: 1 }}
-                                        className="absolute -top-8 bg-amber-500 text-white text-xs font-medium px-2 py-1 rounded-lg"
+                                        className="absolute -top-8 bg-gradient-to-r from-amber-500 to-orange-500 text-white text-xs font-medium px-2 py-1 rounded-lg shadow-lg shadow-amber-500/25"
                                     >
                                         <Sparkles size={12} className="inline mr-1" />
                                         Best
@@ -110,18 +110,7 @@ export const SizeRecommendationSlider: React.FC<SizeRecommendationSliderProps> =
                                     onClick={() => handleSizeClick(size)}
                                     whileHover={{ scale: 1.1 }}
                                     whileTap={{ scale: 0.95 }}
-                                    className={`
-                    w-11 h-11 rounded-full font-medium text-sm transition-all
-                    ${isCurrent
-                                            ? 'bg-indigo-600 text-white shadow-lg scale-110'
-                                            : score >= 85
-                                                ? 'bg-emerald-100 text-emerald-700 hover:bg-emerald-200'
-                                                : score >= 70
-                                                    ? 'bg-amber-100 text-amber-700 hover:bg-amber-200'
-                                                    : 'bg-rose-100 text-rose-700 hover:bg-rose-200'
-                                        }
-                    ${isUserSelected && !isCurrent ? 'ring-2 ring-indigo-400' : ''}
-                  `}
+                                    className={`w-11 h-11 rounded-full font-medium text-sm transition-all ${getSizeButtonStyles(size, score, isCurrent, isUserSelected)} ${isUserSelected && !isCurrent ? 'ring-2 ring-violet-400' : ''}`}
                                 >
                                     {size}
                                 </motion.button>
@@ -141,7 +130,7 @@ export const SizeRecommendationSlider: React.FC<SizeRecommendationSliderProps> =
                 </div>
 
                 {/* Progress line */}
-                <div className="h-1.5 bg-slate-200 rounded-full relative overflow-hidden">
+                <div className="h-1.5 bg-slate-700/50 rounded-full relative overflow-hidden">
                     <motion.div
                         className={`h-full rounded-full ${getScoreBgColor(currentScore)}`}
                         initial={{ width: 0 }}
@@ -157,22 +146,22 @@ export const SizeRecommendationSlider: React.FC<SizeRecommendationSliderProps> =
                 initial={{ opacity: 0, y: 10 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.2 }}
-                className="bg-slate-50 rounded-xl p-5 border border-slate-100"
+                className="bg-slate-700/30 rounded-xl p-5 border border-white/5"
             >
                 {/* Size header */}
                 <div className="flex items-center justify-between mb-4">
                     <div>
-                        <h3 className="text-xl font-bold text-slate-900">
+                        <h3 className="text-xl font-bold text-white">
                             Size {currentSize}
                         </h3>
                         {currentSize === recommendedSize && (
-                            <p className="text-sm text-emerald-600 font-medium flex items-center gap-1">
+                            <p className="text-sm text-emerald-400 font-medium flex items-center gap-1">
                                 <Sparkles size={14} />
                                 This is your BEST fit!
                             </p>
                         )}
                         {currentSize === userSelectedSize && currentSize !== recommendedSize && (
-                            <p className="text-sm text-indigo-600 font-medium">
+                            <p className="text-sm text-violet-400 font-medium">
                                 You selected this size
                             </p>
                         )}
@@ -181,7 +170,7 @@ export const SizeRecommendationSlider: React.FC<SizeRecommendationSliderProps> =
                         <div className={`text-3xl font-bold ${getScoreColor(currentScore)}`}>
                             {Math.round(currentScore)}
                         </div>
-                        <div className="text-sm text-slate-500">Fit Score</div>
+                        <div className="text-sm text-slate-400">Fit Score</div>
                     </div>
                 </div>
 
@@ -192,22 +181,23 @@ export const SizeRecommendationSlider: React.FC<SizeRecommendationSliderProps> =
                             const isGood = meter.status === 'Perfect Fit';
                             const isTight = meter.status === 'Too Tight';
 
+                            const getStatusStyles = () => {
+                                if (isGood) return 'bg-emerald-500/20 text-emerald-400 border-emerald-500/30';
+                                if (isTight) return 'bg-rose-500/20 text-rose-400 border-rose-500/30';
+                                return 'bg-blue-500/20 text-blue-400 border-blue-500/30';
+                            };
+
                             return (
                                 <div key={key} className="flex items-center gap-3">
-                                    <div className="w-24 text-sm font-medium text-slate-700 capitalize">
+                                    <div className="w-24 text-sm font-medium text-slate-300 capitalize">
                                         {key.replace('_', ' ')}
                                     </div>
                                     <div className="flex-1">
                                         <div className="flex items-center gap-2">
-                                            <div className={`
-                        px-2.5 py-1 rounded-lg text-xs font-medium
-                        ${isGood ? 'bg-emerald-100 text-emerald-700' :
-                                                    isTight ? 'bg-rose-100 text-rose-700' :
-                                                        'bg-indigo-100 text-indigo-700'}
-                      `}>
+                                            <div className={`px-2.5 py-1 rounded-lg text-xs font-medium border ${getStatusStyles()}`}>
                                                 {meter.status}
                                             </div>
-                                            <div className="text-sm text-slate-500">
+                                            <div className="text-sm text-slate-400">
                                                 {meter.ease > 0 ? '+' : ''}{meter.ease.toFixed(1)}cm ease
                                             </div>
                                         </div>
@@ -223,13 +213,10 @@ export const SizeRecommendationSlider: React.FC<SizeRecommendationSliderProps> =
 
                 {/* Action button */}
                 <button
-                    className={`
-            w-full mt-5 py-3 rounded-xl font-medium text-base transition-colors
-            ${currentSize === recommendedSize
-                            ? 'bg-emerald-600 hover:bg-emerald-700 text-white'
-                            : 'bg-indigo-600 hover:bg-indigo-700 text-white'
-                        }
-          `}
+                    className={`w-full mt-5 py-3 rounded-xl font-medium text-base transition-all ${currentSize === recommendedSize
+                            ? 'bg-gradient-to-r from-emerald-500 to-green-500 hover:from-emerald-400 hover:to-green-400 text-white shadow-lg shadow-emerald-500/25'
+                            : 'bg-gradient-to-r from-violet-500 to-purple-500 hover:from-violet-400 hover:to-purple-400 text-white shadow-lg shadow-violet-500/25'
+                        }`}
                 >
                     {currentSize === recommendedSize ? '✨ Buy Recommended Size' : `Select Size ${currentSize}`}
                 </button>
@@ -240,10 +227,10 @@ export const SizeRecommendationSlider: React.FC<SizeRecommendationSliderProps> =
                 <motion.div
                     initial={{ opacity: 0 }}
                     animate={{ opacity: 1 }}
-                    className="mt-4 p-4 bg-indigo-50 border border-indigo-200 rounded-xl"
+                    className="mt-4 p-4 bg-violet-500/10 border border-violet-500/30 rounded-xl"
                 >
-                    <p className="text-sm text-indigo-800">
-                        <strong>Note:</strong> You selected size {userSelectedSize.toUpperCase()} ({Math.round(allSizes[userSelectedSize.toUpperCase()] || 0)}%),
+                    <p className="text-sm text-violet-300">
+                        <strong className="text-violet-200">Note:</strong> You selected size {userSelectedSize.toUpperCase()} ({Math.round(allSizes[userSelectedSize.toUpperCase()] || 0)}%),
                         but size {recommendedSize} ({Math.round(recommendedScore)}%) would fit better!
                     </p>
                 </motion.div>

@@ -1,15 +1,42 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
-import { 
-  Check, X, Sparkles, Zap, Crown, Star, ArrowRight, 
+import {
+  Check, X, Sparkles, Zap, Crown, Star, ArrowRight,
   Target, ShoppingBag, Brain, TrendingUp, Package, Eye,
-  Users, Shield, Headphones, Infinity, Gift
+  Users, Shield, Headphones, Infinity, Gift, Calendar
 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
+import toast from 'react-hot-toast';
+import { paymentService, SubscriptionStatus } from '../services/paymentService';
 
 export const PricingPage: React.FC = () => {
   const navigate = useNavigate();
   const [billingCycle, setBillingCycle] = useState<'monthly' | 'yearly'>('yearly');
+  const [isProcessing, setIsProcessing] = useState(false);
+  const [subscription, setSubscription] = useState<SubscriptionStatus | null>(null);
+  const [isLoadingSubscription, setIsLoadingSubscription] = useState(true);
+
+  // Fetch subscription status on mount
+  useEffect(() => {
+    const fetchSubscription = async () => {
+      const token = localStorage.getItem('auth_token');
+      if (!token) {
+        setIsLoadingSubscription(false);
+        return;
+      }
+
+      try {
+        const status = await paymentService.getSubscriptionStatus();
+        setSubscription(status);
+      } catch (error) {
+        console.error('Failed to fetch subscription:', error);
+      } finally {
+        setIsLoadingSubscription(false);
+      }
+    };
+
+    fetchSubscription();
+  }, []);
 
   const plans = [
     {
@@ -22,12 +49,12 @@ export const PricingPage: React.FC = () => {
       popular: false,
       features: [
         { text: '3 Body Scans per month', included: true },
-        { text: '5 FitChecker analyses', included: true },
+        { text: '3 FitChecker analyses', included: true },
         { text: 'Basic 3D visualization', included: true },
         { text: 'Fashion IQ score', included: true },
         { text: 'Save up to 3 measurements', included: true },
         { text: 'Body Tracker (7-day history)', included: true },
-        { text: 'Wardrobe Analytics', included: false },
+        { text: 'Wardrobe & Trend Analytics', included: false },
         { text: 'Trend Dashboard', included: false },
         { text: 'Priority support', included: false },
         { text: 'API access', included: false },
@@ -39,7 +66,7 @@ export const PricingPage: React.FC = () => {
       id: 'pro',
       name: 'Pro',
       description: 'For fashion enthusiasts and regular users',
-      price: { monthly: 12, yearly: 8 },
+      price: { monthly: 999, yearly: 666 }, // ₹999/month or ₹666/month (yearly)
       icon: Zap,
       color: 'violet',
       popular: true,
@@ -50,19 +77,19 @@ export const PricingPage: React.FC = () => {
         { text: 'Full Fashion IQ with badges', included: true },
         { text: 'Unlimited saved measurements', included: true },
         { text: 'Body Tracker (full history)', included: true },
-        { text: 'Wardrobe Analytics', included: true },
+        { text: 'Wardrobe & Trend Analytics', included: true },
         { text: 'Trend Dashboard', included: true },
         { text: 'Email support', included: true },
         { text: 'API access', included: false },
       ],
-      cta: 'Start Pro Trial',
-      ctaAction: () => alert('Pro subscription coming soon!')
+      cta: 'Get Pro Now',
+      ctaAction: () => handlePayment('pro')
     },
     {
       id: 'enterprise',
       name: 'Enterprise',
       description: 'For businesses and power users',
-      price: { monthly: 49, yearly: 39 },
+      price: { monthly: 4000, yearly: 3333 }, // ₹4000/month or ₹3333/month (yearly)
       icon: Crown,
       color: 'amber',
       popular: false,
@@ -79,9 +106,45 @@ export const PricingPage: React.FC = () => {
         { text: 'Custom training', included: true },
       ],
       cta: 'Contact Sales',
-      ctaAction: () => alert('Contact us at enterprise@bodyscan.ai')
+      ctaAction: () => window.location.href = 'mailto:enterprise@bodyscan.ai?subject=Enterprise Plan Inquiry'
     },
   ];
+
+  // Handle payment initiation
+  const handlePayment = async (planId: 'pro' | 'enterprise') => {
+    const token = localStorage.getItem('auth_token');
+    if (!token) {
+      toast.error('Please sign in to purchase a subscription');
+      navigate('/login');
+      return;
+    }
+
+    setIsProcessing(true);
+
+    await paymentService.initiateCheckout(
+      planId,
+      billingCycle,
+      // Success callback
+      () => {
+        setIsProcessing(false);
+        toast.success('🎉 Payment successful! Your subscription is now active.');
+        navigate('/measurements');
+      },
+      // Failure callback
+      (error) => {
+        setIsProcessing(false);
+
+        // Check if it's an authentication error
+        if (error.includes('credentials') || error.includes('Unauthorized') || error.includes('401')) {
+          toast.error('Your session has expired. Please sign in again.');
+          localStorage.removeItem('auth_token');
+          navigate('/login');
+        } else {
+          toast.error(`Payment failed: ${error}`);
+        }
+      }
+    );
+  };
 
   const faqs = [
     {
@@ -90,15 +153,15 @@ export const PricingPage: React.FC = () => {
     },
     {
       q: 'Can I cancel anytime?',
-      a: 'Yes! You can cancel your subscription at any time. You\'ll continue to have access until the end of your billing period.'
+      a: 'Your subscription runs for the purchased period (monthly or yearly). Once purchased, the subscription cannot be cancelled mid-term, but it will not auto-renew unless you choose to renew.'
     },
     {
-      q: 'Is there a free trial for Pro?',
-      a: 'Yes, Pro comes with a 7-day free trial. No credit card required to start.'
+      q: 'What is your refund policy?',
+      a: 'Due to the nature of our AI-powered service, all purchases are final and non-refundable. We recommend trying the free tier first to ensure our service meets your needs.'
     },
     {
       q: 'What payment methods do you accept?',
-      a: 'We accept all major credit cards, PayPal, and Apple Pay. Enterprise plans can also pay via invoice.'
+      a: 'We accept UPI, Credit/Debit Cards (Visa, Mastercard, RuPay), Net Banking, and popular wallets like Paytm, PhonePe, and GPay via Razorpay.'
     },
   ];
 
@@ -116,8 +179,8 @@ export const PricingPage: React.FC = () => {
     <div className="relative overflow-hidden">
       {/* Ambient Background */}
       <div className="fixed inset-0 pointer-events-none">
-        <div className="absolute top-0 left-1/3 w-[600px] h-[600px] bg-gradient-to-br from-violet-200/30 to-transparent rounded-full blur-3xl" />
-        <div className="absolute bottom-1/4 right-0 w-[500px] h-[500px] bg-gradient-to-br from-amber-200/20 to-transparent rounded-full blur-3xl" />
+        <div className="absolute top-0 left-1/3 w-[600px] h-[600px] bg-gradient-to-br from-violet-950/40 to-transparent rounded-full blur-3xl" />
+        <div className="absolute bottom-1/4 right-0 w-[500px] h-[500px] bg-gradient-to-br from-amber-950/30 to-transparent rounded-full blur-3xl" />
       </div>
 
       {/* Header */}
@@ -128,48 +191,46 @@ export const PricingPage: React.FC = () => {
             animate={{ opacity: 1, y: 0 }}
             className="text-center max-w-3xl mx-auto"
           >
-            <motion.span 
+            <motion.span
               initial={{ opacity: 0, scale: 0.9 }}
               animate={{ opacity: 1, scale: 1 }}
-              className="inline-flex items-center gap-2 px-4 py-1.5 bg-violet-100 text-violet-700 rounded-full text-sm font-semibold mb-6"
+              className="inline-flex items-center gap-2 px-4 py-1.5 bg-violet-500/10 text-violet-400 rounded-full text-sm font-semibold mb-6 border border-violet-500/20"
             >
-              <Gift className="w-4 h-4" />
-              7-day free Pro trial
+              <Sparkles className="w-4 h-4" />
+              Start free with 3 scans/month
             </motion.span>
-            
-            <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold tracking-tight text-slate-900 mb-6">
+
+            <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold tracking-tight text-white mb-6">
               Simple, Transparent{' '}
-              <span className="bg-gradient-to-r from-violet-600 to-fuchsia-600 bg-clip-text text-transparent">
+              <span className="bg-gradient-to-r from-violet-400 to-fuchsia-400 bg-clip-text text-transparent">
                 Pricing
               </span>
             </h1>
-            
-            <p className="text-xl text-slate-600 mb-10">
+
+            <p className="text-xl text-slate-400 mb-10">
               Choose the plan that fits your needs. Upgrade or downgrade anytime.
             </p>
 
             {/* Billing Toggle */}
-            <div className="inline-flex items-center gap-4 p-1.5 bg-slate-100 rounded-2xl">
+            <div className="inline-flex items-center gap-4 p-1.5 bg-slate-800/50 rounded-2xl border border-slate-700/50">
               <button
                 onClick={() => setBillingCycle('monthly')}
-                className={`px-6 py-2.5 rounded-xl text-sm font-semibold transition-all ${
-                  billingCycle === 'monthly' 
-                    ? 'bg-white text-slate-900 shadow-md' 
-                    : 'text-slate-600 hover:text-slate-900'
-                }`}
+                className={`px-6 py-2.5 rounded-xl text-sm font-semibold transition-all ${billingCycle === 'monthly'
+                  ? 'bg-slate-700 text-white shadow-md'
+                  : 'text-slate-400 hover:text-white'
+                  }`}
               >
                 Monthly
               </button>
               <button
                 onClick={() => setBillingCycle('yearly')}
-                className={`px-6 py-2.5 rounded-xl text-sm font-semibold transition-all flex items-center gap-2 ${
-                  billingCycle === 'yearly' 
-                    ? 'bg-white text-slate-900 shadow-md' 
-                    : 'text-slate-600 hover:text-slate-900'
-                }`}
+                className={`px-6 py-2.5 rounded-xl text-sm font-semibold transition-all flex items-center gap-2 ${billingCycle === 'yearly'
+                  ? 'bg-slate-700 text-white shadow-md'
+                  : 'text-slate-400 hover:text-white'
+                  }`}
               >
                 Yearly
-                <span className="px-2 py-0.5 bg-emerald-100 text-emerald-700 text-xs font-bold rounded-full">
+                <span className="px-2 py-0.5 bg-emerald-500/20 text-emerald-400 text-xs font-bold rounded-full">
                   Save 33%
                 </span>
               </button>
@@ -181,7 +242,7 @@ export const PricingPage: React.FC = () => {
       {/* Pricing Cards */}
       <section className="relative pb-24">
         <div className="container mx-auto px-6 max-w-7xl">
-          <motion.div 
+          <motion.div
             initial="hidden"
             whileInView="visible"
             viewport={{ once: true }}
@@ -191,7 +252,7 @@ export const PricingPage: React.FC = () => {
             {plans.map((plan) => {
               const price = plan.price[billingCycle];
               const Icon = plan.icon;
-              
+
               return (
                 <motion.div
                   key={plan.id}
@@ -207,74 +268,87 @@ export const PricingPage: React.FC = () => {
                       </span>
                     </div>
                   )}
-                  
-                  <div className={`relative h-full bg-white rounded-3xl p-8 border-2 transition-all ${
-                    plan.popular 
-                      ? 'border-violet-300 shadow-2xl shadow-violet-500/10' 
-                      : 'border-slate-200 hover:border-slate-300 shadow-lg hover:shadow-xl'
-                  }`}>
+
+                  <div className={`relative h-full bento-card p-8 border-2 transition-all ${plan.popular
+                    ? 'border-violet-500/50 shadow-2xl shadow-violet-500/10'
+                    : 'hover:border-slate-600'
+                    }`}>
                     {/* Plan Header */}
                     <div className="mb-8">
-                      <div className={`w-14 h-14 rounded-2xl flex items-center justify-center mb-4 ${
-                        plan.color === 'violet' ? 'bg-violet-100' :
-                        plan.color === 'amber' ? 'bg-amber-100' : 'bg-slate-100'
-                      }`}>
-                        <Icon className={`w-7 h-7 ${
-                          plan.color === 'violet' ? 'text-violet-600' :
-                          plan.color === 'amber' ? 'text-amber-600' : 'text-slate-600'
-                        }`} />
+                      <div className={`w-14 h-14 rounded-2xl flex items-center justify-center mb-4 ${plan.color === 'violet' ? 'bg-violet-500/20' :
+                        plan.color === 'amber' ? 'bg-amber-500/20' : 'bg-slate-700'
+                        }`}>
+                        <Icon className={`w-7 h-7 ${plan.color === 'violet' ? 'text-violet-400' :
+                          plan.color === 'amber' ? 'text-amber-400' : 'text-slate-400'
+                          }`} />
                       </div>
-                      
-                      <h3 className="text-2xl font-bold text-slate-900 mb-1">{plan.name}</h3>
-                      <p className="text-slate-500 text-sm">{plan.description}</p>
+
+                      <h3 className="text-2xl font-bold text-white mb-1">{plan.name}</h3>
+                      <p className="text-slate-400 text-sm">{plan.description}</p>
                     </div>
 
                     {/* Price */}
                     <div className="mb-8">
                       <div className="flex items-baseline gap-1">
-                        <span className="text-5xl font-bold text-slate-900">
-                          ${price}
+                        <span className="text-5xl font-bold text-white">
+                          ₹{price}
                         </span>
                         {price > 0 && (
-                          <span className="text-slate-500">/month</span>
+                          <span className="text-slate-400">/month</span>
                         )}
                       </div>
                       {billingCycle === 'yearly' && price > 0 && (
                         <p className="text-sm text-slate-500 mt-1">
-                          Billed ${price * 12}/year
+                          Billed ₹{price * 12}/year
                         </p>
                       )}
                     </div>
 
                     {/* CTA Button */}
-                    <motion.button
-                      whileHover={{ scale: 1.02 }}
-                      whileTap={{ scale: 0.98 }}
-                      onClick={plan.ctaAction}
-                      className={`w-full py-4 px-6 rounded-xl font-semibold text-center transition-all flex items-center justify-center gap-2 ${
-                        plan.popular 
-                          ? 'bg-gradient-to-r from-violet-600 to-fuchsia-600 text-white shadow-lg shadow-violet-500/25 hover:shadow-xl' 
+                    {/* Check if this is the user's current plan */}
+                    {subscription?.is_active && subscription.plan_type === 'premium' && plan.id === 'pro' ? (
+                      <div className="space-y-3">
+                        <div className="w-full py-4 px-6 rounded-xl font-semibold text-center bg-emerald-500/20 border-2 border-emerald-500 text-emerald-400 flex items-center justify-center gap-2">
+                          <Check className="w-5 h-5" />
+                          Current Plan
+                        </div>
+                        {subscription.days_remaining && (
+                          <p className="text-sm text-slate-400 text-center flex items-center justify-center gap-1">
+                            <Calendar className="w-4 h-4" />
+                            {subscription.days_remaining} days remaining
+                          </p>
+                        )}
+                      </div>
+                    ) : (
+                      <motion.button
+                        whileHover={{ scale: 1.02 }}
+                        whileTap={{ scale: 0.98 }}
+                        onClick={plan.ctaAction}
+                        disabled={isProcessing || isLoadingSubscription}
+                        className={`w-full py-4 px-6 rounded-xl font-semibold text-center transition-all flex items-center justify-center gap-2 ${plan.popular
+                          ? 'bg-gradient-to-r from-violet-600 to-fuchsia-600 text-white shadow-lg shadow-violet-500/25 hover:shadow-xl'
                           : plan.color === 'amber'
-                          ? 'bg-amber-500 text-white hover:bg-amber-600'
-                          : 'bg-slate-900 text-white hover:bg-slate-800'
-                      }`}
-                    >
-                      {plan.cta}
-                      <ArrowRight className="w-4 h-4" />
-                    </motion.button>
+                            ? 'bg-amber-500 text-white hover:bg-amber-600'
+                            : 'bg-slate-900 text-white hover:bg-slate-800'
+                          } ${(isProcessing || isLoadingSubscription) ? 'opacity-50 cursor-not-allowed' : ''}`}
+                      >
+                        {isLoadingSubscription ? 'Loading...' : plan.cta}
+                        {!isLoadingSubscription && <ArrowRight className="w-4 h-4" />}
+                      </motion.button>
+                    )}
 
                     {/* Features List */}
-                    <div className="mt-8 pt-8 border-t border-slate-100">
-                      <p className="text-sm font-semibold text-slate-900 mb-4">What's included:</p>
+                    <div className="mt-8 pt-8 border-t border-slate-700/50">
+                      <p className="text-sm font-semibold text-white mb-4">What's included:</p>
                       <ul className="space-y-3">
                         {plan.features.map((feature, idx) => (
                           <li key={idx} className="flex items-start gap-3">
                             {feature.included ? (
-                              <Check className="w-5 h-5 text-emerald-500 flex-shrink-0 mt-0.5" />
+                              <Check className="w-5 h-5 text-emerald-400 flex-shrink-0 mt-0.5" />
                             ) : (
-                              <X className="w-5 h-5 text-slate-300 flex-shrink-0 mt-0.5" />
+                              <X className="w-5 h-5 text-slate-600 flex-shrink-0 mt-0.5" />
                             )}
-                            <span className={feature.included ? 'text-slate-700' : 'text-slate-400'}>
+                            <span className={feature.included ? 'text-slate-300' : 'text-slate-500'}>
                               {feature.text}
                             </span>
                           </li>
@@ -290,7 +364,7 @@ export const PricingPage: React.FC = () => {
       </section>
 
       {/* Feature Comparison */}
-      <section className="relative py-24 bg-gradient-to-b from-slate-50 to-white">
+      <section className="relative py-24">
         <div className="container mx-auto px-6 max-w-5xl">
           <motion.div
             initial={{ opacity: 0, y: 20 }}
@@ -298,10 +372,10 @@ export const PricingPage: React.FC = () => {
             viewport={{ once: true }}
             className="text-center mb-16"
           >
-            <h2 className="text-3xl md:text-4xl font-bold text-slate-900 mb-4">
+            <h2 className="text-3xl md:text-4xl font-bold text-white mb-4">
               What You Get with Each Plan
             </h2>
-            <p className="text-lg text-slate-600">
+            <p className="text-lg text-slate-400">
               Compare features across all plans
             </p>
           </motion.div>
@@ -320,25 +394,25 @@ export const PricingPage: React.FC = () => {
               { icon: TrendingUp, title: 'Body Tracker', free: '7 days', pro: 'Full history', enterprise: 'Full history' },
               { icon: Package, title: 'Wardrobe', free: '—', pro: 'Full access', enterprise: 'Full access' },
             ].map((feature, idx) => (
-              <div key={idx} className="bg-white rounded-2xl p-6 border border-slate-200 shadow-sm">
+              <div key={idx} className="bento-card p-6">
                 <div className="flex items-center gap-3 mb-4">
-                  <div className="w-10 h-10 bg-violet-100 rounded-xl flex items-center justify-center">
-                    <feature.icon className="w-5 h-5 text-violet-600" />
+                  <div className="w-10 h-10 bg-violet-500/20 rounded-xl flex items-center justify-center">
+                    <feature.icon className="w-5 h-5 text-violet-400" />
                   </div>
-                  <h3 className="font-semibold text-slate-900">{feature.title}</h3>
+                  <h3 className="font-semibold text-white">{feature.title}</h3>
                 </div>
                 <div className="space-y-2 text-sm">
-                  <div className="flex justify-between py-2 border-b border-slate-100">
-                    <span className="text-slate-500">Free</span>
-                    <span className="font-medium text-slate-700">{feature.free}</span>
+                  <div className="flex justify-between py-2 border-b border-slate-700/50">
+                    <span className="text-slate-400">Free</span>
+                    <span className="font-medium text-slate-300">{feature.free}</span>
                   </div>
-                  <div className="flex justify-between py-2 border-b border-slate-100">
-                    <span className="text-violet-600 font-medium">Pro</span>
-                    <span className="font-semibold text-violet-700">{feature.pro}</span>
+                  <div className="flex justify-between py-2 border-b border-slate-700/50">
+                    <span className="text-violet-400 font-medium">Pro</span>
+                    <span className="font-semibold text-violet-400">{feature.pro}</span>
                   </div>
                   <div className="flex justify-between py-2">
-                    <span className="text-amber-600 font-medium">Enterprise</span>
-                    <span className="font-semibold text-amber-700">{feature.enterprise}</span>
+                    <span className="text-amber-400 font-medium">Enterprise</span>
+                    <span className="font-semibold text-amber-400">{feature.enterprise}</span>
                   </div>
                 </div>
               </div>
@@ -358,10 +432,10 @@ export const PricingPage: React.FC = () => {
               { icon: Infinity, text: 'No Lock-in' },
             ].map((item, idx) => (
               <div key={idx} className="flex flex-col items-center gap-2">
-                <div className="w-12 h-12 bg-slate-100 rounded-xl flex items-center justify-center">
-                  <item.icon className="w-6 h-6 text-slate-600" />
+                <div className="w-12 h-12 bg-slate-800/50 rounded-xl flex items-center justify-center border border-slate-700/50">
+                  <item.icon className="w-6 h-6 text-slate-400" />
                 </div>
-                <span className="text-sm font-medium text-slate-600">{item.text}</span>
+                <span className="text-sm font-medium text-slate-400">{item.text}</span>
               </div>
             ))}
           </div>
@@ -369,7 +443,7 @@ export const PricingPage: React.FC = () => {
       </section>
 
       {/* FAQs */}
-      <section className="relative py-24 bg-gradient-to-b from-white to-slate-50">
+      <section className="relative py-24">
         <div className="container mx-auto px-6 max-w-3xl">
           <motion.div
             initial={{ opacity: 0, y: 20 }}
@@ -377,7 +451,7 @@ export const PricingPage: React.FC = () => {
             viewport={{ once: true }}
             className="text-center mb-12"
           >
-            <h2 className="text-3xl font-bold text-slate-900 mb-4">
+            <h2 className="text-3xl font-bold text-white mb-4">
               Frequently Asked Questions
             </h2>
           </motion.div>
@@ -393,10 +467,10 @@ export const PricingPage: React.FC = () => {
               <motion.div
                 key={idx}
                 variants={itemVariants}
-                className="bg-white rounded-2xl p-6 border border-slate-200 shadow-sm"
+                className="bento-card p-6"
               >
-                <h3 className="font-semibold text-slate-900 mb-2">{faq.q}</h3>
-                <p className="text-slate-600">{faq.a}</p>
+                <h3 className="font-semibold text-white mb-2">{faq.q}</h3>
+                <p className="text-slate-400">{faq.a}</p>
               </motion.div>
             ))}
           </motion.div>
@@ -411,10 +485,10 @@ export const PricingPage: React.FC = () => {
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
           >
-            <h2 className="text-3xl md:text-4xl font-bold text-slate-900 mb-4">
+            <h2 className="text-3xl md:text-4xl font-bold text-white mb-4">
               Ready to Get Started?
             </h2>
-            <p className="text-lg text-slate-600 mb-8">
+            <p className="text-lg text-slate-400 mb-8">
               Try BodyScan AI free and upgrade whenever you're ready.
             </p>
             <motion.button

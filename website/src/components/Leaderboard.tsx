@@ -42,7 +42,7 @@ export const Leaderboard: React.FC = () => {
     if (loading) {
         return (
             <div className="flex items-center justify-center p-8">
-                <div className="animate-spin rounded-full h-10 w-10 border-2 border-indigo-500 border-t-transparent"></div>
+                <div className="animate-spin rounded-full h-10 w-10 border-2 border-accent-500 border-t-transparent"></div>
             </div>
         );
     }
@@ -61,7 +61,7 @@ export const Leaderboard: React.FC = () => {
                         initial={{ x: -20, opacity: 0 }}
                         animate={{ x: 0, opacity: 1 }}
                         transition={{ delay: idx * 0.03 }}
-                        className={`${getRankColor(entry.rank)} rounded-xl p-4 border hover:border-indigo-200 transition-colors`}
+                        className={`${getRankColor(entry.rank)} rounded-xl p-4 border hover:border-accent-200 transition-colors`}
                     >
                         <div className="flex items-center justify-between">
                             <div className="flex items-center gap-4">
@@ -76,7 +76,7 @@ export const Leaderboard: React.FC = () => {
                                 </div>
                             </div>
                             <div className="text-right">
-                                <div className="text-2xl font-bold text-indigo-600">
+                                <div className="text-2xl font-bold text-accent-500">
                                     {entry.overall_score}
                                 </div>
                                 <div className="text-xs text-slate-500">IQ Score</div>

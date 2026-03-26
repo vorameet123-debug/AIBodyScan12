@@ -1,0 +1,126 @@
+# Production Docker Compose Configuration
+
+version: '3.8'
+
+services:
+  # ==========================================================================
+  # API Backend
+  # ==========================================================================
+  api:
+    build:
+      context: .
+      dockerfile: Dockerfile.api
+    container_name: aibodyscan-api
+    restart: unless-stopped
+    ports:
+      - "8000:8000"
+    environment:
+      - ENVIRONMENT=production
+      - DEBUG=false
+      - DATABASE_URL=postgresql://${DB_USER}:${DB_PASSWORD}@db:5432/${DB_NAME}
+      - REDIS_URL=redis://redis:6379/0
+      - SECRET_KEY=${SECRET_KEY}
+      - RAZORPAY_KEY_ID=${RAZORPAY_KEY_ID}
+      - RAZORPAY_KEY_SECRET=${RAZORPAY_KEY_SECRET}
+      - SENTRY_DSN=${SENTRY_DSN}
+    depends_on:
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_started
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+    networks:
+      - app-network
+    volumes:
+      - ./logs:/app/logs
+
+  # ==========================================================================
+  # Frontend (Nginx serving built React)
+  # ==========================================================================
+  frontend:
+    build:
+      context: ./website
+      dockerfile: Dockerfile
+    container_name: aibodyscan-frontend
+    restart: unless-stopped
+    expose:
+      - "3000"
+    depends_on:
+      - api
+    networks:
+      - app-network
+
+  # ==========================================================================
+  # Database (PostgreSQL)
+  # ==========================================================================
+  db:
+    image: postgres:15-alpine
+    container_name: aibodyscan-db
+    restart: unless-stopped
+    environment:
+      - POSTGRES_USER=${DB_USER}
+      - POSTGRES_PASSWORD=${DB_PASSWORD}
+      - POSTGRES_DB=${DB_NAME}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./backups:/backups
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${DB_USER} -d ${DB_NAME}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - app-network
+
+  # ==========================================================================
+  # Redis (Caching)
+  # ==========================================================================
+  redis:
+    image: redis:7-alpine
+    container_name: aibodyscan-redis
+    restart: unless-stopped
+    command: redis-server --appendonly yes
+    volumes:
+      - redis_data:/data
+    networks:
+      - app-network
+
+  # ==========================================================================
+  # Nginx Reverse Proxy (Optional - for SSL termination)
+  # ==========================================================================
+  nginx:
+    image: nginx:alpine
+    container_name: aibodyscan-nginx
+    restart: unless-stopped
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./nginx/nginx.conf:/etc/nginx/nginx.conf:ro
+      - ./nginx/ssl:/etc/nginx/ssl:ro
+    depends_on:
+      - api
+      - frontend
+    networks:
+      - app-network
+
+# ==========================================================================
+# Volumes
+# ==========================================================================
+volumes:
+  postgres_data:
+    driver: local
+  redis_data:
+    driver: local
+
+# ==========================================================================
+# Networks
+# ==========================================================================
+networks:
+  app-network:
+    driver: bridge

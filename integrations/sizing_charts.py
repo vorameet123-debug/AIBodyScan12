@@ -2,7 +2,7 @@
 Comprehensive Sizing Charts for Accurate Fit Analysis
 Contains real-world sizing data for various garment categories
 """
-from typing import Dict, Any
+from typing import Any
 
 # Fit type adjustments (in cm)
 # Applied to girth measurements (chest, waist, hip)
@@ -114,7 +114,7 @@ SIZING_CHARTS = {
     'blazer': MENS_JACKET,
     'coat': MENS_JACKET,
     'kurta': MENS_KURTA,
-    
+
     # Women's wear
     'top': WOMENS_TOPS,
     'blouse': WOMENS_TOPS,
@@ -124,7 +124,7 @@ SIZING_CHARTS = {
     'palazzo': WOMENS_BOTTOMS,
     'leggings': WOMENS_BOTTOMS,
     'skirt': WOMENS_BOTTOMS,
-    
+
     # Ethnic wear
     'saree blouse': SAREE_BLOUSE,
     'salwar': SALWAR_KAMEEZ,
@@ -152,7 +152,7 @@ SPECIAL_GARMENTS = {
 }
 
 
-def get_sizing_chart(garment_type: str) -> Dict[str, Dict[str, float]]:
+def get_sizing_chart(garment_type: str) -> dict[str, dict[str, float]]:
     """
     Get the appropriate sizing chart for a garment type
     
@@ -163,27 +163,27 @@ def get_sizing_chart(garment_type: str) -> Dict[str, Dict[str, float]]:
         Dictionary of size -> measurements
     """
     garment_key = garment_type.lower().strip()
-    
+
     # Try exact match first
     if garment_key in SIZING_CHARTS:
         return SIZING_CHARTS[garment_key]
-    
+
     # Try partial match
     for key in SIZING_CHARTS:
         if key in garment_key or garment_key in key:
             return SIZING_CHARTS[key]
-    
+
     # Default to shirt for tops, pants for bottoms
     if any(word in garment_key for word in ['top', 'shirt', 'blouse', 'tunic']):
         return WOMENS_TOPS if 'women' in garment_key else MENS_SHIRT_SLIM
     elif any(word in garment_key for word in ['pant', 'jean', 'trouser', 'bottom']):
         return WOMENS_BOTTOMS if 'women' in garment_key else MENS_PANTS
-    
+
     # Ultimate fallback
     return MENS_SHIRT_SLIM
 
 
-def apply_fit_adjustment(measurements: Dict[str, float], fit_type: str) -> Dict[str, float]:
+def apply_fit_adjustment(measurements: dict[str, float], fit_type: str) -> dict[str, float]:
     """
     Apply fit type adjustments to garment measurements
     
@@ -195,22 +195,22 @@ def apply_fit_adjustment(measurements: Dict[str, float], fit_type: str) -> Dict[
         Adjusted measurements
     """
     adjustment = FIT_TYPE_ADJUSTMENTS.get(fit_type.lower(), 0)
-    
+
     if adjustment == 0:
         return measurements
-    
+
     adjusted = measurements.copy()
-    
+
     # Apply adjustment to girth measurements only
     girth_keys = ['chest', 'waist', 'hip', 'thigh']
     for key in girth_keys:
         if key in adjusted:
             adjusted[key] += adjustment
-    
+
     return adjusted
 
 
-def get_special_garment_info(garment_type: str) -> Dict[str, Any]:
+def get_special_garment_info(garment_type: str) -> dict[str, Any]:
     """
     Get special handling information for specific garment types
     
@@ -221,9 +221,10 @@ def get_special_garment_info(garment_type: str) -> Dict[str, Any]:
         Dictionary with special handling flags and warnings
     """
     garment_key = garment_type.lower().strip()
-    
+
     for special_type, info in SPECIAL_GARMENTS.items():
         if special_type in garment_key:
             return info
-    
+
     return {}
+

@@ -2,8 +2,10 @@
  * Purchase Tracking TypeScript Interfaces and API Methods
  */
 import axios from 'axios';
+import { API_BASE_URL } from '../config/apiConfig';
 
-const API_BASE_URL = process.env.REACT_APP_API_URL || 'http://localhost:8000';
+// Configure axios to skip ngrok browser warning
+axios.defaults.headers.common['ngrok-skip-browser-warning'] = 'true';
 
 // API Methods
 export const PurchaseAPI = {

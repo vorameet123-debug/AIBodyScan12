@@ -2,7 +2,6 @@
 Size Recommendation Engine
 Provides size recommendations (S/M/L/XL, numeric sizes) based on body measurements
 """
-from typing import Dict, List, Optional, Tuple
 from loguru import logger
 
 
@@ -11,13 +10,13 @@ class SizeRecommendationEngine:
     Recommends clothing sizes based on body measurements
     Supports multiple size systems: S/M/L/XL, numeric (24, 26, 28), and age-based
     """
-    
+
     def __init__(self):
         """Initialize size charts for different categories"""
         self.size_charts = self._load_size_charts()
         logger.info("SizeRecommendationEngine initialized")
-    
-    def _load_size_charts(self) -> Dict:
+
+    def _load_size_charts(self) -> dict:
         """
         Load size charts for different clothing categories
         Returns dictionary with size ranges for each category
@@ -33,7 +32,7 @@ class SizeRecommendationEngine:
                 'XL': {'chest_min': 106, 'chest_max': 114, 'height_min': 175, 'height_max': 200},
                 'XXL': {'chest_min': 114, 'chest_max': 999, 'height_min': 180, 'height_max': 999}
             },
-            
+
             'generic_bottoms': {
                 'XS': {'waist_min': 0, 'waist_max': 60, 'height_min': 0, 'height_max': 130},
                 'S': {'waist_min': 60, 'waist_max': 70, 'height_min': 130, 'height_max': 150},
@@ -42,7 +41,7 @@ class SizeRecommendationEngine:
                 'XL': {'waist_min': 90, 'waist_max': 100, 'height_min': 180, 'height_max': 200},
                 'XXL': {'waist_min': 100, 'waist_max': 999, 'height_min': 180, 'height_max': 999}
             },
-            
+
             # Numeric sizing (waist-based for pants)
             # Updated with more accurate waist measurements (in cm)
             # Size 30 typically corresponds to waist 76-82cm
@@ -57,7 +56,7 @@ class SizeRecommendationEngine:
                 '38': {'waist_min': 100, 'waist_max': 106, 'inseam_min': 0, 'inseam_max': 999},
                 '40': {'waist_min': 106, 'waist_max': 112, 'inseam_min': 0, 'inseam_max': 999}
             },
-            
+
             # Dress shirts (neck-based for boys/men)
             'dress_shirts': {
                 '10': {'neck_min': 24, 'neck_max': 26, 'chest_min': 0, 'chest_max': 999},
@@ -69,7 +68,7 @@ class SizeRecommendationEngine:
                 '16': {'neck_min': 36, 'neck_max': 38, 'chest_min': 0, 'chest_max': 999},
                 '17': {'neck_min': 38, 'neck_max': 40, 'chest_min': 0, 'chest_max': 999}
             },
-            
+
             # Dresses (girls/women)
             'dresses': {
                 'XS': {'chest_min': 0, 'chest_max': 75, 'waist_min': 0, 'waist_max': 65, 'height_min': 0, 'height_max': 150},
@@ -78,7 +77,7 @@ class SizeRecommendationEngine:
                 'L': {'chest_min': 95, 'chest_max': 105, 'waist_min': 85, 'waist_max': 95, 'height_min': 175, 'height_max': 185},
                 'XL': {'chest_min': 105, 'chest_max': 115, 'waist_min': 95, 'waist_max': 105, 'height_min': 185, 'height_max': 200}
             },
-            
+
             # Age-based sizing (kids)
             'kids_tops': {
                 '2T': {'chest_min': 0, 'chest_max': 55, 'height_min': 0, 'height_max': 90},
@@ -92,7 +91,7 @@ class SizeRecommendationEngine:
                 '12': {'chest_min': 90, 'chest_max': 95, 'height_min': 160, 'height_max': 170},
                 '14': {'chest_min': 95, 'chest_max': 100, 'height_min': 170, 'height_max': 180}
             },
-            
+
             'kids_bottoms': {
                 '2T': {'waist_min': 0, 'waist_max': 50, 'height_min': 0, 'height_max': 90},
                 '3T': {'waist_min': 50, 'waist_max': 55, 'height_min': 90, 'height_max': 100},
@@ -106,16 +105,16 @@ class SizeRecommendationEngine:
                 '14': {'waist_min': 90, 'waist_max': 95, 'height_min': 170, 'height_max': 180}
             }
         }
-        
+
         return charts
-    
+
     def recommend_size(
         self,
-        measurements: Dict[str, float],
+        measurements: dict[str, float],
         category: str = 'generic_tops',
-        gender: Optional[str] = None,
-        age: Optional[int] = None
-    ) -> Dict[str, any]:
+        gender: str | None = None,
+        age: int | None = None
+    ) -> dict[str, any]:
         """
         Recommend size based on measurements
         
@@ -131,24 +130,24 @@ class SizeRecommendationEngine:
         if category not in self.size_charts:
             logger.warning(f"Unknown category: {category}, using generic_tops")
             category = 'generic_tops'
-        
+
         size_chart = self.size_charts[category]
-        
+
         # Debug: Log available measurements
         logger.debug(f"Recommending size for category: {category}")
         logger.debug(f"Available measurement keys: {list(measurements.keys())}")
-        
+
         # Calculate scores for each size
         size_scores = {}
         for size, ranges in size_chart.items():
             score = 0
             max_score = 0
-            
+
             # Check chest (for tops) - try multiple key variations
             if 'chest_min' in ranges:
                 max_score += 1
                 # Try different possible keys for chest measurement
-                chest = (measurements.get('chest circumference') or 
+                chest = (measurements.get('chest circumference') or
                         measurements.get('chest') or
                         measurements.get('chest_circumference') or 0)
                 if chest > 0:
@@ -158,12 +157,12 @@ class SizeRecommendationEngine:
                     # Also give partial credit if close to range (within 2cm)
                     elif abs(chest - ranges['chest_min']) <= 2 or abs(chest - ranges['chest_max']) <= 2:
                         score += 0.5
-            
+
             # Check waist (for bottoms) - try multiple key variations
             if 'waist_min' in ranges:
                 max_score += 1
                 # Try different possible keys for waist measurement
-                waist = (measurements.get('waist circumference') or 
+                waist = (measurements.get('waist circumference') or
                         measurements.get('waist') or
                         measurements.get('waist_circumference') or 0)
                 if waist > 0:
@@ -173,28 +172,28 @@ class SizeRecommendationEngine:
                     # Also give partial credit if close to range (within 2cm)
                     elif abs(waist - ranges['waist_min']) <= 2 or abs(waist - ranges['waist_max']) <= 2:
                         score += 0.5
-            
+
             # Check height
             if 'height_min' in ranges and 'height' in measurements:
                 max_score += 1
                 height = measurements.get('height', 0)
                 if ranges['height_min'] <= height <= ranges['height_max']:
                     score += 1
-            
+
             # Check neck (for dress shirts)
             if 'neck_min' in ranges and 'neck' in measurements:
                 max_score += 1
                 neck = measurements.get('neck circumference', measurements.get('neck', 0))
                 if ranges['neck_min'] <= neck <= ranges['neck_max']:
                     score += 1
-            
+
             # Check inseam (for pants)
             if 'inseam_min' in ranges and 'inside leg height' in measurements:
                 max_score += 1
                 inseam = measurements.get('inside leg height', 0)
                 if ranges['inseam_min'] <= inseam <= ranges['inseam_max']:
                     score += 1
-            
+
             if max_score > 0:
                 confidence = score / max_score
                 size_scores[size] = {
@@ -202,7 +201,7 @@ class SizeRecommendationEngine:
                     'max_score': max_score,
                     'confidence': confidence
                 }
-        
+
         if not size_scores:
             return {
                 'recommended_size': None,
@@ -210,31 +209,31 @@ class SizeRecommendationEngine:
                 'alternatives': [],
                 'message': 'No matching size found'
             }
-        
+
         # Debug: Log size scores
         if size_scores:
             logger.debug(f"Size scores for {category}: {[(k, v['confidence']) for k, v in sorted(size_scores.items(), key=lambda x: x[1]['confidence'], reverse=True)[:5]]}")
-        
+
         # Find best match - prioritize by score, then confidence, then prefer smaller size if tie
         # This helps avoid recommending L when M would fit better
-        best_size = max(size_scores.items(), 
+        best_size = max(size_scores.items(),
                        key=lambda x: (x[1]['score'], x[1]['confidence'], -len(x[0])))
         recommended_size = best_size[0]
         confidence = best_size[1]['confidence']
-        
+
         logger.info(f"Recommended {category} size: {recommended_size} (confidence: {confidence:.1%})")
-        
+
         # If confidence is low, try to find a better match by checking if we're on the border
         # Prefer the smaller size if measurements are close to the boundary
         if confidence < 0.7 and len(size_scores) > 1:
             # Check if we're close to a smaller size
-            sorted_sizes = sorted(size_scores.items(), 
-                                key=lambda x: (x[1]['score'], x[1]['confidence']), 
+            sorted_sizes = sorted(size_scores.items(),
+                                key=lambda x: (x[1]['score'], x[1]['confidence']),
                                 reverse=True)
             if len(sorted_sizes) >= 2:
                 second_best = sorted_sizes[1]
                 # If second best is very close and is a smaller size, prefer it
-                if (second_best[1]['confidence'] >= confidence - 0.1 and 
+                if (second_best[1]['confidence'] >= confidence - 0.1 and
                     len(second_best[0]) <= len(recommended_size)):
                     # Check size order: XS < S < M < L < XL < XXL
                     size_order = ['XS', 'S', 'M', 'L', 'XL', 'XXL']
@@ -242,14 +241,14 @@ class SizeRecommendationEngine:
                         if size_order.index(second_best[0]) < size_order.index(recommended_size):
                             recommended_size = second_best[0]
                             confidence = second_best[1]['confidence']
-        
+
         # Find alternatives (within 0.2 confidence as alternatives)
         alternatives = [
             size for size, data in size_scores.items()
             if size != recommended_size and data['confidence'] >= confidence - 0.2
         ]
         alternatives.sort(key=lambda x: size_scores[x]['confidence'], reverse=True)
-        
+
         return {
             'recommended_size': recommended_size,
             'confidence': round(confidence * 100, 1),  # As percentage
@@ -257,13 +256,13 @@ class SizeRecommendationEngine:
             'category': category,
             'scores': {size: data['confidence'] for size, data in size_scores.items()}
         }
-    
+
     def recommend_all_sizes(
         self,
-        measurements: Dict[str, float],
-        gender: Optional[str] = None,
-        age: Optional[int] = None
-    ) -> Dict[str, Dict]:
+        measurements: dict[str, float],
+        gender: str | None = None,
+        age: int | None = None
+    ) -> dict[str, dict]:
         """
         Get size recommendations for all categories
         
@@ -276,7 +275,7 @@ class SizeRecommendationEngine:
             Dictionary with recommendations for each category
         """
         recommendations = {}
-        
+
         # Determine which categories to use
         if age and age <= 14:
             # Kids sizing
@@ -295,24 +294,24 @@ class SizeRecommendationEngine:
                 measurements, 'generic_tops', gender, age
             )
             recommendations['shirts'] = recommendations['tops']  # Alias for shirts
-            
+
             # Bottoms (generic letter sizes) - only for non-males or if gender not specified
             # Note: Removing this for males as requested - will implement pants/shorts later
             if gender != 'male':
                 recommendations['bottoms'] = self.recommend_size(
                     measurements, 'generic_bottoms', gender, age
                 )
-        
+
         # Pants (numeric sizing) - always include
         pants_numeric = self.recommend_size(
             measurements, 'numeric_pants', gender, age
         )
         recommendations['pants'] = pants_numeric
-        
+
         # Also map numeric size to letter size for pants
         numeric_to_letter = {
-            '24': 'XS', '26': 'S', '28': 'S', 
-            '30': 'M', '32': 'M', 
+            '24': 'XS', '26': 'S', '28': 'S',
+            '30': 'M', '32': 'M',
             '34': 'L', '36': 'L',
             '38': 'XL', '40': 'XL'
         }
@@ -325,24 +324,24 @@ class SizeRecommendationEngine:
                     'numeric_equivalent': numeric_size,
                     'alternatives': [numeric_to_letter.get(alt, alt) for alt in pants_numeric.get('alternatives', []) if alt in numeric_to_letter]
                 }
-        
+
         # Dress shirts (if neck measurement available) - always include
         if 'neck circumference' in measurements:
             recommendations['dress_shirts'] = self.recommend_size(
                 measurements, 'dress_shirts', gender, age
             )
-        
+
         # Dresses - only for females (remove for males)
         if gender == 'female':
             recommendations['dresses'] = self.recommend_size(
                 measurements, 'dresses', gender, age
             )
         # If gender is None, don't include dresses (user will specify later)
-        
+
         return recommendations
 
 
-def calculate_outseam(measurements: Dict[str, float]) -> Optional[float]:
+def calculate_outseam(measurements: dict[str, float]) -> float | None:
     """
     Calculate outseam length (waist to ankle on outside of leg)
     
@@ -357,20 +356,21 @@ def calculate_outseam(measurements: Dict[str, float]) -> Optional[float]:
     """
     height = measurements.get('height')
     inside_leg = measurements.get('inside leg height')
-    
+
     if height is None or inside_leg is None:
         return None
-    
+
     # Simple approximation: outseam ≈ height - inside_leg
     # This works because inside_leg is crotch to ankle, and height includes head
     # More accurate would need crotch height, but this is a good approximation
     outseam = height - inside_leg
-    
+
     # Sanity check: outseam should be positive and reasonable (30-100 cm typically)
     if outseam < 0 or outseam > 150:
         logger.warning(f"Calculated outseam seems unreasonable: {outseam} cm")
         return None
-    
+
     return round(outseam, 2)
+
 
 

@@ -27,7 +27,7 @@ export const MaterialAnalysisDisplay: React.FC<MaterialAnalysisDisplayProps> = (
     <motion.div
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
-      className="bg-white rounded-2xl p-6 shadow-bento border border-slate-200/60"
+      className="bg-slate-900 rounded-2xl p-6 shadow-bento border border-slate-700/60"
     >
       {/* Header */}
       <div className="flex items-center gap-3 mb-6">

@@ -4,8 +4,8 @@ Connects React frontend with Python measurement pipeline
 """
 import os
 import sys
-from pathlib import Path
 from datetime import datetime
+from pathlib import Path
 
 # Fix encoding for Windows console
 if sys.platform == 'win32':
@@ -14,37 +14,47 @@ if sys.platform == 'win32':
 
 # Load environment variables
 from dotenv import load_dotenv
+
 load_dotenv()
 
-from fastapi import FastAPI, File, UploadFile, Form, HTTPException, Body, Depends, Request
-from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import JSONResponse
-from typing import Optional, List, Dict, Any
-from sqlmodel import Session, select
+import base64
+from typing import Any
+
 import cv2
 import numpy as np
-import base64
-from loguru import logger
-from pydantic import BaseModel, ConfigDict, Field
 from auth import (
-    get_password_hash,
-    verify_password,
-    create_access_token,
     get_current_user,
-    get_current_user_optional,
 )
-from db import create_db_and_tables, get_session, User, MeasurementRecord
+from config import API_CONFIG, DEFAULT_FIT_TYPE, FILE_UPLOAD_LIMITS, FIT_CHECK_DEFAULTS, VALID_FIT_TYPES
+from db import MeasurementRecord, User, create_db_and_tables, get_session
+from error_handlers import ErrorCodes
+from fastapi import Depends, FastAPI, File, Form, HTTPException, Request, UploadFile
+from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import JSONResponse
 from fit_check_history_helper import save_fit_check_history
-from config import FIT_CHECK_DEFAULTS, FILE_UPLOAD_LIMITS, VALID_FIT_TYPES, DEFAULT_FIT_TYPE, API_CONFIG
-from error_handlers import handle_api_error, ErrorCodes, APIError
+from loguru import logger
+from pydantic import BaseModel, ConfigDict
+from rate_limiter import RATE_LIMITS, limiter, setup_rate_limiting
+from sqlmodel import Session, select
 
 
+from response_models import (  # noqa: E402
+    TokenResponse,
+    SaveMeasurementRequest,
+    MeasurementRecordResponse,
+    ClothingFitRequest,
+    NewClothingFitCheckResponse,
+    FitMetersResponse,
+    GarmentAnalysisResponse,
+    RoastResponse,
+    ColorMatchResponse,
+    StyleRecommendationResponse,
+    OccasionAnalysisResponse,
+)
 
 
-
-class TokenResponse(BaseModel):
-    access_token: str
-    token_type: str = "bearer"
+class _ModelsRemoved:  # Removed — now in response_models.py
+    pass
 
 
 class SaveMeasurementRequest(BaseModel):
@@ -54,10 +64,10 @@ class SaveMeasurementRequest(BaseModel):
 
 class MeasurementRecordResponse(BaseModel):
     id: int
-    name: Optional[str]
+    name: str | None
     measurements: dict
-    size_recommendations: Optional[dict] = None
-    metadata: Optional[dict] = None
+    size_recommendations: dict | None = None
+    metadata: dict | None = None
     created_at: datetime
 
 
@@ -67,7 +77,7 @@ class ClothingFitRequest(BaseModel):
     clothing_type: str
     size: str
     size_system: str = "US"
-    brand: Optional[str] = None
+    brand: str | None = None
     material: str
     occasion: str
 
@@ -87,8 +97,8 @@ class AlternativeSize(BaseModel):
 class FitAnalysisResponse(BaseModel):
     fit_confidence: float
     fit_status: str
-    problem_areas: List[ProblemArea]
-    alternative_sizes: List[AlternativeSize]
+    problem_areas: list[ProblemArea]
+    alternative_sizes: list[AlternativeSize]
     expected_measurements: dict
     user_measurements_used: dict
 
@@ -101,16 +111,16 @@ class StyleAnalysisResponse(BaseModel):
     occasion_score: float
     fit_preference: str
     description: str
-    recommended_styles: List[str]
-    styles_to_avoid: List[str]
-    occasion_notes: List[str]
+    recommended_styles: list[str]
+    styles_to_avoid: list[str]
+    occasion_notes: list[str]
     overall_recommendation: str
 
 
 class ColorInfo(BaseModel):
     rgb: dict
     name: str
-    percentage: Optional[float] = None
+    percentage: float | None = None
 
 
 class AlternativeColor(BaseModel):
@@ -123,9 +133,9 @@ class ColorAnalysisResponse(BaseModel):
     match_score: float
     compatibility: str
     primary_color: ColorInfo
-    all_colors: List[ColorInfo]
+    all_colors: list[ColorInfo]
     recommendation: str
-    alternative_colors: List[AlternativeColor]
+    alternative_colors: list[AlternativeColor]
     skin_tone: dict
 
 
@@ -141,11 +151,11 @@ class MaterialAnalysisResponse(BaseModel):
     suitability: str
     occasion_suitability: str
     climate_suitability: str
-    best_for: List[str]
+    best_for: list[str]
     care_instructions: str
     shrinkage_risk: str
-    warnings: List[str]
-    recommendations: List[str]
+    warnings: list[str]
+    recommendations: list[str]
 
 
 class OverallRecommendation(BaseModel):
@@ -161,7 +171,7 @@ class ClothingFitCheckResponse(BaseModel):
     color_analysis: ColorAnalysisResponse
     material_analysis: MaterialAnalysisResponse
     overall_recommendation: OverallRecommendation
-    alerts: List[str]
+    alerts: list[str]
 
 
 # New Clothing Fit Check V2 Models (with Groq Integration)
@@ -174,14 +184,14 @@ class FitMeter(BaseModel):
     score: float
 
 class FitMetersResponse(BaseModel):
-    fit_meters: Dict[str, Optional[FitMeter]]
+    fit_meters: dict[str, FitMeter | None]
     overall_fit_score: float
     worst_metric: str
 
 class GarmentAnalysisResponse(BaseModel):
     garment_type: str
     material: str
-    colors: List[Dict]
+    colors: list[dict]
     style: str
     pattern: str
     fit_type: str
@@ -195,25 +205,25 @@ class RoastResponse(BaseModel):
 class SkinToneResponse(BaseModel):
     tone_category: str
     description: str
-    rgb_values: Dict[str, int]
+    rgb_values: dict[str, int]
     confidence: float
 
 class ColorMatchResponse(BaseModel):
     match_score: int
     roast: str
-    suggested_colors: List[str]
-    skin_tone: Dict
-    primary_color: Dict[str, Any]
+    suggested_colors: list[str]
+    skin_tone: dict
+    primary_color: dict[str, Any]
 
 class StyleRecommendationResponse(BaseModel):
-    outfit_suggestions: List[str]
+    outfit_suggestions: list[str]
     style_score: int
 
 class OccasionAnalysisResponse(BaseModel):
     occasion_match_score: int
     is_appropriate: bool
     recommendation: str
-    alternative_occasions: List[str]
+    alternative_occasions: list[str]
 
 class NewClothingFitCheckResponse(BaseModel):
     model_config = ConfigDict(
@@ -221,7 +231,7 @@ class NewClothingFitCheckResponse(BaseModel):
         use_enum_values=True,
         populate_by_name=True
     )
-    
+
     success: bool
     garment_analysis: GarmentAnalysisResponse
     fit_meters: FitMetersResponse
@@ -229,11 +239,11 @@ class NewClothingFitCheckResponse(BaseModel):
     color_analysis: ColorMatchResponse
     style_recommendations: StyleRecommendationResponse
     occasion_analysis: OccasionAnalysisResponse
-    material_comfort: Dict
+    material_comfort: dict
     overall_score: float
     # Size recommendation fields - MAKE THEM REQUIRED (not Optional) to force inclusion
-    size_recommendation: Dict[str, Any]  # REMOVED Optional
-    all_sizes: Dict[str, Any]  # REMOVED Optional
+    size_recommendation: dict[str, Any]  # REMOVED Optional
+    all_sizes: dict[str, Any]  # REMOVED Optional
     user_selected_size: str | None = None  # Keep as optional but use union syntax
     check_id: int  # REMOVED Optional - MUST have a value
 
@@ -246,8 +256,8 @@ sys.path.insert(0, str(PROJECT_ROOT / "integrations"))
 
 # Import clothing fit analysis modules (after path setup)
 try:
-    from integrations.groq_service import GroqService, GroqServiceError
     from integrations.fit_meter_calculator import FitMeterCalculator
+    from integrations.groq_service import GroqService, GroqServiceError
     from integrations.skin_tone_detector import SkinToneDetector
     CLOTHING_ANALYSIS_AVAILABLE = True
 except ImportError as e:
@@ -271,23 +281,42 @@ def on_startup():
 
 # Register routers
 from routers import auth_router, measurement_router
+
 app.include_router(auth_router)
 app.include_router(measurement_router)
 
-# CORS middleware - allows React to call this API
+# Serve static files (3D models, etc.)
+from fastapi.staticfiles import StaticFiles
+static_dir = Path(__file__).parent / "static"
+if static_dir.exists():
+    app.mount("/static", StaticFiles(directory=str(static_dir)), name="static")
+
+# Setup rate limiting (must be before CORS middleware)
+setup_rate_limiting(app)
+
+# CORS middleware - uses centralized secure configuration
+from cors_config import get_cors_config
+
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=[
-        "http://localhost:3000",  # React dev server
-        "http://localhost:3001",
-        "http://127.0.0.1:3000",
-        "http://127.0.0.1:3001",
-        # Add your production domain here when deploying
-    ],
-    allow_credentials=True,
-    allow_methods=["*"],
-    allow_headers=["*"],
+    **get_cors_config()
 )
+
+# Setup performance middleware (GZip, timing, cache headers)
+try:
+    from performance_middleware import setup_performance_middleware
+    setup_performance_middleware(app)
+    logger.info("Performance middleware configured successfully")
+except Exception as e:
+    logger.warning(f"Could not setup performance middleware: {e}")
+
+# Setup security headers (OWASP recommended)
+try:
+    from security_headers import setup_security_headers
+    setup_security_headers(app)
+    logger.info("Security headers middleware configured successfully")
+except Exception as e:
+    logger.warning(f"Could not setup security headers: {e}")
 
 # Register Fashion IQ routes
 try:
@@ -334,6 +363,24 @@ except Exception as e:
     logger.warning(f"Could not register trend routes: {e}")
 
 
+# Register Payment routes
+try:
+    from payment_routes import register_payment_routes
+    register_payment_routes(app, get_session)
+    logger.info("Payment routes registered successfully")
+except Exception as e:
+    logger.warning(f"Could not register payment routes: {e}")
+
+
+# Register Usage tracking routes
+try:
+    from usage_routes import register_usage_routes
+    register_usage_routes(app, get_session)
+    logger.info("Usage tracking routes registered successfully")
+except Exception as e:
+    logger.warning(f"Could not register usage routes: {e}")
+
+
 # Initialize pipeline (lazy loading - will load on first request)
 pipeline = None
 
@@ -351,12 +398,13 @@ def get_pipeline():
             logger.error(f"Failed to initialize pipeline: {e}")
             raise HTTPException(
                 status_code=500,
-                detail=f"Failed to initialize measurement pipeline: {str(e)}"
+                detail=f"Failed to initialize measurement pipeline: {e!s}"
             )
     return pipeline
 
 @app.get("/")
-async def root():
+@limiter.limit(RATE_LIMITS["health"])
+async def root(request: Request):
     """Root endpoint"""
     return {
         "message": "3D Body Measurement API",
@@ -381,7 +429,8 @@ async def root():
     }
 
 @app.get("/api/v1/health")
-async def health_check():
+@limiter.limit(RATE_LIMITS["health"])
+async def health_check(request: Request):
     """Health check endpoint"""
     try:
         # Try to get pipeline (will initialize if needed)
@@ -399,8 +448,32 @@ async def health_check():
             "error": str(e)
         }
 
+@app.get("/api/v1/health/performance")
+@limiter.limit(RATE_LIMITS["health"])
+async def performance_stats(request: Request):
+    """Get API performance statistics"""
+    try:
+        from performance_middleware import get_performance_stats
+        stats = get_performance_stats().get_stats()
+        
+        # Add cache status
+        try:
+            from integrations.cache_service import get_cache
+            cache = get_cache()
+            stats["cache"] = {
+                "enabled": cache.enabled,
+                "connected": cache.client is not None if cache.enabled else False
+            }
+        except Exception:
+            stats["cache"] = {"enabled": False, "connected": False}
+        
+        return {"success": True, "data": stats}
+    except Exception as e:
+        return {"success": False, "error": str(e)}
+
 @app.get("/api/v1/test-connection")
-async def test_connection():
+@limiter.limit(RATE_LIMITS["health"])
+async def test_connection(request: Request):
     """Test endpoint to verify frontend-backend connection"""
     return {
         "status": "connected",
@@ -409,7 +482,8 @@ async def test_connection():
     }
 
 @app.get("/api/v1/info")
-async def api_info():
+@limiter.limit(RATE_LIMITS["health"])
+async def api_info(request: Request):
     """Get API information"""
     return {
         "name": "3D Body Measurement API",
@@ -440,8 +514,9 @@ async def api_info():
 # ---------------------------
 
 @app.post("/api/v1/clothing/fit-check", response_model_exclude_none=False)
+@limiter.limit(RATE_LIMITS["heavy"])
 async def check_clothing_fit(
-    request: Request, 
+    request: Request,
     current_user: User = Depends(get_current_user),
     db: Session = Depends(get_session)
 ):
@@ -450,60 +525,60 @@ async def check_clothing_fit(
     Requires authentication - users can only access their own measurements.
     """
     logger.info(f"Fit check request from user {current_user.id} ({current_user.email})")
-    
+
     try:
         form = await request.form()
         logger.info(f"Form Keys Received: {list(form.keys())}")
-        
+
         productImage = form.get("productImage")
         measurement_id = form.get("measurement_id")
         size = form.get("size", "").strip()
         occasion = form.get("occasion", "").strip()
         fit_type = form.get("fit_type", "slim").strip().lower()  # Default to slim if not provided
-        
+
         # Validate required fields
         if not productImage:
             logger.error("No product image in form data")
             raise HTTPException(status_code=422, detail="Missing product image")
-        
+
         if not measurement_id:
             raise HTTPException(status_code=422, detail="Missing measurement_id")
-        
+
         # Validate optional fields
         if fit_type not in VALID_FIT_TYPES:
             fit_type = DEFAULT_FIT_TYPE  # Default to slim if invalid
             logger.warning(f"Invalid fit_type, defaulting to '{DEFAULT_FIT_TYPE}'")
-        
+
         if size and len(size) > FILE_UPLOAD_LIMITS["max_size_string_length"]:
             raise HTTPException(
-                status_code=422, 
+                status_code=422,
                 detail=f"Size value too long (max {FILE_UPLOAD_LIMITS['max_size_string_length']} characters)"
             )
-        
+
         if occasion and len(occasion) > FILE_UPLOAD_LIMITS["max_occasion_string_length"]:
             raise HTTPException(
-                status_code=422, 
+                status_code=422,
                 detail=f"Occasion value too long (max {FILE_UPLOAD_LIMITS['max_occasion_string_length']} characters)"
             )
-            
+
         try:
             m_id = int(measurement_id)
             if m_id <= 0:
                 raise ValueError("Measurement ID must be positive")
         except (ValueError, TypeError):
             raise HTTPException(status_code=422, detail="Invalid measurement_id format (must be a positive integer)")
-        
+
         logger.info(f"Validated inputs - mid={m_id}, size={size}, occ={occasion}, fit={fit_type}")
-            
+
     except HTTPException:
         raise
     except Exception as e:
         logger.error(f"Error processing form: {e}")
-        raise HTTPException(status_code=422, detail=f"Form processing error: {str(e)}")
+        raise HTTPException(status_code=422, detail=f"Form processing error: {e!s}")
 
     if not CLOTHING_ANALYSIS_AVAILABLE:
         raise HTTPException(
-            status_code=503, 
+            status_code=503,
             detail="Clothing analysis modules are not available on the server"
         )
 
@@ -514,20 +589,20 @@ async def check_clothing_fit(
             MeasurementRecord.user_id == current_user.id  # CRITICAL: Verify ownership
         )
     ).first()
-    
+
     if not measurement_record:
         logger.warning(f"User {current_user.id} attempted to access measurement {m_id} (not found or unauthorized)")
         raise HTTPException(
-            status_code=404, 
+            status_code=404,
             detail="Measurement record not found or you don't have permission to access it"
         )
-        
+
     # Extract measurements from payload
     user_measurements = measurement_record.payload.get("measurements", {})
     if not user_measurements:
         raise HTTPException(status_code=400, detail="No measurements found in record")
     logger.info(f"Loaded measurements for user {current_user.id}")
-    
+
     # 2. Process Image with validation
     try:
         # Validate file type
@@ -537,20 +612,20 @@ async def check_clothing_fit(
             if file_ext not in FILE_UPLOAD_LIMITS["allowed_extensions"]:
                 allowed = ", ".join([ext.upper() for ext in FILE_UPLOAD_LIMITS["allowed_extensions"]])
                 raise HTTPException(
-                    status_code=422, 
+                    status_code=422,
                     detail=f"Unsupported file type: {file_ext}. Supported formats: {allowed}"
                 )
-        
+
         # Read and validate file size
         image_bytes = await productImage.read()
         file_size_mb = len(image_bytes) / (1024 * 1024)
-        
+
         if file_size_mb > FILE_UPLOAD_LIMITS["max_size_mb"]:
             raise HTTPException(
                 status_code=422,
                 detail=f"File size ({file_size_mb:.2f}MB) exceeds {FILE_UPLOAD_LIMITS['max_size_mb']}MB limit"
             )
-        
+
         # Validate image can be decoded
         nparr = np.frombuffer(image_bytes, np.uint8)
         decoded_img = cv2.imdecode(nparr, cv2.IMREAD_COLOR)
@@ -559,14 +634,14 @@ async def check_clothing_fit(
                 status_code=422,
                 detail="Invalid image file - could not decode image. Please upload a valid JPEG or PNG image."
             )
-            
+
         logger.info(f"Image validated: {filename}, size: {file_size_mb:.2f}MB")
-        
+
     except HTTPException:
         raise
     except Exception as e:
         logger.error(f"Failed to process image: {e}")
-        raise HTTPException(status_code=400, detail=f"Invalid image file: {str(e)}")
+        raise HTTPException(status_code=400, detail=f"Invalid image file: {e!s}")
 
     # 3. Initialize Services
     groq_api_key = os.getenv("GROQ_API_KEY")
@@ -579,12 +654,12 @@ async def check_clothing_fit(
                 "details": {}
             }
         )
-    
+
     timeout = API_CONFIG.get("default_timeout_seconds", 30.0)
     max_retries = API_CONFIG.get("max_retries", 3)
     groq_service = GroqService(api_key=groq_api_key, timeout=timeout, max_retries=max_retries)
     fit_calculator = FitMeterCalculator()
-    
+
     # Optional: Skin Tone (using already decoded image)
     skin_tone_result = "unknown"
     try:
@@ -612,19 +687,19 @@ async def check_clothing_fit(
             "formality_level": 5
         }
         logger.warning("Using fallback garment analysis due to API error")
-    
+
     # 5. Analyze ALL Sizes and Get Recommendation
     garment_type = garment_analysis.get("garment_type", "unknown")
     logger.info(f"Analyzing all sizes for {garment_type} with {fit_type} fit...")
-    
+
     # Analyze all available sizes
     size_analysis = fit_calculator.analyze_all_sizes(
         user_measurements, garment_type, fit_type
     )
-    
+
     # Get the user's selected size result (if provided)
     user_selected_size = size if size else None
-    
+
     # Get the full fit result for the selected size (or use recommended if no size selected)
     if size and size in size_analysis['all_sizes']:
         user_selected_result = size_analysis['all_sizes'][size]
@@ -656,19 +731,19 @@ async def check_clothing_fit(
         # Use empty dict - defaults will be applied later
         advice = {}
         logger.warning("Using default advice due to API error")
-    
+
     # 7. Merge & Finalize Response (using defaults from config)
     roast_default = FIT_CHECK_DEFAULTS["roast"].copy()
     roast_data = advice.get("roast", roast_default)
-    
+
     color_default = FIT_CHECK_DEFAULTS["color"].copy()
     color_default["skin_tone"] = {"category": skin_tone_result}
     color_data = advice.get("color_analysis", color_default)
-    
+
     # Ensure skin_tone is always present
     if "skin_tone" not in color_data:
         color_data["skin_tone"] = {"category": skin_tone_result}
-    
+
     if "primary_color" not in color_data:
          colors = garment_analysis.get("colors", [])
          if colors:
@@ -678,34 +753,34 @@ async def check_clothing_fit(
                  rgb_dict = {"r": rgb_val[0], "g": rgb_val[1], "b": rgb_val[2]}
              else:
                  rgb_dict = rgb_val
-             
+
              color_data["primary_color"] = {
                  "name": c.get("name", "Unknown"),
                  "rgb": rgb_dict
              }
-    
+
     style_default = FIT_CHECK_DEFAULTS["style"].copy()
     style_data = advice.get("style_recommendations", style_default)
-    
+
     occasion_default = FIT_CHECK_DEFAULTS["occasion"].copy()
     occasion_data = advice.get("occasion_analysis", occasion_default)
 
     # Save fit check history and get check_id
     check_id = save_fit_check_history(
-        db, 
+        db,
         current_user.id,  # Use authenticated user's ID, not measurement_id
-        garment_analysis, 
-        size, 
-        size_analysis, 
-        fit_meters_result, 
+        garment_analysis,
+        size,
+        size_analysis,
+        fit_meters_result,
         color_data
     )
-    
+
     # DEBUG: Log what we got back
     logger.info(f"🔍 After save_fit_check_history: check_id={check_id}, type={type(check_id)}")
     logger.info(f"🔍 size_analysis keys: {list(size_analysis.keys())}")
     logger.info(f"🔍 size_analysis['size_scores']: {size_analysis.get('size_scores')}")
-    
+
     # Build response with all fields properly included in the model
     response = NewClothingFitCheckResponse(
         success=True,
@@ -732,18 +807,18 @@ async def check_clothing_fit(
         user_selected_size=user_selected_size,
         check_id=check_id  # Purchase tracking ID
     )
-    
+
     # DEBUG: Log the actual response object values BEFORE serialization
     logger.info(f"🔍 Response object check_id attribute: {check_id}")
     logger.info(f"🔍 Response object size_recommendation: {size_analysis.get('size_scores')}")
-    
+
     # DEBUG: Log what we're sending (using dict access to avoid AttributeError)
     response_dict = response.model_dump(exclude_none=False)  # CRITICAL: Don't exclude None values!
     logger.info(f"📤 Response includes: check_id={response_dict.get('check_id')}, has_size_rec={bool(response_dict.get('size_recommendation'))}, has_all_sizes={bool(response_dict.get('all_sizes'))}")
     logger.debug(f"📦 Full response_dict keys: {list(response_dict.keys())}")
     logger.info(f"📦 check_id in response_dict: {response_dict.get('check_id')}")
     logger.info(f"📦 all_sizes in response_dict: {response_dict.get('all_sizes')}")
-    
+
     # NUCLEAR OPTION: Manually add the missing fields to the response dict
     response_dict['size_recommendation'] = {
         'recommended_size': size_analysis['recommended_size'],
@@ -754,9 +829,9 @@ async def check_clothing_fit(
     response_dict['all_sizes'] = size_analysis['size_scores']
     response_dict['user_selected_size'] = user_selected_size
     response_dict['check_id'] = check_id
-    
+
     logger.info(f"✅ MANUALLY ADDED FIELDS - check_id={response_dict.get('check_id')}, has_size_rec={bool(response_dict.get('size_recommendation'))}")
-    
+
     # Return the manually constructed dict as JSON
     from fastapi.responses import JSONResponse
     return JSONResponse(content=response_dict)
@@ -801,7 +876,7 @@ def get_groq_service():
     global groq_service
     if groq_service is None and CLOTHING_ANALYSIS_AVAILABLE:
         # Using the key provided by user
-        key = "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" 
+        key = "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"
         groq_service = GroqService(api_key=key)
     return groq_service
 
@@ -858,7 +933,7 @@ class FitMeter(BaseModel):
     score: float
 
 class FitMetersResponse(BaseModel):
-    fit_meters: Dict[str, Optional[FitMeter]]
+    fit_meters: dict[str, FitMeter | None]
     overall_fit_score: float
     worst_metric: str
 
@@ -870,7 +945,7 @@ class RoastResponse(BaseModel):
 class GarmentAnalysisResponse(BaseModel):
     garment_type: str
     material: str
-    colors: List[Dict]
+    colors: list[dict]
     style: str
     pattern: str
     fit_type: str
@@ -879,19 +954,19 @@ class GarmentAnalysisResponse(BaseModel):
 class ColorMatchResponse(BaseModel):
     match_score: float
     roast: str
-    suggested_colors: List[str]
-    skin_tone: Dict
-    primary_color: Dict[str, Any]
+    suggested_colors: list[str]
+    skin_tone: dict
+    primary_color: dict[str, Any]
 
 class StyleRecommendationResponse(BaseModel):
-    outfit_suggestions: List[str]
+    outfit_suggestions: list[str]
     style_score: float
 
 class OccasionAnalysisResponse(BaseModel):
     occasion_match_score: float
     is_appropriate: bool
     recommendation: str
-    alternative_occasions: List[str]
+    alternative_occasions: list[str]
 
 class NewClothingFitCheckResponse(BaseModel):
     success: bool
@@ -901,7 +976,7 @@ class NewClothingFitCheckResponse(BaseModel):
     color_analysis: ColorMatchResponse
     style_recommendations: StyleRecommendationResponse
     occasion_analysis: OccasionAnalysisResponse
-    material_comfort: Dict
+    material_comfort: dict
     overall_score: float
 
 
@@ -931,10 +1006,10 @@ async def check_clothing_fit(
             status_code=503,
             detail="Clothing analysis modules not available. Please check backend installation."
         )
-    
+
     try:
         logger.info(f"NEW Clothing fit check request from user {current_user.email}")
-        
+
         # Get user's saved measurement
         record = session.exec(
             select(MeasurementRecord).where(
@@ -942,29 +1017,29 @@ async def check_clothing_fit(
                 MeasurementRecord.user_id == current_user.id
             )
         ).first()
-        
+
         if not record:
             raise HTTPException(status_code=404, detail="Measurement not found")
-        
+
         payload = record.payload or {}
         user_measurements = payload.get("measurements", {})
         metadata = payload.get("metadata", {})
-        
+
         if not user_measurements:
             raise HTTPException(status_code=400, detail="No measurements found in saved record")
-        
+
         # Load clothing image
         clothing_bytes = await clothing_image.read()
         clothing_np = np.frombuffer(clothing_bytes, np.uint8)
         clothing_img = cv2.imdecode(clothing_np, cv2.IMREAD_COLOR)
-        
+
         if clothing_img is None:
             raise HTTPException(status_code=400, detail="Could not decode clothing image")
-        
+
         # Get user's original photo for skin tone detection
         user_photo = None
         front_image_base64 = payload.get("metadata", {}).get("front_image_base64")
-        
+
         if front_image_base64:
             try:
                 image_bytes = base64.b64decode(front_image_base64)
@@ -974,7 +1049,7 @@ async def check_clothing_fit(
             except Exception as e:
                 logger.warning(f"Failed to decode stored front image: {e}")
                 user_photo = None
-        
+
         # Initialize services
         gemini_service = get_gemini_service()
         fit_meter_calculator = get_fit_meter_calculator()
@@ -983,40 +1058,40 @@ async def check_clothing_fit(
         body_type_classifier = get_body_type_classifier()
         style_analyzer = get_style_analyzer()
         skin_tone_detector = get_skin_tone_detector()
-        
+
         # 1. GARMENT ANALYSIS
         # Use Groq Vision (Llama 4 Scout)
         logger.info("Analyzing garment with Groq Vision...")
         groq_svc = get_groq_service()
         garment_analysis = groq_svc.analyze_garment_image(clothing_bytes)
-        
+
         # 2. FIT METERS - Calculate ease-based fit
         logger.info("Calculating fit meters...")
         garment_type = garment_analysis.get('garment_type', 'shirt')
-        
+
         # Estimate garment measurements if not provided by AI
         garment_measurements = garment_analysis.get('estimated_measurements', {})
         if not garment_measurements:
             garment_measurements = fit_meter_calculator.estimate_garment_measurements(
                 garment_type, size, user_measurements
             )
-        
+
         fit_meters_result = fit_meter_calculator.calculate_fit_meters(
             user_measurements, garment_measurements, garment_type
         )
-        
+
         # 3. COLOR ANALYSIS (Moved up for batching context)
         logger.info("Analyzing colors...")
-        
+
         # Use Gemini-detected colors if available and not default "gray"
         gemini_colors = garment_analysis.get('colors', [])
         # Check if it's the default error response (gray, 100%)
         is_default_gray = (
-            len(gemini_colors) == 1 and 
-            gemini_colors[0].get('name', '').lower() == 'gray' and 
+            len(gemini_colors) == 1 and
+            gemini_colors[0].get('name', '').lower() == 'gray' and
             gemini_colors[0].get('percentage') == 100
         )
-        
+
         if gemini_colors and not is_default_gray:
             logger.info(f"Using Gemini-detected colors: {gemini_colors}")
             # Convert Gemini format (RGB list) to ColorAnalyzer format (RGB dict)
@@ -1039,7 +1114,7 @@ async def check_clothing_fit(
         else:
             logger.info("Using OpenCV for color extraction (Gemini returned default/empty)")
             clothing_colors = color_analyzer.extract_dominant_colors(clothing_img)
-        
+
         # Detect skin tone
         if user_photo is not None:
             skin_tone_result = skin_tone_detector.detect_from_image(user_photo)
@@ -1052,7 +1127,7 @@ async def check_clothing_fit(
                 'rgb_values': {'r': 170, 'g': 140, 'b': 120},
                 'confidence': 0.5
             }
-        
+
         # Analyze basic color compatibility (Local Logic)
         color_result = color_analyzer.analyze_color_compatibility(clothing_colors, skin_tone)
         primary_color_name = color_result['primary_color']['name']
@@ -1062,9 +1137,9 @@ async def check_clothing_fit(
         logger.info("Generating comprehensive AI advice (Groq)...")
         groq_svc = get_groq_service()
         advice = groq_svc.generate_comprehensive_advice(
-            fit_meters_result, 
-            garment_analysis, 
-            occasion, 
+            fit_meters_result,
+            garment_analysis,
+            occasion,
             skin_tone,
             size
         )
@@ -1078,25 +1153,25 @@ async def check_clothing_fit(
         }
         ai_roast = advice.get('roast', {})
         roast_result = {**default_roast, **ai_roast}
-        
+
         # Color Analysis
         color_ai_data = advice.get('color_analysis', {})
         if color_ai_data.get('match_score'):
              color_result['match_score'] = color_ai_data['match_score']
-        
+
         current_roast = color_result.get('roast', "Color analysis complete.")
         color_result['roast'] = color_ai_data.get('roast', current_roast)
-        
+
         current_suggestions = color_result.get('suggested_colors', [])
         color_result['suggested_colors'] = color_ai_data.get('suggested_colors', current_suggestions)
-        
+
         # Style Recommendations
         style_ai_data = advice.get('style_recommendations', {})
         outfit_suggestions = style_ai_data.get('outfit_suggestions', ["Jeans", "Sneakers"])
-        
+
         # 5. STYLE & OCCASION LOCAL LOGIC mixed with AI
         logger.info("Finalizing style and occasion...")
-        
+
         gender = metadata.get("gender", "neutral")
         body_type_result = body_type_classifier.classify(user_measurements, gender)
         style_result = style_analyzer.analyze_style(
@@ -1116,7 +1191,7 @@ async def check_clothing_fit(
             "alternative_occasions": []
         }
         occasion_result = {**default_occasion, **occasion_ai_data}
-        
+
         # 7. MATERIAL COMFORT
         logger.info("Analyzing material comfort...")
         material = garment_analysis.get('material', 'cotton')
@@ -1125,13 +1200,13 @@ async def check_clothing_fit(
             climate = 'Cold'
         elif occasion.lower() in ['summer', 'beach']:
             climate = 'Warm'
-        
+
         material_result = material_analyzer.analyze_material(
             material=material,
             occasion=occasion,
             climate=climate
         )
-        
+
         # 8. CALCULATE OVERALL SCORE
         overall_score = (
             fit_meters_result['overall_fit_score'] * 0.40 +  # Fit is most important
@@ -1140,20 +1215,20 @@ async def check_clothing_fit(
             occasion_result['occasion_match_score'] * 0.10 +
             material_result['comfort_score'] * 0.10
         )
-        
+
         # Format response
         # Prepare fit meters dict
         meters_dict = {}
         for part in ['chest', 'waist', 'hip', 'shoulder']:
             if part in fit_meters_result['fit_meters']:
                 meters_dict[part] = FitMeter(**fit_meters_result['fit_meters'][part])
-        
+
         fit_meters_response = FitMetersResponse(
             fit_meters=meters_dict,
             overall_fit_score=fit_meters_result['overall_fit_score'],
             worst_metric=fit_meters_result['worst_metric']
         )
-        
+
         # Prepare primary color with correct RGB format
         prim_col = color_result.get('primary_color', {'name': 'unknown', 'rgb': {'r': 128, 'g': 128, 'b': 128}})
         # Ensure RGB is dict
@@ -1187,14 +1262,14 @@ async def check_clothing_fit(
             },
             overall_score=round(overall_score, 1)
         )
-        
+
     except HTTPException:
         raise
     except Exception as e:
         logger.exception(f"Error in clothing fit check: {e}")
         raise HTTPException(
             status_code=500,
-            detail=f"Failed to analyze clothing fit: {str(e)}"
+            detail=f"Failed to analyze clothing fit: {e!s}"
         )
 
 
@@ -1287,10 +1362,10 @@ async def virtual_try_on(
 @app.post("/api/v1/measurements")
 async def get_measurements(
     front_image: UploadFile = File(..., description="Front view image (required)"),
-    side_image: Optional[UploadFile] = File(None, description="Side view image (optional)"),
-    height_cm: Optional[float] = Form(None, description="User height in cm"),
-    gender: Optional[str] = Form(None, description="Gender: 'male' or 'female'"),
-    age: Optional[int] = Form(None, description="Age in years"),
+    side_image: UploadFile | None = File(None, description="Side view image (optional)"),
+    height_cm: float | None = Form(None, description="User height in cm"),
+    gender: str | None = Form(None, description="Gender: 'male' or 'female'"),
+    age: int | None = Form(None, description="Age in years"),
     current_user: User = Depends(get_current_user),  # CRITICAL: Require authentication
     session: Session = Depends(get_session),
 ):
@@ -1310,42 +1385,62 @@ async def get_measurements(
     - metadata: Processing information (includes user_id for tracking)
     """
     try:
+        # ── Feature Gating: Check scan limit ──
+        from feature_gating import check_feature_access
+        check_feature_access("body_scan", current_user, session)
+
         logger.info(f"Measurement request from user {current_user.id} ({current_user.email})")
         logger.info(f"Height: {height_cm}, Gender: {gender}, Age: {age}")
         logger.info(f"Front image filename: {front_image.filename if front_image else 'None'}")
         logger.info(f"Side image filename: {side_image.filename if side_image else 'None'}")
-        
+
         # Validate front image
         if not front_image.filename:
             raise HTTPException(
                 status_code=400,
                 detail="Front image is required"
             )
-        
+
+        # Validate MIME type
+        allowed_types = {"image/jpeg", "image/png", "image/webp", "image/bmp"}
+        if front_image.content_type and front_image.content_type not in allowed_types:
+            raise HTTPException(
+                status_code=400,
+                detail=f"Invalid file type '{front_image.content_type}'. Allowed: JPEG, PNG, WebP, BMP."
+            )
+
+        # Validate file extension
+        ext = front_image.filename.rsplit(".", 1)[-1].lower() if "." in front_image.filename else ""
+        if ext not in {"jpg", "jpeg", "png", "webp", "bmp"}:
+            raise HTTPException(
+                status_code=400,
+                detail="Invalid file extension. Allowed: .jpg, .jpeg, .png, .webp, .bmp"
+            )
+
         # Check file size (max 10MB)
         front_image.file.seek(0, 2)  # Seek to end
         file_size = front_image.file.tell()
         front_image.file.seek(0)  # Reset to beginning
-        
+
         if file_size > 10 * 1024 * 1024:  # 10MB
             raise HTTPException(
                 status_code=400,
                 detail="File size exceeds 10MB limit"
             )
-        
+
         # Read front image
         front_bytes = await front_image.read()
         front_np = np.frombuffer(front_bytes, np.uint8)
         front_img = cv2.imdecode(front_np, cv2.IMREAD_COLOR)
-        
+
         if front_img is None:
             raise HTTPException(
                 status_code=400,
                 detail="Invalid front image. Please upload a valid image file (JPEG, PNG)."
             )
-        
+
         logger.info(f"Front image loaded: shape={front_img.shape}, size={file_size/1024:.2f}KB")
-        
+
         # Read side image if provided
         side_img = None
         if side_image and side_image.filename:
@@ -1356,10 +1451,10 @@ async def get_measurements(
                 logger.info(f"Side image loaded: shape={side_img.shape}")
             else:
                 logger.warning("Side image provided but could not be decoded")
-        
+
         # Get pipeline
         measurement_pipeline = get_pipeline()
-        
+
         # Process images
         logger.info("Starting measurement processing...")
         result = measurement_pipeline.process_image(
@@ -1369,7 +1464,7 @@ async def get_measurements(
             gender=gender,
             age=age
         )
-        
+
         # Check if result indicates failure
         if not result.get('success', False):
             error_msg = result.get('error', 'Unknown error')
@@ -1379,7 +1474,7 @@ async def get_measurements(
                 status_code=500,
                 detail=f"Measurement failed: {error_msg}"
             )
-        
+
         # Additional check: Even if success=True, verify measurements exist
         measurements_dict = result.get('measurements', {})
         if not measurements_dict or len(measurements_dict) == 0:
@@ -1389,16 +1484,16 @@ async def get_measurements(
                 status_code=500,
                 detail="Measurement extraction failed: No measurements could be extracted from the image. Please try with a different, clearer image."
             )
-        
+
         logger.info("Measurement completed successfully")
         measurements_count = len(result.get('measurements', {}))
         logger.info(f"Extracted {measurements_count} measurements")
-        
+
         # Ensure measurements is always a dict, even if empty
         if 'measurements' not in result or result['measurements'] is None:
             result['measurements'] = {}
             logger.warning("Measurements dict was None or missing, setting to empty dict")
-        
+
         if measurements_count == 0:
             logger.warning("=" * 80)
             logger.warning("WARNING: No measurements were extracted!")
@@ -1413,7 +1508,7 @@ async def get_measurements(
                 logger.info(f"  - {key}: {value} cm")
             if measurements_count > 5:
                 logger.info(f"  ... and {measurements_count - 5} more")
-        
+
         logger.info(f"Returning response: success={result.get('success')}, measurements_count={measurements_count}")
         logger.info("=" * 80)
 
@@ -1423,7 +1518,7 @@ async def get_measurements(
             # Encode the front image as JPEG base64
             _, buffer = cv2.imencode('.jpg', front_img, [cv2.IMWRITE_JPEG_QUALITY, 85])
             front_image_base64 = base64.b64encode(buffer).decode('utf-8')
-            
+
             # Add to metadata so it can be saved with measurements
             if 'metadata' not in result:
                 result['metadata'] = {}
@@ -1438,7 +1533,7 @@ async def get_measurements(
         # This allows users to choose which measurements to save and name them.
 
         return JSONResponse(content=result)
-    
+
     except HTTPException as he:
         # Re-raise HTTP exceptions
         logger.error(f"HTTP Exception: {he.detail}")
@@ -1446,24 +1541,24 @@ async def get_measurements(
     except Exception as e:
         logger.exception(f"Unexpected error: {e}")
         logger.error(f"Error type: {type(e).__name__}")
-        logger.error(f"Error message: {str(e)}")
+        logger.error(f"Error message: {e!s}")
         import traceback
         logger.error(f"Traceback:\n{traceback.format_exc()}")
         raise HTTPException(
             status_code=500,
-            detail=f"Internal server error: {str(e)}"
+            detail=f"Internal server error: {e!s}"
         )
 
 if __name__ == "__main__":
-    import uvicorn
-    
     # Ensure we're in the api directory for relative imports
     import os
+
+    import uvicorn
     api_dir = os.path.dirname(os.path.abspath(__file__))
     if os.getcwd() != api_dir:
         os.chdir(api_dir)
         logger.info(f"Changed working directory to: {api_dir}")
-    
+
     # Configure logging
     logger.add(
         "api.log",
@@ -1471,13 +1566,13 @@ if __name__ == "__main__":
         retention="7 days",
         level="INFO"
     )
-    
+
     logger.info("Starting FastAPI server...")
     logger.info(f"Python: {sys.executable}")
     logger.info(f"Working Directory: {os.getcwd()}")
     logger.info("API will be available at: http://localhost:8000")
     logger.info("API documentation at: http://localhost:8000/docs")
-    
+
     uvicorn.run(
         "app:app",
         host="0.0.0.0",
@@ -1485,3 +1580,4 @@ if __name__ == "__main__":
         reload=True,
         log_level="info"
     )
+

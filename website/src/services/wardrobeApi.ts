@@ -2,13 +2,13 @@
  * Wardrobe Analytics TypeScript Interfaces and API Methods
  */
 import axios from 'axios';
-
-const API_BASE_URL = process.env.REACT_APP_API_URL || 'http://localhost:8000';
+import { API_BASE_URL } from '../config/apiConfig';
 
 // Interfaces
 export interface WardrobeComposition {
     total_items: number;
     by_type: { [key: string]: number };
+    by_color: { [key: string]: number };
     percentages: { [key: string]: number };
     filter_applied: string;
 }

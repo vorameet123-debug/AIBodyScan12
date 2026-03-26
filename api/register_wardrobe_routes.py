@@ -4,7 +4,7 @@ Script to register wardrobe analytics routes in app.py
 import sys
 
 # Read the file
-with open('d:/3Dmodel/api/app.py', 'r', encoding='utf-8') as f:
+with open('d:/3Dmodel/api/app.py', encoding='utf-8') as f:
     lines = f.readlines()
 
 registration_code = """# Register Wardrobe Analytics routes
@@ -24,13 +24,13 @@ for i, line in enumerate(lines):
         j = i + 1
         while j < len(lines) and lines[j].strip() != '':
             j += 1
-        
+
         if 'register_wardrobe_routes' not in ''.join(lines):
             lines.insert(j + 1, '\n' + registration_code)
-            
+
             with open('d:/3Dmodel/api/app.py', 'w', encoding='utf-8') as f:
                 f.writelines(lines)
-            
+
             print("SUCCESS: Registered wardrobe analytics routes")
             sys.exit(0)
         else:
@@ -39,3 +39,4 @@ for i, line in enumerate(lines):
 
 print("ERROR: Could not find registration point")
 sys.exit(1)
+

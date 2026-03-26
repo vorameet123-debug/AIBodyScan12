@@ -2,7 +2,7 @@
 Material Comfort Analysis Engine
 Analyzes material properties for comfort, breathability, and occasion suitability
 """
-from typing import Dict, Optional
+
 from loguru import logger
 
 
@@ -10,7 +10,7 @@ class MaterialAnalyzer:
     """
     Analyzes material comfort and suitability
     """
-    
+
     def __init__(self):
         """Initialize material analyzer with material database"""
         self.material_properties = {
@@ -172,7 +172,7 @@ class MaterialAnalyzer:
                 'shrinkage_risk': 'Low'
             }
         }
-        
+
         # Occasion requirements
         self.occasion_requirements = {
             'Sports': {
@@ -221,15 +221,15 @@ class MaterialAnalyzer:
                 'preferred_materials': ['Cotton', 'Linen', 'Rayon']
             }
         }
-        
+
         logger.info("MaterialAnalyzer initialized")
-    
+
     def analyze_material(
         self,
         material: str,
-        occasion: Optional[str] = None,
-        climate: Optional[str] = None
-    ) -> Dict:
+        occasion: str | None = None,
+        climate: str | None = None
+    ) -> dict:
         """
         Analyze material comfort and suitability
         
@@ -242,7 +242,7 @@ class MaterialAnalyzer:
             Dictionary with material analysis
         """
         material_cap = material.capitalize()
-        
+
         if material_cap not in self.material_properties:
             logger.warning(f"Unknown material: {material}, using default")
             return {
@@ -252,9 +252,9 @@ class MaterialAnalyzer:
                 'warnings': [],
                 'recommendations': []
             }
-        
+
         properties = self.material_properties[material_cap]
-        
+
         # Calculate overall comfort score (weighted average)
         comfort_score = (
             properties['breathability'] * 0.3 +
@@ -262,15 +262,15 @@ class MaterialAnalyzer:
             properties['moisture_wicking'] * 0.2 +
             (100 - properties.get('skin_sensitivity_score', 0)) * 0.2
         )
-        
+
         # Check occasion suitability
         occasion_suitability = 'good'
         occasion_warnings = []
         occasion_recommendations = []
-        
+
         if occasion and occasion in self.occasion_requirements:
             req = self.occasion_requirements[occasion]
-            
+
             # Check if material meets requirements
             meets_requirements = True
             for prop in req['required_properties']:
@@ -281,7 +281,7 @@ class MaterialAnalyzer:
                         occasion_warnings.append(
                             f"{material_cap} may not be ideal for {occasion} - {prop} score is {properties[prop]}/100 (recommended: {min_score}+)"
                         )
-            
+
             if not meets_requirements:
                 occasion_suitability = 'poor'
                 if material_cap not in req['preferred_materials']:
@@ -290,11 +290,11 @@ class MaterialAnalyzer:
                     )
             elif material_cap in req['preferred_materials']:
                 occasion_suitability = 'excellent'
-        
+
         # Check climate suitability
         climate_suitability = 'good'
         climate_warnings = []
-        
+
         if climate:
             if climate.lower() in ['warm', 'summer', 'hot']:
                 if properties['coolness'] < 70:
@@ -308,14 +308,14 @@ class MaterialAnalyzer:
                     climate_warnings.append(
                         f"{material_cap} may not provide enough warmth for {climate} weather"
                     )
-        
+
         # Collect all warnings
         all_warnings = []
         if properties.get('sensitivity_warning'):
             all_warnings.append(properties['sensitivity_warning'])
         all_warnings.extend(occasion_warnings)
         all_warnings.extend(climate_warnings)
-        
+
         # Determine overall suitability
         if occasion_suitability == 'excellent' and climate_suitability == 'good':
             overall_suitability = 'excellent'
@@ -325,7 +325,7 @@ class MaterialAnalyzer:
             overall_suitability = 'poor'
         else:
             overall_suitability = 'fair'
-        
+
         return {
             'comfort_score': round(comfort_score, 1),
             'breathability': properties['breathability'],
@@ -344,3 +344,4 @@ class MaterialAnalyzer:
             'warnings': all_warnings,
             'recommendations': occasion_recommendations
         }
+

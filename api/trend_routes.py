@@ -2,22 +2,23 @@
 Trend Intelligence API Routes
 Provides endpoints for trend analysis and user alignment
 """
+from datetime import datetime, timedelta
+
+from fashion_iq_models import ExternalTrend
 from fastapi import APIRouter, Depends, HTTPException, Query
-from sqlmodel import Session
-from typing import Optional, List, Dict, Any
 from loguru import logger
-from integrations.trend_analyzer import TrendAnalyzer
+from sqlmodel import Session
+
 from integrations.external_trend_analyzer import ExternalTrendAnalyzer
 from integrations.fashion_trend_advisor import FashionTrendAdvisor
-from fashion_iq_models import ExternalTrend
-from datetime import datetime, timedelta
+from integrations.trend_analyzer import TrendAnalyzer
 
 
 def register_trend_routes(app, get_session):
     """Register trend intelligence routes"""
-    
+
     router = APIRouter(prefix="/api/v1/trends", tags=["Trends"])
-    
+
     @router.get("/current")
     async def get_current_trends(
         days: int = Query(7, description="Number of days to analyze", ge=1, le=90),
@@ -36,8 +37,8 @@ def register_trend_routes(app, get_session):
             }
         except Exception as e:
             logger.error(f"Error getting current trends: {e}")
-            raise HTTPException(status_code=500, detail=f"Failed to get trends: {str(e)}")
-    
+            raise HTTPException(status_code=500, detail=f"Failed to get trends: {e!s}")
+
     @router.get("/user-alignment/{user_id}")
     async def get_user_alignment(
         user_id: int,
@@ -54,8 +55,8 @@ def register_trend_routes(app, get_session):
             }
         except Exception as e:
             logger.error(f"Error calculating user alignment: {e}")
-            raise HTTPException(status_code=500, detail=f"Failed to calculate alignment: {str(e)}")
-    
+            raise HTTPException(status_code=500, detail=f"Failed to calculate alignment: {e!s}")
+
     @router.get("/styles")
     async def get_style_trends(
         days: int = Query(30, description="Number of days to analyze", ge=1, le=365),
@@ -71,8 +72,8 @@ def register_trend_routes(app, get_session):
             }
         except Exception as e:
             logger.error(f"Error getting style trends: {e}")
-            raise HTTPException(status_code=500, detail=f"Failed to get style trends: {str(e)}")
-    
+            raise HTTPException(status_code=500, detail=f"Failed to get style trends: {e!s}")
+
     @router.get("/forecast")
     async def get_trend_forecast(
         days: int = Query(7, description="Number of days to analyze", ge=1, le=30),
@@ -89,8 +90,8 @@ def register_trend_routes(app, get_session):
             }
         except Exception as e:
             logger.error(f"Error forecasting trends: {e}")
-            raise HTTPException(status_code=500, detail=f"Failed to forecast trends: {str(e)}")
-    
+            raise HTTPException(status_code=500, detail=f"Failed to forecast trends: {e!s}")
+
     @router.get("/external")
     async def get_external_trends(
         days: int = Query(7, description="Number of days to look back", ge=1, le=90),
@@ -106,8 +107,8 @@ def register_trend_routes(app, get_session):
             }
         except Exception as e:
             logger.error(f"Error getting external trends: {e}")
-            raise HTTPException(status_code=500, detail=f"Failed to get external trends: {str(e)}")
-    
+            raise HTTPException(status_code=500, detail=f"Failed to get external trends: {e!s}")
+
     @router.get("/combined")
     async def get_combined_trends(
         days: int = Query(7, description="Number of days to analyze", ge=1, le=90),
@@ -123,113 +124,107 @@ def register_trend_routes(app, get_session):
             }
         except Exception as e:
             logger.error(f"Error getting combined trends: {e}")
-            raise HTTPException(status_code=500, detail=f"Failed to get combined trends: {str(e)}")
-    
+            raise HTTPException(status_code=500, detail=f"Failed to get combined trends: {e!s}")
+
     @router.post("/analyze-external")
     async def analyze_external_trends(
-        season: Optional[str] = Query(None, description="Season filter (e.g., 'spring 2024')"),
-        category: Optional[str] = Query(None, description="Category filter (e.g., 'menswear')"),
+        season: str | None = Query(None, description="Season filter (e.g., 'spring 2024')"),
+        category: str | None = Query(None, description="Category filter (e.g., 'menswear')"),
         session: Session = Depends(get_session)
     ):
         """Trigger external trend analysis using Groq AI and store results"""
         try:
             # Initialize external analyzer
             external_analyzer = ExternalTrendAnalyzer()
-            
+
             # Analyze trends
             trends_data = external_analyzer.analyze_fashion_trends(
                 season=season,
                 category=category
             )
-            
-            # Store in database
+
+            # Store in database (upsert — skip if same name already exists)
             stored_count = 0
-            
-            # Store trending items
+            updated_count = 0
+
+            def upsert_trend(trend_type: str, trend_name: str, trend_data: dict, popularity_score: float, trend_direction: str):
+                nonlocal stored_count, updated_count
+                if not trend_name:
+                    return
+                # Check if already exists
+                existing = session.exec(
+                    select(ExternalTrend).where(
+                        ExternalTrend.trend_type == trend_type,
+                        ExternalTrend.trend_name == trend_name
+                    )
+                ).first()
+                if existing:
+                    # Update score and direction
+                    existing.popularity_score = popularity_score
+                    existing.trend_direction = trend_direction
+                    existing.trend_data = trend_data
+                    existing.is_active = True
+                    existing.expires_at = datetime.utcnow() + timedelta(days=30)
+                    updated_count += 1
+                else:
+                    session.add(ExternalTrend(
+                        trend_type=trend_type,
+                        trend_name=trend_name,
+                        trend_data=trend_data,
+                        popularity_score=popularity_score,
+                        trend_direction=trend_direction,
+                        source="groq_ai",
+                        season=season,
+                        confidence=trends_data.get("confidence", 0.8),
+                        expires_at=datetime.utcnow() + timedelta(days=30),
+                        is_active=True
+                    ))
+                    stored_count += 1
+
             for item in trends_data.get("trending_items", []):
-                trend = ExternalTrend(
-                    trend_type="item",
-                    trend_name=item.get("item", ""),
-                    trend_data=item,
-                    popularity_score=item.get("popularity_score", 0),
-                    trend_direction=item.get("trend_direction", "stable"),
-                    source="groq_ai",
-                    season=season,
-                    confidence=trends_data.get("confidence", 0.8),
-                    expires_at=datetime.utcnow() + timedelta(days=30),
-                    is_active=True
-                )
-                session.add(trend)
-                stored_count += 1
-            
-            # Store trending colors
+                upsert_trend("item", item.get("item", ""), item, item.get("popularity_score", 0), item.get("trend_direction", "stable"))
+
             for color in trends_data.get("trending_colors", []):
-                trend = ExternalTrend(
-                    trend_type="color",
-                    trend_name=color.get("color", ""),
-                    trend_data=color,
-                    popularity_score=color.get("popularity_score", 0),
-                    trend_direction="stable",
-                    source="groq_ai",
-                    season=season,
-                    confidence=trends_data.get("confidence", 0.8),
-                    expires_at=datetime.utcnow() + timedelta(days=30),
-                    is_active=True
-                )
-                session.add(trend)
-                stored_count += 1
-            
-            # Store trending styles
+                upsert_trend("color", color.get("color", ""), color, color.get("popularity_score", 0), "stable")
+
             for style in trends_data.get("trending_styles", []):
-                trend = ExternalTrend(
-                    trend_type="style",
-                    trend_name=style.get("style", ""),
-                    trend_data=style,
-                    popularity_score=style.get("popularity_score", 0),
-                    trend_direction="stable",
-                    source="groq_ai",
-                    season=season,
-                    confidence=trends_data.get("confidence", 0.8),
-                    expires_at=datetime.utcnow() + timedelta(days=30),
-                    is_active=True
-                )
-                session.add(trend)
-                stored_count += 1
-            
+                upsert_trend("style", style.get("style", ""), style, style.get("popularity_score", 0), "stable")
+
             session.commit()
-            
+
             return {
                 "success": True,
                 "message": f"Analyzed and stored {stored_count} external trends",
                 "trends_analyzed": trends_data,
                 "stored_count": stored_count
             }
-            
+
         except Exception as e:
             logger.error(f"Error analyzing external trends: {e}")
             session.rollback()
-            raise HTTPException(status_code=500, detail=f"Failed to analyze external trends: {str(e)}")
-    
+            raise HTTPException(status_code=500, detail=f"Failed to analyze external trends: {e!s}")
+
     @router.get("/for-you/{user_id}")
     async def get_trends_for_user(
         user_id: int,
         days: int = Query(7, description="Days to look back for trends", ge=1, le=90),
         min_match: float = Query(60.0, description="Minimum match score", ge=0, le=100),
-        person_name: Optional[str] = Query(None, description="Filter by person name"),
+        person_name: str | None = Query(None, description="Filter by person name"),
         session: Session = Depends(get_session)
     ):
         """Get personalized trends for user"""
         try:
             advisor = FashionTrendAdvisor(session)
             trends = advisor.get_trends_for_user(user_id, days=days, min_match_score=min_match)
-            
+
             # Add body shape changes if available
-            from integrations.body_intelligence import BodyIntelligence
             from datetime import datetime, timedelta
-            
+
+            from integrations.body_intelligence import BodyIntelligence
+
             tracker = BodyIntelligence(session)
             shape_changes = tracker.detect_shape_changes(user_id, person_name=person_name)
-            
+
             # Filter to recent changes (last 30 days)
             recent_changes = []
             cutoff_date = datetime.utcnow() - timedelta(days=30)
@@ -237,7 +232,7 @@ def register_trend_routes(app, get_session):
                 change_date = datetime.strptime(change['change_date'], '%Y-%m-%d')
                 if change_date >= cutoff_date:
                     recent_changes.append(change)
-            
+
             # Add body insights to response if there are recent changes
             response_data = trends
             if recent_changes:
@@ -245,15 +240,15 @@ def register_trend_routes(app, get_session):
                     'shape_changes': recent_changes,
                     'latest_shape': recent_changes[-1]['to_shape'] if recent_changes else None
                 }
-            
+
             return {
                 "success": True,
                 "data": response_data
             }
         except Exception as e:
             logger.error(f"Error getting trends for user: {e}")
-            raise HTTPException(status_code=500, detail=f"Failed to get personalized trends: {str(e)}")
-    
+            raise HTTPException(status_code=500, detail=f"Failed to get personalized trends: {e!s}")
+
     @router.get("/explain/{user_id}")
     async def explain_trend(
         user_id: int,
@@ -270,8 +265,10 @@ def register_trend_routes(app, get_session):
             }
         except Exception as e:
             logger.error(f"Error explaining trend: {e}")
-            raise HTTPException(status_code=500, detail=f"Failed to explain trend: {str(e)}")
-    
+            raise HTTPException(status_code=500, detail=f"Failed to explain trend: {e!s}")
+
     # Register router with app
     app.include_router(router)
     logger.info("Trend intelligence routes registered successfully")
+
+

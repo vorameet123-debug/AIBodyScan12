@@ -2,13 +2,15 @@
 Standardized error handling utilities for the Fit Checker API
 Provides consistent error messages and formats across all endpoints
 """
+from typing import Any
+
 from fastapi import HTTPException
-from typing import Optional, Dict, Any
 from loguru import logger
+
 
 class APIError(Exception):
     """Base exception for API errors"""
-    def __init__(self, message: str, status_code: int = 500, error_code: str = None, details: Dict[str, Any] = None):
+    def __init__(self, message: str, status_code: int = 500, error_code: str = None, details: dict[str, Any] = None):
         self.message = message
         self.status_code = status_code
         self.error_code = error_code or "INTERNAL_ERROR"
@@ -53,7 +55,7 @@ def handle_api_error(error: Exception, default_message: str = "An error occurred
         )
 
 
-def format_error_response(error_code: str, message: str, details: Optional[Dict[str, Any]] = None) -> Dict[str, Any]:
+def format_error_response(error_code: str, message: str, details: dict[str, Any] | None = None) -> dict[str, Any]:
     """
     Format a standardized error response
     

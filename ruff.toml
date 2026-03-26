@@ -1,0 +1,71 @@
+# Ruff Configuration for Python Backend
+# See https://docs.astral.sh/ruff/configuration/
+
+# Target Python version
+target-version = "py311"
+
+# Line length (same as Black)
+line-length = 120
+
+# Include all Python files
+include = ["*.py", "*.pyi"]
+
+# Exclude directories
+exclude = [
+    ".git",
+    ".venv",
+    "__pycache__",
+    "*.egg-info",
+    "node_modules",
+    "website",
+    "migrations",
+    ".mypy_cache",
+]
+
+[lint]
+# Enable recommended rules
+select = [
+    "E",      # pycodestyle errors
+    "W",      # pycodestyle warnings
+    "F",      # Pyflakes
+    "I",      # isort
+    "B",      # flake8-bugbear
+    "C4",     # flake8-comprehensions
+    "UP",     # pyupgrade
+    "S",      # flake8-bandit (security)
+    "T10",    # flake8-debugger
+    "SIM",    # flake8-simplify
+    "RUF",    # Ruff-specific rules
+]
+
+# Ignore specific rules
+ignore = [
+    "E501",   # Line too long (handled by formatter)
+    "S101",   # Use of assert (OK in tests)
+    "S104",   # Possible binding to all interfaces
+    "S105",   # Hardcoded password (false positives)
+    "S106",   # Hardcoded password (false positives)
+    "B008",   # Function call in default argument (FastAPI Depends)
+]
+
+# Allow autofix for all enabled rules
+fixable = ["ALL"]
+
+[lint.per-file-ignores]
+# Tests can use assert and magic values
+"tests/*" = ["S101", "S106", "PLR2004"]
+"**/test_*.py" = ["S101", "S106", "PLR2004"]
+
+[lint.isort]
+# Known first-party imports
+known-first-party = ["api", "integrations"]
+
+[format]
+# Use double quotes for strings
+quote-style = "double"
+
+# Indent with spaces
+indent-style = "space"
+
+# Unix-style line endings
+line-ending = "lf"

@@ -38,3 +38,4 @@ if __name__ == "__main__":
         print("   cd api && python app.py")
     
     sys.exit(0 if all_ok else 1)
+

@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Save, X, AlertCircle, CheckCircle } from 'lucide-react';
+import { Button } from './ui/Button';
 import toast from 'react-hot-toast';
 import { ApiService, MeasurementResponse } from '../services/api';
 
@@ -32,7 +33,6 @@ export const SaveMeasurementDialog: React.FC<SaveMeasurementDialogProps> = ({
         setIsUpdateMode(true);
         setUpdateMeasurementId(parseInt(updateId));
         setName(updateName);
-        console.log(`Update mode detected: ID=${updateId}, Name=${updateName}`);
       } else {
         setIsUpdateMode(false);
         setUpdateMeasurementId(null);
@@ -88,10 +88,10 @@ export const SaveMeasurementDialog: React.FC<SaveMeasurementDialogProps> = ({
           animate={{ opacity: 1, scale: 1, y: 0 }}
           exit={{ opacity: 0, scale: 0.95, y: 10 }}
           onClick={(e) => e.stopPropagation()}
-          className="bg-white rounded-2xl shadow-bento max-w-md w-full overflow-hidden"
+          className="bg-slate-900 rounded-2xl shadow-bento max-w-md w-full overflow-hidden border border-slate-700"
         >
           {/* Header */}
-          <div className="bg-indigo-600 p-6 text-white">
+          <div className="bg-accent-500 p-6 text-white">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-3">
                 <div className="w-10 h-10 bg-white/20 rounded-xl flex items-center justify-center">
@@ -179,31 +179,25 @@ export const SaveMeasurementDialog: React.FC<SaveMeasurementDialogProps> = ({
           </div>
 
           {/* Actions */}
-          <div className="p-6 bg-slate-50 flex gap-3">
-            <button
+          <div className="p-6 bg-slate-800 flex gap-3">
+            <Button
+              variant="secondary"
               onClick={onClose}
               disabled={isSaving}
-              className="flex-1 px-4 py-2.5 bg-white border border-slate-200 text-slate-700 font-medium rounded-xl hover:bg-slate-50 transition-colors disabled:opacity-50"
+              className="flex-1"
             >
               Cancel
-            </button>
-            <button
+            </Button>
+            <Button
+              variant="primary"
               onClick={handleSave}
-              disabled={isSaving || !name.trim()}
-              className="flex-1 px-4 py-2.5 bg-indigo-600 text-white font-medium rounded-xl hover:bg-indigo-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+              disabled={!name.trim()}
+              loading={isSaving}
+              className="flex-1"
             >
-              {isSaving ? (
-                <>
-                  <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
-                  <span>Saving...</span>
-                </>
-              ) : (
-                <>
-                  <Save size={16} />
-                  <span>{isUpdateMode ? 'Update Measurement' : 'Save Measurement'}</span>
-                </>
-              )}
-            </button>
+              {!isSaving && <Save size={16} />}
+              <span>{isUpdateMode ? 'Update Measurement' : 'Save Measurement'}</span>
+            </Button>
           </div>
         </motion.div>
       </motion.div>

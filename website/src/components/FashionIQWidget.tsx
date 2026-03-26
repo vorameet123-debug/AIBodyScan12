@@ -61,7 +61,7 @@ export const FashionIQWidget: React.FC<FashionIQWidgetProps> = ({ userId, refres
 
     const getLevelConfig = (level: string) => {
         switch (level) {
-            case 'Master': return { color: 'from-indigo-600 to-indigo-700', text: 'text-indigo-600', bg: 'bg-indigo-50', icon: '👑' };
+            case 'Master': return { color: 'from-accent-600 to-accent-700', text: 'text-accent-500', bg: 'bg-accent-50', icon: '👑' };
             case 'Expert': return { color: 'from-blue-600 to-blue-700', text: 'text-blue-600', bg: 'bg-blue-50', icon: '🎯' };
             case 'Learner': return { color: 'from-emerald-600 to-emerald-700', text: 'text-emerald-600', bg: 'bg-emerald-50', icon: '✨' };
             default: return { color: 'from-slate-600 to-slate-700', text: 'text-slate-600', bg: 'bg-slate-50', icon: '🔰' };
@@ -71,7 +71,7 @@ export const FashionIQWidget: React.FC<FashionIQWidgetProps> = ({ userId, refres
     if (loading && !iqData) {
         return (
             <div className="bg-white rounded-2xl p-6 shadow-bento border border-slate-200/60 animate-pulse h-48 flex items-center justify-center">
-                <div className="w-8 h-8 rounded-full border-2 border-indigo-500 border-t-transparent animate-spin" />
+                <div className="w-8 h-8 rounded-full border-2 border-accent-500 border-t-transparent animate-spin" />
             </div>
         );
     }
@@ -96,7 +96,7 @@ export const FashionIQWidget: React.FC<FashionIQWidgetProps> = ({ userId, refres
                                     initial={{ opacity: 0 }}
                                     animate={{ opacity: 1 }}
                                     exit={{ opacity: 0 }}
-                                    className="text-[8px] font-bold text-indigo-500 animate-pulse uppercase"
+                                    className="text-[8px] font-bold text-accent-500 animate-pulse uppercase"
                                 >
                                     • Recalculating...
                                 </motion.span>
@@ -187,7 +187,7 @@ export const FashionIQWidget: React.FC<FashionIQWidgetProps> = ({ userId, refres
                     }
                 </div>
                 {iqData.level !== 'Master' && (
-                    <div className="text-indigo-600 flex items-center gap-1">
+                    <div className="text-accent-500 flex items-center gap-1">
                         {
                             iqData.level === 'Expert' ? 81 - iqData.overall_score :
                                 iqData.level === 'Learner' ? 61 - iqData.overall_score :

@@ -3,6 +3,7 @@ import { motion } from 'framer-motion';
 import { PieChart, Pie, Cell, ResponsiveContainer, Legend, Tooltip, BarChart, Bar, XAxis, YAxis, LineChart, Line, CartesianGrid } from 'recharts';
 import { Package, Palette, TrendingUp, AlertCircle, Heart, ShoppingCart } from 'lucide-react';
 import { WardrobeAPI, WardrobeAnalyticsData, WishlistItem } from '../services/wardrobeApi';
+import { Spinner } from './ui/Spinner';
 import toast from 'react-hot-toast';
 
 interface WardrobeAnalyticsProps {
@@ -40,7 +41,7 @@ export const WardrobeAnalytics: React.FC<WardrobeAnalyticsProps> = ({ userId, hi
         return (
             <div className="flex items-center justify-center p-12">
                 <div className="flex flex-col items-center gap-4">
-                    <div className="w-12 h-12 rounded-full border-2 border-indigo-200 border-t-indigo-600 animate-spin"></div>
+                    <Spinner size="xl" />
                     <p className="text-sm font-medium text-slate-500">Loading analytics...</p>
                 </div>
             </div>
@@ -49,11 +50,11 @@ export const WardrobeAnalytics: React.FC<WardrobeAnalyticsProps> = ({ userId, hi
 
     if (!data || data.composition.total_items === 0) {
         return (
-            <div className="bg-white border-2 border-dashed border-slate-200 rounded-2xl p-10 text-center">
+            <div className="bg-slate-900 border-2 border-dashed border-slate-700 rounded-2xl p-6 md:p-8 text-center">
                 <div className="w-14 h-14 bg-amber-50 rounded-2xl flex items-center justify-center mx-auto mb-4">
                     <Package className="w-7 h-7 text-amber-500" />
                 </div>
-                <h3 className="text-lg font-bold text-slate-900 mb-2">No Wardrobe Data Yet</h3>
+                <h3 className="text-lg font-bold text-white mb-2">No Wardrobe Data Yet</h3>
                 <p className="text-slate-500">Complete some fit checks to see your wardrobe analytics!</p>
             </div>
         );
@@ -74,9 +75,9 @@ export const WardrobeAnalytics: React.FC<WardrobeAnalyticsProps> = ({ userId, hi
         <div className="space-y-6">
             {/* Filter Toggle */}
             {!hideHeader && (
-                <div className="bg-white rounded-2xl shadow-bento border border-slate-200/60 p-4">
+                <div className="bg-slate-900 rounded-2xl shadow-bento border border-slate-700/60 p-4">
                     <div className="flex items-center justify-between">
-                        <h2 className="text-lg font-bold text-slate-900">Wardrobe Analytics</h2>
+                        <h2 className="text-lg font-bold text-white">Wardrobe Analytics</h2>
                         <div className="flex gap-2">
                             <button
                                 onClick={() => setFilter('all')}
@@ -115,12 +116,12 @@ export const WardrobeAnalytics: React.FC<WardrobeAnalyticsProps> = ({ userId, hi
                 <motion.div
                     initial={{ scale: 0.95, opacity: 0 }}
                     animate={{ scale: 1, opacity: 1 }}
-                    className="bg-white rounded-2xl p-5 border border-slate-200/60 shadow-bento"
+                    className="bg-slate-900 rounded-2xl p-5 border border-slate-700/60 shadow-bento"
                 >
                     <div className="w-10 h-10 bg-blue-50 rounded-xl flex items-center justify-center mb-3">
                         <ShoppingCart className="w-5 h-5 text-blue-600" />
                     </div>
-                    <div className="text-2xl font-bold text-slate-900">{data.conversion.total_checks}</div>
+                    <div className="text-2xl font-bold text-white">{data.conversion.total_checks}</div>
                     <div className="text-sm text-slate-500">Total Checks</div>
                 </motion.div>
 
@@ -128,12 +129,12 @@ export const WardrobeAnalytics: React.FC<WardrobeAnalyticsProps> = ({ userId, hi
                     initial={{ scale: 0.95, opacity: 0 }}
                     animate={{ scale: 1, opacity: 1 }}
                     transition={{ delay: 0.1 }}
-                    className="bg-white rounded-2xl p-5 border border-slate-200/60 shadow-bento"
+                    className="bg-slate-900 rounded-2xl p-5 border border-slate-700/60 shadow-bento"
                 >
                     <div className="w-10 h-10 bg-emerald-50 rounded-xl flex items-center justify-center mb-3">
                         <Package className="w-5 h-5 text-emerald-600" />
                     </div>
-                    <div className="text-2xl font-bold text-slate-900">{data.conversion.purchased}</div>
+                    <div className="text-2xl font-bold text-white">{data.conversion.purchased}</div>
                     <div className="text-sm text-slate-500">Purchased</div>
                 </motion.div>
 
@@ -141,12 +142,12 @@ export const WardrobeAnalytics: React.FC<WardrobeAnalyticsProps> = ({ userId, hi
                     initial={{ scale: 0.95, opacity: 0 }}
                     animate={{ scale: 1, opacity: 1 }}
                     transition={{ delay: 0.2 }}
-                    className="bg-white rounded-2xl p-5 border border-slate-200/60 shadow-bento"
+                    className="bg-slate-900 rounded-2xl p-5 border border-slate-700/60 shadow-bento"
                 >
                     <div className="w-10 h-10 bg-pink-50 rounded-xl flex items-center justify-center mb-3">
                         <Heart className="w-5 h-5 text-pink-600" />
                     </div>
-                    <div className="text-2xl font-bold text-slate-900">{data.conversion.wishlist}</div>
+                    <div className="text-2xl font-bold text-white">{data.conversion.wishlist}</div>
                     <div className="text-sm text-slate-500">Wishlist</div>
                 </motion.div>
 
@@ -154,12 +155,12 @@ export const WardrobeAnalytics: React.FC<WardrobeAnalyticsProps> = ({ userId, hi
                     initial={{ scale: 0.95, opacity: 0 }}
                     animate={{ scale: 1, opacity: 1 }}
                     transition={{ delay: 0.3 }}
-                    className="bg-white rounded-2xl p-5 border border-slate-200/60 shadow-bento"
+                    className="bg-slate-900 rounded-2xl p-5 border border-slate-700/60 shadow-bento"
                 >
-                    <div className="w-10 h-10 bg-indigo-50 rounded-xl flex items-center justify-center mb-3">
-                        <TrendingUp className="w-5 h-5 text-indigo-600" />
+                    <div className="w-10 h-10 bg-accent-50 rounded-xl flex items-center justify-center mb-3">
+                        <TrendingUp className="w-5 h-5 text-accent-500" />
                     </div>
-                    <div className="text-2xl font-bold text-slate-900">{data.conversion.conversion_rate}%</div>
+                    <div className="text-2xl font-bold text-white">{data.conversion.conversion_rate}%</div>
                     <div className="text-sm text-slate-500">Conversion</div>
                 </motion.div>
             </div>
@@ -167,17 +168,17 @@ export const WardrobeAnalytics: React.FC<WardrobeAnalyticsProps> = ({ userId, hi
             {/* Charts Row */}
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                 {/* Composition Chart */}
-                <div className="bg-white rounded-2xl shadow-bento p-6 border border-slate-200/60">
-                    <h3 className="text-base font-bold text-slate-900 mb-4 flex items-center gap-2">
-                        <Package className="w-5 h-5 text-indigo-500" />
+                <div className="bg-slate-900 rounded-2xl shadow-bento p-6 border border-slate-700/60">
+                    <h3 className="text-base font-bold text-white mb-4 flex items-center gap-2">
+                        <Package className="w-5 h-5 text-accent-500" />
                         Wardrobe Composition
                     </h3>
-                    <ResponsiveContainer width="100%" height={280}>
+                    <ResponsiveContainer width="100%" height={320}>
                         <PieChart>
                             <Pie
                                 data={compositionData}
                                 cx="50%"
-                                cy="50%"
+                                cy="55%"
                                 innerRadius={60}
                                 outerRadius={100}
                                 paddingAngle={3}
@@ -188,15 +189,15 @@ export const WardrobeAnalytics: React.FC<WardrobeAnalyticsProps> = ({ userId, hi
                                 animationDuration={800}
                             >
                                 {compositionData.map((entry, index) => (
-                                    <Cell 
-                                        key={`cell-${index}`} 
+                                    <Cell
+                                        key={`cell-${index}`}
                                         fill={COLORS[index % COLORS.length]}
                                         opacity={0.9}
                                         className="cursor-pointer hover:opacity-100 transition-opacity"
                                     />
                                 ))}
                             </Pie>
-                            <Tooltip 
+                            <Tooltip
                                 contentStyle={{
                                     backgroundColor: '#1E293B',
                                     border: '1px solid #475569',
@@ -204,7 +205,7 @@ export const WardrobeAnalytics: React.FC<WardrobeAnalyticsProps> = ({ userId, hi
                                     color: '#F1F5F9'
                                 }}
                             />
-                            <Legend 
+                            <Legend
                                 verticalAlign="bottom"
                                 height={36}
                                 iconType="circle"
@@ -214,23 +215,23 @@ export const WardrobeAnalytics: React.FC<WardrobeAnalyticsProps> = ({ userId, hi
                 </div>
 
                 {/* Color Distribution */}
-                <div className="bg-white rounded-2xl shadow-bento p-6 border border-slate-200/60">
-                    <h3 className="text-base font-bold text-slate-900 mb-4 flex items-center gap-2">
+                <div className="bg-slate-900 rounded-2xl shadow-bento p-6 border border-slate-700/60">
+                    <h3 className="text-base font-bold text-white mb-4 flex items-center gap-2">
                         <Palette className="w-5 h-5 text-pink-500" />
                         Color Distribution
                     </h3>
                     <ResponsiveContainer width="100%" height={280}>
                         <BarChart data={colorData}>
                             <CartesianGrid strokeDasharray="3 3" stroke="#E2E8F0" />
-                            <XAxis 
-                                dataKey="name" 
+                            <XAxis
+                                dataKey="name"
                                 tick={{ fontSize: 12, fill: '#64748B' }}
                                 angle={-45}
                                 textAnchor="end"
                                 height={80}
                             />
                             <YAxis tick={{ fontSize: 12, fill: '#64748B' }} />
-                            <Tooltip 
+                            <Tooltip
                                 contentStyle={{
                                     backgroundColor: '#1E293B',
                                     border: '1px solid #475569',
@@ -239,40 +240,95 @@ export const WardrobeAnalytics: React.FC<WardrobeAnalyticsProps> = ({ userId, hi
                                 }}
                                 cursor={{ fill: 'rgba(99, 102, 241, 0.1)' }}
                             />
-                            <Bar 
-                                dataKey="value" 
+                            <Bar
+                                dataKey="value"
                                 radius={[8, 8, 0, 0]}
                                 animationDuration={800}
                             >
                                 {colorData.map((entry, index) => {
-                                    // Map color names to hex values
+                                    // Comprehensive color map with variations
                                     const colorMap: { [key: string]: string } = {
+                                        // Basics
                                         'black': '#000000',
                                         'white': '#FFFFFF',
-                                        'red': '#EF4444',
-                                        'blue': '#3B82F6',
-                                        'green': '#10B981',
-                                        'yellow': '#F59E0B',
-                                        'orange': '#F97316',
-                                        'purple': '#8B5CF6',
-                                        'pink': '#EC4899',
-                                        'brown': '#92400E',
                                         'gray': '#6B7280',
                                         'grey': '#6B7280',
-                                        'beige': '#D4A574',
+
+                                        // Blues
+                                        'blue': '#3B82F6',
+                                        'light blue': '#60A5FA',
+                                        'dark blue': '#1E40AF',
                                         'navy': '#1E3A8A',
-                                        'khaki': '#C3B091',
-                                        'olive': '#84CC16',
+                                        'navy blue': '#1E3A8A',
+                                        'sky blue': '#7DD3FC',
+                                        'royal blue': '#2563EB',
+                                        'cobalt': '#0047AB',
+
+                                        // Reds
+                                        'red': '#EF4444',
+                                        'light red': '#F87171',
+                                        'dark red': '#B91C1C',
                                         'maroon': '#7F1D1D',
+                                        'burgundy': '#881337',
+                                        'crimson': '#DC143C',
+
+                                        // Greens
+                                        'green': '#10B981',
+                                        'light green': '#4ADE80',
+                                        'dark green': '#065F46',
+                                        'olive': '#84CC16',
+                                        'lime': '#84CC16',
+                                        'mint': '#6EE7B7',
+                                        'forest green': '#166534',
+                                        'sage': '#9CA986',
+
+                                        // Yellows/Oranges
+                                        'yellow': '#F59E0B',
+                                        'light yellow': '#FCD34D',
+                                        'gold': '#D97706',
+                                        'orange': '#F97316',
+                                        'light orange': '#FB923C',
+                                        'dark orange': '#C2410C',
+
+                                        // Purples/Pinks
+                                        'purple': '#8B5CF6',
+                                        'light purple': '#A78BFA',
+                                        'dark purple': '#6B21A8',
+                                        'violet': '#7C3AED',
+                                        'lavender': '#C4B5FD',
+                                        'pink': '#EC4899',
+                                        'light pink': '#F9A8D4',
+                                        'hot pink': '#DB2777',
+                                        'magenta': '#D946EF',
+
+                                        // Browns/Tans
+                                        'brown': '#92400E',
+                                        'light brown': '#A16207',
+                                        'dark brown': '#78350F',
+                                        'tan': '#D2B48C',
+                                        'beige': '#D4A574',
+                                        'khaki': '#C3B091',
+                                        'cream': '#FFFDD0',
+                                        'camel': '#C19A6B',
+
+                                        // Other
                                         'teal': '#14B8A6',
+                                        'turquoise': '#2DD4BF',
+                                        'cyan': '#22D3EE',
+                                        'indigo': '#4F46E5',
+                                        'charcoal': '#36454F',
+                                        'silver': '#C0C0C0',
                                         'unknown': '#9CA3AF'
                                     };
-                                    const fillColor = colorMap[entry.name.toLowerCase()] || '#EC4899';
+
+                                    const colorName = entry.name.toLowerCase();
+                                    const fillColor = colorMap[colorName] || '#9CA3AF'; // Default to gray instead of pink
+
                                     return (
-                                        <Cell 
-                                            key={`cell-${index}`} 
-                                            fill={fillColor} 
-                                            stroke={fillColor === '#FFFFFF' ? '#334155' : 'none'} 
+                                        <Cell
+                                            key={`cell-${index}`}
+                                            fill={fillColor}
+                                            stroke={fillColor === '#FFFFFF' ? '#334155' : 'none'}
                                             strokeWidth={fillColor === '#FFFFFF' ? 2 : 0}
                                             opacity={0.9}
                                             className="cursor-pointer hover:opacity-100 transition-opacity"
@@ -287,23 +343,23 @@ export const WardrobeAnalytics: React.FC<WardrobeAnalyticsProps> = ({ userId, hi
 
             {/* Fit Score Timeline */}
             {data.fit_history.length > 0 && (
-                <div className="bg-white rounded-2xl shadow-bento p-6 border border-slate-200/60">
-                    <h3 className="text-base font-bold text-slate-900 mb-4 flex items-center gap-2">
+                <div className="bg-slate-900 rounded-2xl shadow-bento p-6 border border-slate-700/60">
+                    <h3 className="text-base font-bold text-white mb-4 flex items-center gap-2">
                         <TrendingUp className="w-5 h-5 text-blue-500" />
                         Fit Score Timeline (Last 30 Days)
                     </h3>
                     <ResponsiveContainer width="100%" height={220}>
                         <LineChart data={data.fit_history}>
                             <CartesianGrid strokeDasharray="3 3" stroke="#E2E8F0" />
-                            <XAxis 
-                                dataKey="date" 
+                            <XAxis
+                                dataKey="date"
                                 tick={{ fontSize: 12, fill: '#64748B' }}
                             />
-                            <YAxis 
-                                domain={[0, 100]} 
+                            <YAxis
+                                domain={[0, 100]}
                                 tick={{ fontSize: 12, fill: '#64748B' }}
                             />
-                            <Tooltip 
+                            <Tooltip
                                 contentStyle={{
                                     backgroundColor: '#1E293B',
                                     border: '1px solid #475569',
@@ -311,18 +367,18 @@ export const WardrobeAnalytics: React.FC<WardrobeAnalyticsProps> = ({ userId, hi
                                     color: '#F1F5F9'
                                 }}
                             />
-                            <Line 
-                                type="monotone" 
-                                dataKey="score" 
-                                stroke="url(#colorGradient)" 
-                                strokeWidth={3} 
-                                dot={{ 
-                                    fill: '#6366F1', 
+                            <Line
+                                type="monotone"
+                                dataKey="score"
+                                stroke="url(#colorGradient)"
+                                strokeWidth={3}
+                                dot={{
+                                    fill: '#6366F1', // We can keep this or use accent hex
                                     strokeWidth: 2,
                                     r: 5,
                                     className: 'hover:r-7 transition-all cursor-pointer'
                                 }}
-                                activeDot={{ 
+                                activeDot={{
                                     r: 8,
                                     fill: '#8B5CF6',
                                     stroke: '#FFF',
@@ -343,8 +399,8 @@ export const WardrobeAnalytics: React.FC<WardrobeAnalyticsProps> = ({ userId, hi
 
             {/* Wardrobe Gaps */}
             {data.gaps.length > 0 && (
-                <div className="bg-white rounded-2xl shadow-bento p-6 border border-slate-200/60">
-                    <h3 className="text-base font-bold text-slate-900 mb-4 flex items-center gap-2">
+                <div className="bg-slate-900 rounded-2xl shadow-bento p-6 border border-slate-700/60">
+                    <h3 className="text-base font-bold text-white mb-4 flex items-center gap-2">
                         <AlertCircle className="w-5 h-5 text-amber-500" />
                         Wardrobe Gaps
                     </h3>
@@ -362,8 +418,8 @@ export const WardrobeAnalytics: React.FC<WardrobeAnalyticsProps> = ({ userId, hi
 
             {/* Wishlist */}
             {data.wishlist.length > 0 && (
-                <div className="bg-white rounded-2xl shadow-bento p-6 border border-slate-200/60">
-                    <h3 className="text-base font-bold text-slate-900 mb-4 flex items-center gap-2">
+                <div className="bg-slate-900 rounded-2xl shadow-bento p-6 border border-slate-700/60">
+                    <h3 className="text-base font-bold text-white mb-4 flex items-center gap-2">
                         <Heart className="w-5 h-5 text-pink-500" />
                         Your Wishlist ({data.wishlist.length} items)
                     </h3>
@@ -372,7 +428,7 @@ export const WardrobeAnalytics: React.FC<WardrobeAnalyticsProps> = ({ userId, hi
                             <div key={item.id} className="bg-gradient-to-br from-pink-50 to-purple-50 border border-pink-100 rounded-xl p-4">
                                 <div className="flex justify-between items-start mb-2">
                                     <div className="font-semibold text-slate-900">{item.garment}</div>
-                                    <div className="text-xl font-bold text-indigo-600">{item.score}</div>
+                                    <div className="text-xl font-bold text-accent-500">{item.score}</div>
                                 </div>
                                 <div className="text-sm text-slate-600">Size: {item.size}</div>
                                 <div className="text-sm text-slate-600">Color: {item.color}</div>

@@ -15,7 +15,9 @@ import {
     AlertCircle
 } from 'lucide-react';
 import { WardrobeAPI } from '../../services/wardrobeApi';
+import { useSearchParams, useNavigate } from 'react-router-dom';
 import toast from 'react-hot-toast';
+import { WardrobeAnalyticsData, FitHistoryItem, WardrobeGap } from '../../types/wardrobe';
 
 interface OverviewTabProps {
     userId: number;
@@ -40,7 +42,9 @@ interface RecentActivity {
 
 export const OverviewTab: React.FC<OverviewTabProps> = ({ userId }) => {
     const [loading, setLoading] = useState(true);
-    const [data, setData] = useState<any>(null);
+    const [data, setData] = useState<WardrobeAnalyticsData | null>(null);
+    const [, setSearchParams] = useSearchParams();
+    const navigate = useNavigate();
 
     useEffect(() => {
         loadOverviewData();
@@ -119,7 +123,7 @@ export const OverviewTab: React.FC<OverviewTabProps> = ({ userId }) => {
     ];
 
     // Mock recent activity - in production, this would come from API
-    const recentActivity: RecentActivity[] = data.fit_history.slice(0, 5).map((item: any, idx: number) => ({
+    const recentActivity: RecentActivity[] = data.fit_history.slice(0, 5).map((item: FitHistoryItem, idx: number) => ({
         id: idx,
         type: item.purchased ? 'purchase' : 'check',
         garment: item.garment,
@@ -148,7 +152,7 @@ export const OverviewTab: React.FC<OverviewTabProps> = ({ userId }) => {
                     >
                         {/* Gradient Background */}
                         <div className={`absolute inset-0 bg-gradient-to-br ${stat.color} opacity-0 group-hover:opacity-10 transition-opacity`} />
-                        
+
                         <div className="relative">
                             <div className="flex items-start justify-between mb-3">
                                 <div className={`w-11 h-11 bg-gradient-to-br ${stat.color} rounded-xl flex items-center justify-center shadow-lg`}>
@@ -179,7 +183,7 @@ export const OverviewTab: React.FC<OverviewTabProps> = ({ userId }) => {
                         <Award className="w-5 h-5 text-accent-400" />
                         Wardrobe Health
                     </h3>
-                    
+
                     {/* Circular Progress */}
                     <div className="flex flex-col items-center py-4">
                         <div className="relative w-40 h-40">
@@ -216,7 +220,7 @@ export const OverviewTab: React.FC<OverviewTabProps> = ({ userId }) => {
                                 <span className="text-sm text-slate-400">out of 100</span>
                             </div>
                         </div>
-                        
+
                         <div className="mt-6 w-full space-y-2">
                             <div className="flex items-center justify-between text-sm">
                                 <span className="text-slate-400">Diversity</span>
@@ -250,7 +254,10 @@ export const OverviewTab: React.FC<OverviewTabProps> = ({ userId }) => {
                             <Clock className="w-5 h-5 text-accent-400" />
                             Recent Activity
                         </h3>
-                        <button className="text-sm text-accent-400 hover:text-accent-300 font-semibold flex items-center gap-1">
+                        <button
+                            onClick={() => setSearchParams({ section: 'history' })}
+                            className="text-sm text-accent-400 hover:text-accent-300 font-semibold flex items-center gap-1"
+                        >
                             View All
                             <ArrowRight className="w-4 h-4" />
                         </button>
@@ -263,13 +270,12 @@ export const OverviewTab: React.FC<OverviewTabProps> = ({ userId }) => {
                                     key={activity.id}
                                     className="flex items-center gap-4 p-3 bg-slate-800/30 rounded-xl hover:bg-slate-800/50 transition-colors"
                                 >
-                                    <div className={`w-10 h-10 rounded-xl flex items-center justify-center ${
-                                        activity.type === 'purchase'
-                                            ? 'bg-emerald-500/20 text-emerald-400'
-                                            : activity.type === 'wishlist'
+                                    <div className={`w-10 h-10 rounded-xl flex items-center justify-center ${activity.type === 'purchase'
+                                        ? 'bg-emerald-500/20 text-emerald-400'
+                                        : activity.type === 'wishlist'
                                             ? 'bg-pink-500/20 text-pink-400'
                                             : 'bg-blue-500/20 text-blue-400'
-                                    }`}>
+                                        }`}>
                                         {activity.type === 'purchase' ? (
                                             <ShoppingCart className="w-5 h-5" />
                                         ) : activity.type === 'wishlist' ? (
@@ -321,7 +327,7 @@ export const OverviewTab: React.FC<OverviewTabProps> = ({ userId }) => {
                     </h3>
                     <div className="space-y-3">
                         {data.gaps.length > 0 ? (
-                            data.gaps.slice(0, 3).map((gap: any, idx: number) => (
+                            data.gaps.slice(0, 3).map((gap: WardrobeGap, idx: number) => (
                                 <div key={idx} className="flex items-start gap-3 p-3 bg-slate-900/40 rounded-xl">
                                     <AlertCircle className="w-5 h-5 text-amber-400 flex-shrink-0 mt-0.5" />
                                     <div className="flex-1">
@@ -347,25 +353,37 @@ export const OverviewTab: React.FC<OverviewTabProps> = ({ userId }) => {
                 >
                     <h3 className="text-lg font-bold text-white mb-4">Quick Actions</h3>
                     <div className="grid grid-cols-2 gap-3">
-                        <button className="flex flex-col items-center gap-2 p-4 bg-slate-800/50 rounded-xl hover:bg-slate-800 transition-colors group">
+                        <button
+                            onClick={() => setSearchParams({ section: 'items', action: 'add' })}
+                            className="flex flex-col items-center gap-2 p-4 bg-slate-800/50 rounded-xl hover:bg-slate-800 transition-colors group"
+                        >
                             <div className="w-12 h-12 bg-gradient-to-br from-blue-500 to-cyan-500 rounded-xl flex items-center justify-center group-hover:scale-110 transition-transform">
                                 <Package className="w-6 h-6 text-white" />
                             </div>
                             <span className="text-sm font-semibold text-white">Add Item</span>
                         </button>
-                        <button className="flex flex-col items-center gap-2 p-4 bg-slate-800/50 rounded-xl hover:bg-slate-800 transition-colors group">
+                        <button
+                            onClick={() => setSearchParams({ section: 'trending' })}
+                            className="flex flex-col items-center gap-2 p-4 bg-slate-800/50 rounded-xl hover:bg-slate-800 transition-colors group"
+                        >
                             <div className="w-12 h-12 bg-gradient-to-br from-pink-500 to-rose-500 rounded-xl flex items-center justify-center group-hover:scale-110 transition-transform">
                                 <TrendingUp className="w-6 h-6 text-white" />
                             </div>
                             <span className="text-sm font-semibold text-white">View Trends</span>
                         </button>
-                        <button className="flex flex-col items-center gap-2 p-4 bg-slate-800/50 rounded-xl hover:bg-slate-800 transition-colors group">
+                        <button
+                            onClick={() => navigate('/fit-checker')}
+                            className="flex flex-col items-center gap-2 p-4 bg-slate-800/50 rounded-xl hover:bg-slate-800 transition-colors group"
+                        >
                             <div className="w-12 h-12 bg-gradient-to-br from-purple-500 to-indigo-500 rounded-xl flex items-center justify-center group-hover:scale-110 transition-transform">
                                 <Target className="w-6 h-6 text-white" />
                             </div>
                             <span className="text-sm font-semibold text-white">Fit Check</span>
                         </button>
-                        <button className="flex flex-col items-center gap-2 p-4 bg-slate-800/50 rounded-xl hover:bg-slate-800 transition-colors group">
+                        <button
+                            onClick={() => setSearchParams({ section: 'items', filter: 'wishlist' })}
+                            className="flex flex-col items-center gap-2 p-4 bg-slate-800/50 rounded-xl hover:bg-slate-800 transition-colors group"
+                        >
                             <div className="w-12 h-12 bg-gradient-to-br from-emerald-500 to-teal-500 rounded-xl flex items-center justify-center group-hover:scale-110 transition-transform">
                                 <Heart className="w-6 h-6 text-white" />
                             </div>

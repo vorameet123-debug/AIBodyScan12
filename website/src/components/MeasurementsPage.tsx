@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useLocation } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
+import { useNavigate } from 'react-router-dom';
 import { MeasurementForm } from './MeasurementForm';
 import { MeasurementsDisplay } from './MeasurementsDisplay';
 import { SizeRecommendations } from './SizeRecommendations';
@@ -9,10 +10,14 @@ import { Model3DBottomSheet } from './Model3DBottomSheet';
 import { SaveMeasurementDialog } from './SaveMeasurementDialog';
 import { ApiService, MeasurementResponse } from '../services/api';
 import { CheckCircle, RotateCcw, Save, Database, Eye } from 'lucide-react';
+import { Button } from './ui/Button';
 import toast from 'react-hot-toast';
+import { useInvalidateBodyIntelligence } from '../contexts/BodyIntelligenceContext';
 
 export const MeasurementsPage: React.FC = () => {
+  const navigate = useNavigate();
   const location = useLocation();
+  const invalidateBodyIntelligence = useInvalidateBodyIntelligence();
   const [result, setResult] = useState<MeasurementResponse | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [selectedMeasurement, setSelectedMeasurement] = useState<string | null>(null);
@@ -31,7 +36,6 @@ export const MeasurementsPage: React.FC = () => {
       if (loadedMeasurementData) {
         try {
           const data = JSON.parse(loadedMeasurementData);
-          console.log('Loading measurement from sessionStorage:', data);
 
           const measurementResponse: MeasurementResponse = {
             success: true,
@@ -96,7 +100,7 @@ export const MeasurementsPage: React.FC = () => {
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -20 }}
             transition={{ duration: 0.4 }}
-            className="bg-white rounded-2xl p-8 md:p-10 shadow-bento border border-slate-200/60"
+            className="bg-slate-900 rounded-2xl p-6 shadow-bento border border-slate-700/60"
           >
             {/* Header Section */}
             <motion.div
@@ -105,13 +109,13 @@ export const MeasurementsPage: React.FC = () => {
               transition={{ delay: 0.1 }}
               className="text-center mb-10"
             >
-              <div className="inline-flex items-center justify-center w-14 h-14 bg-indigo-50 rounded-2xl mb-6">
-                <Database className="text-indigo-600" size={28} />
+              <div className="inline-flex items-center justify-center w-14 h-14 bg-gradient-to-br from-violet-500 to-purple-600 rounded-2xl mb-6 shadow-lg shadow-violet-500/25">
+                <Database className="text-white" size={28} />
               </div>
-              <h2 className="text-3xl font-bold text-slate-900 mb-3">
+              <h2 className="text-3xl font-bold text-white mb-3">
                 Get Your Body Measurements
               </h2>
-              <p className="text-slate-500 max-w-2xl mx-auto">
+              <p className="text-slate-400 max-w-2xl mx-auto">
                 Upload your photos and enter your details to receive accurate body measurements powered by AI
               </p>
             </motion.div>
@@ -158,7 +162,7 @@ export const MeasurementsPage: React.FC = () => {
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.1 }}
-              className="bg-white rounded-2xl p-6 shadow-bento border border-slate-200/60"
+              className="bg-slate-900 rounded-2xl p-6 shadow-bento border border-slate-700/60"
             >
               <Model3DViewerSMPL
                 model3D={result.model_3d}
@@ -173,7 +177,7 @@ export const MeasurementsPage: React.FC = () => {
               initial={{ opacity: 0, y: 10 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.2 }}
-              className="bg-white rounded-2xl p-6 shadow-bento border border-slate-200/60"
+              className="bg-slate-900 rounded-2xl p-6 shadow-bento border border-slate-700/60"
             >
               <MeasurementsDisplay
                 measurements={result.measurements}
@@ -204,7 +208,7 @@ export const MeasurementsPage: React.FC = () => {
                 initial={{ opacity: 0, y: 10 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: 0.3 }}
-                className="bg-white rounded-2xl p-6 shadow-bento border border-slate-200/60"
+                className="bg-slate-900 rounded-2xl p-6 shadow-bento border border-slate-700/60"
               >
                 <SizeRecommendations recommendations={result.size_recommendations} />
               </motion.div>
@@ -228,13 +232,15 @@ export const MeasurementsPage: React.FC = () => {
                     try {
                       await ApiService.saveMeasurement(updateMeasurementName, result);
                       toast.success(`"${updateMeasurementName}" updated successfully! 🎉`);
+                      // Invalidate body intelligence cache so Body Tracker will refresh
+                      invalidateBodyIntelligence();
                       // Clear update mode flags
                       sessionStorage.removeItem('updateMeasurementId');
                       sessionStorage.removeItem('updateMeasurementName');
                       setIsUpdateMode(false);
                       // Navigate back to My Measurements
                       setTimeout(() => {
-                        window.location.href = '/my-measurements';
+                        navigate('/my-measurements');
                       }, 1000);
                     } catch (error: any) {
                       toast.error(error?.response?.data?.detail || 'Failed to update measurement');
@@ -246,23 +252,21 @@ export const MeasurementsPage: React.FC = () => {
                   Save New Measurement
                 </motion.button>
               ) : !isSavedMeasurement && (
-                <motion.button
-                  initial={{ opacity: 0, scale: 0.95 }}
-                  animate={{ opacity: 1, scale: 1 }}
+                <Button
+                  variant="primary"
                   onClick={() => setShowSaveDialog(true)}
-                  className="flex items-center gap-2 bg-purple-600 hover:bg-purple-700 text-white font-medium py-2.5 px-6 rounded-xl transition-colors"
                 >
                   <Save size={18} />
                   Save Measurement
-                </motion.button>
+                </Button>
               )}
-              <button
+              <Button
+                variant="primary"
                 onClick={handleReset}
-                className="flex items-center gap-2 bg-indigo-600 hover:bg-indigo-700 text-white font-medium py-2.5 px-6 rounded-xl transition-colors"
               >
                 <RotateCcw size={18} />
                 {isSavedMeasurement || isUpdateMode ? 'Back to Measurements' : 'Measure Another Person'}
-              </button>
+              </Button>
             </motion.div>
           </motion.div>
         )}
@@ -276,6 +280,8 @@ export const MeasurementsPage: React.FC = () => {
           measurementData={result}
           onSaved={() => {
             toast.success('Measurement saved successfully!');
+            // Invalidate body intelligence cache so Body Tracker will refresh
+            invalidateBodyIntelligence();
           }}
         />
       )}

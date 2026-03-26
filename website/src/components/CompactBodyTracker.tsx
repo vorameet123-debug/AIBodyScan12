@@ -107,9 +107,9 @@ export const CompactBodyTracker: React.FC<CompactBodyTrackerProps> = ({ userId, 
 
             {/* Key Metrics */}
             <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-                <div className="bg-indigo-50 rounded-xl p-3 border border-indigo-100">
+                <div className="bg-accent-50 rounded-xl p-3 border border-accent-100">
                     <div className="text-xs text-slate-600 mb-1">Total Tracked</div>
-                    <div className="text-2xl font-bold text-indigo-600">{progress.total_measurements}</div>
+                    <div className="text-2xl font-bold text-accent-500">{progress.total_measurements}</div>
                     <div className="text-xs text-slate-500">{progress.period_analyzed}</div>
                 </div>
 
@@ -207,14 +207,14 @@ export const CompactBodyTracker: React.FC<CompactBodyTrackerProps> = ({ userId, 
 
             {/* Pattern Insights */}
             {progress.pattern_insights && progress.pattern_insights.length > 0 && (
-                <div className="bg-gradient-to-br from-indigo-50 to-purple-50 rounded-xl p-4 border border-indigo-200">
+                <div className="bg-gradient-to-br from-accent-50 to-purple-50 rounded-xl p-4 border border-accent-200">
                     <div className="flex items-center gap-2 mb-2">
-                        <Activity size={14} className="text-indigo-600" />
+                        <Activity size={14} className="text-accent-500" />
                         <h4 className="text-xs font-bold text-slate-700 uppercase tracking-tight">Intelligence Insights</h4>
                     </div>
                     <div className="space-y-2">
                         {progress.pattern_insights.slice(0, 2).map((pattern, idx) => (
-                            <div key={idx} className="text-xs text-indigo-900 bg-white/50 p-2 rounded-lg border border-indigo-100 flex justify-between items-center">
+                            <div key={idx} className="text-xs text-accent-900 bg-white/50 p-2 rounded-lg border border-accent-100 flex justify-between items-center">
                                 <span className="font-medium">{pattern.description}</span>
                                 <span className={`text-[10px] px-1.5 py-0.5 rounded-md font-bold text-white ${pattern.confidence === 'high' ? 'bg-green-500' : 'bg-yellow-500'}`}>
                                     {pattern.confidence}

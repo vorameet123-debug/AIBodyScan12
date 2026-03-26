@@ -2,8 +2,8 @@ import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { LoginForm } from './LoginForm';
 import { RegisterForm } from './RegisterForm';
-import { 
-  Sparkles, Zap, TrendingUp, BarChart3, Target, ShoppingBag, 
+import {
+  Sparkles, Zap, TrendingUp, BarChart3, Target, ShoppingBag,
   Brain, Package, Eye, Shield, Star, CheckCircle, ArrowRight
 } from 'lucide-react';
 import toast from 'react-hot-toast';
@@ -25,7 +25,7 @@ export const AuthLanding: React.FC<AuthLandingProps> = ({ onAuthSuccess }) => {
     { icon: ShoppingBag, text: 'FitChecker AI', color: 'from-fuchsia-500 to-pink-500' },
     { icon: Brain, text: 'Fashion IQ', color: 'from-purple-500 to-indigo-500' },
     { icon: TrendingUp, text: 'Body Tracker', color: 'from-indigo-500 to-blue-500' },
-    { icon: Package, text: 'Wardrobe Analytics', color: 'from-blue-500 to-cyan-500' },
+    { icon: Package, text: 'Wardrobe & Trend Analytics', color: 'from-blue-500 to-cyan-500' },
     { icon: Eye, text: '3D Visualization', color: 'from-cyan-500 to-teal-500' },
   ];
 
@@ -39,23 +39,23 @@ export const AuthLanding: React.FC<AuthLandingProps> = ({ onAuthSuccess }) => {
           <div className="absolute bottom-0 left-0 w-[600px] h-[600px] bg-gradient-to-tr from-fuchsia-600/15 via-pink-600/10 to-transparent rounded-full blur-3xl" />
           <div className="absolute top-1/3 left-1/3 w-[500px] h-[500px] bg-gradient-to-br from-indigo-600/10 to-transparent rounded-full blur-3xl" />
         </div>
-        
+
         {/* Dot Grid Pattern */}
         <div className="absolute inset-0 bg-[radial-gradient(rgba(255,255,255,0.03)_1px,transparent_1px)] bg-[size:40px_40px]" />
-        
+
         {/* Scan Lines Effect */}
         <div className="absolute inset-0 bg-[linear-gradient(transparent_50%,rgba(0,0,0,0.1)_50%)] bg-[size:100%_4px] opacity-10 pointer-events-none" />
       </div>
 
       {/* Left Panel - Branding & Features */}
-      <motion.div 
+      <motion.div
         initial={{ opacity: 0, x: -50 }}
         animate={{ opacity: 1, x: 0 }}
         transition={{ duration: 0.8 }}
         className="hidden lg:flex lg:w-3/5 relative z-10 flex-col justify-between p-12 xl:p-16"
       >
         {/* Logo */}
-        <motion.div 
+        <motion.div
           initial={{ opacity: 0, y: -20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.2 }}
@@ -84,14 +84,14 @@ export const AuthLanding: React.FC<AuthLandingProps> = ({ onAuthSuccess }) => {
               <Zap className="w-4 h-4" />
               AI-Powered Body Intelligence
             </span>
-            
+
             <h2 className="text-5xl xl:text-6xl font-bold text-white leading-tight mb-6">
               Your Body.{' '}
               <span className="bg-gradient-to-r from-violet-400 via-purple-400 to-fuchsia-400 bg-clip-text text-transparent">
                 Decoded.
               </span>
             </h2>
-            
+
             <p className="text-xl text-slate-400 leading-relaxed mb-12">
               Get 21+ precise measurements from just 2 photos. Track your body changes,
               check clothing fits, and build your fashion intelligence — all powered by AI.
@@ -173,7 +173,7 @@ export const AuthLanding: React.FC<AuthLandingProps> = ({ onAuthSuccess }) => {
         {/* Form Container */}
         <div className="w-full max-w-md">
           {/* Mobile Logo (shown only on mobile) */}
-          <motion.div 
+          <motion.div
             initial={{ opacity: 0, y: -20 }}
             animate={{ opacity: 1, y: 0 }}
             className="lg:hidden flex items-center justify-center gap-3 mb-8"
@@ -198,11 +198,10 @@ export const AuthLanding: React.FC<AuthLandingProps> = ({ onAuthSuccess }) => {
             <div className="flex gap-1 p-1 bg-slate-800/50 rounded-2xl mb-8">
               <button
                 onClick={() => setAuthView('login')}
-                className={`flex-1 py-3 px-4 rounded-xl font-semibold text-sm transition-all relative ${
-                  authView === 'login'
+                className={`flex-1 py-3 px-4 rounded-xl font-semibold text-sm transition-all relative ${authView === 'login'
                     ? 'text-white'
                     : 'text-slate-400 hover:text-slate-300'
-                }`}
+                  }`}
               >
                 {authView === 'login' && (
                   <motion.div
@@ -215,11 +214,10 @@ export const AuthLanding: React.FC<AuthLandingProps> = ({ onAuthSuccess }) => {
               </button>
               <button
                 onClick={() => setAuthView('register')}
-                className={`flex-1 py-3 px-4 rounded-xl font-semibold text-sm transition-all relative ${
-                  authView === 'register'
+                className={`flex-1 py-3 px-4 rounded-xl font-semibold text-sm transition-all relative ${authView === 'register'
                     ? 'text-white'
                     : 'text-slate-400 hover:text-slate-300'
-                }`}
+                  }`}
               >
                 {authView === 'register' && (
                   <motion.div
@@ -277,7 +275,7 @@ export const AuthLanding: React.FC<AuthLandingProps> = ({ onAuthSuccess }) => {
               ))}
             </div>
             <p className="text-sm text-slate-500">
-              Trusted by <span className="text-slate-400 font-medium">10,000+</span> users worldwide
+              Trusted by <span className="text-slate-300 font-medium">10,000+</span> users worldwide
             </p>
           </motion.div>
         </div>

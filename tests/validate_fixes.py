@@ -86,3 +86,4 @@ print("  1. Run the API: cd api && python app.py")
 print("  2. Run test: cd d:\\3Dmodel && python test_quick.py")
 print("  3. Upload an image to test full measurement extraction")
 print("\n")
+

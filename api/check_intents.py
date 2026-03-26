@@ -10,3 +10,4 @@ for row in cursor.fetchall():
     print(f'{row[0]:3} | {row[1]:10} | {row[2]:5} | {row[3]:9} | {row[4]}')
 
 conn.close()
+

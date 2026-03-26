@@ -57,12 +57,12 @@ export const ColorAnalysisDisplay: React.FC<ColorAnalysisDisplayProps> = ({ anal
     <motion.div
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
-      className="bg-white rounded-2xl p-6 shadow-bento border border-slate-200/60"
+      className="bg-slate-900 rounded-2xl p-6 shadow-bento border border-slate-700/60"
     >
       {/* Header */}
       <div className="flex items-center gap-3 mb-6">
-        <div className="w-10 h-10 bg-indigo-50 rounded-xl flex items-center justify-center">
-          <Palette className="text-indigo-600" size={20} />
+        <div className="w-10 h-10 bg-accent-50 rounded-xl flex items-center justify-center">
+          <Palette className="text-accent-500" size={20} />
         </div>
         <div>
           <h3 className="text-lg font-bold text-slate-900">Color Analysis</h3>
@@ -110,7 +110,7 @@ export const ColorAnalysisDisplay: React.FC<ColorAnalysisDisplayProps> = ({ anal
       </div>
 
       {/* Primary Color */}
-      <div className="mb-5 p-4 bg-white rounded-xl border border-slate-200/60">
+      <div className="mb-5 p-4 bg-slate-800 rounded-xl border border-slate-700/60">
         <div className="flex items-center gap-4">
           <div
             className="w-14 h-14 rounded-xl border-2 border-white shadow-sm"
@@ -150,7 +150,7 @@ export const ColorAnalysisDisplay: React.FC<ColorAnalysisDisplayProps> = ({ anal
       {analysis.alternative_colors.length > 0 && (
         <div>
           <h4 className="text-sm font-semibold text-slate-900 mb-3 flex items-center gap-2">
-            <Sparkles className="text-indigo-500" size={16} />
+            <Sparkles className="text-accent-500" size={16} />
             Alternative Color Suggestions
           </h4>
           <div className="grid grid-cols-5 gap-2">

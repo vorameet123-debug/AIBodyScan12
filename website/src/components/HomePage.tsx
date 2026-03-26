@@ -1,7 +1,7 @@
 import React, { useRef } from 'react';
 import { motion, useScroll, useTransform, useInView } from 'framer-motion';
-import { 
-  Brain, Zap, BarChart3, TrendingUp, Target, Sparkles, ArrowRight, 
+import {
+  Brain, Zap, BarChart3, TrendingUp, Target, Sparkles, ArrowRight,
   Play, Ruler, ShoppingBag, Package, Crown, Star, Users, Globe,
   CheckCircle, ArrowUpRight, Cpu, Layers, Activity, Eye
 } from 'lucide-react';
@@ -53,7 +53,7 @@ export const HomePage: React.FC = () => {
     },
     {
       icon: Package,
-      title: 'Wardrobe Analytics',
+      title: 'Wardrobe & Trend Analytics',
       description: 'Smart analysis of your wardrobe composition, colors, and style gaps',
       color: 'blue',
       path: '/wardrobe'
@@ -91,16 +91,16 @@ export const HomePage: React.FC = () => {
   };
 
   return (
-    <div className="relative overflow-hidden">
+    <div className="relative overflow-hidden bg-slate-950">
       {/* Ambient Background */}
       <div className="fixed inset-0 pointer-events-none">
-        <div className="absolute top-0 left-1/4 w-[800px] h-[800px] bg-gradient-to-br from-violet-200/30 via-purple-200/20 to-transparent rounded-full blur-3xl" />
-        <div className="absolute bottom-0 right-1/4 w-[600px] h-[600px] bg-gradient-to-br from-fuchsia-200/20 via-pink-200/15 to-transparent rounded-full blur-3xl" />
-        <div className="absolute top-1/2 left-0 w-[400px] h-[400px] bg-gradient-to-br from-indigo-200/20 to-transparent rounded-full blur-3xl" />
+        <div className="absolute top-0 left-1/4 w-[800px] h-[800px] bg-gradient-to-br from-violet-950/40 via-purple-950/30 to-transparent rounded-full blur-3xl" />
+        <div className="absolute bottom-0 right-1/4 w-[600px] h-[600px] bg-gradient-to-br from-fuchsia-950/30 via-pink-950/20 to-transparent rounded-full blur-3xl" />
+        <div className="absolute top-1/2 left-0 w-[400px] h-[400px] bg-gradient-to-br from-indigo-950/30 to-transparent rounded-full blur-3xl" />
       </div>
 
       {/* Hero Section */}
-      <motion.section 
+      <motion.section
         ref={heroRef}
         style={{ opacity: heroOpacity, scale: heroScale, y: heroY }}
         className="relative min-h-[90vh] flex items-center justify-center pt-8 pb-24"
@@ -112,19 +112,19 @@ export const HomePage: React.FC = () => {
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.2 }}
-              className="inline-flex items-center gap-3 px-4 py-2 bg-gradient-to-r from-violet-50 to-fuchsia-50 rounded-full mb-8 border border-violet-200/50"
+              className="inline-flex items-center gap-3 px-4 py-2 bg-gradient-to-r from-violet-500/10 to-fuchsia-500/10 rounded-full mb-8 border border-violet-500/20"
             >
-              <span className="flex items-center gap-1.5 text-sm font-semibold text-violet-700">
+              <span className="flex items-center gap-1.5 text-sm font-semibold text-violet-400">
                 <Cpu className="w-4 h-4" />
                 AI-Powered
               </span>
-              <span className="w-px h-4 bg-violet-200" />
-              <span className="flex items-center gap-1.5 text-sm font-semibold text-fuchsia-700">
+              <span className="w-px h-4 bg-violet-500/30" />
+              <span className="flex items-center gap-1.5 text-sm font-semibold text-fuchsia-400">
                 <Layers className="w-4 h-4" />
                 3D Modeling
               </span>
-              <span className="w-px h-4 bg-violet-200" />
-              <span className="flex items-center gap-1.5 text-sm font-semibold text-purple-700">
+              <span className="w-px h-4 bg-violet-500/30" />
+              <span className="flex items-center gap-1.5 text-sm font-semibold text-purple-400">
                 <Activity className="w-4 h-4" />
                 Real-time
               </span>
@@ -135,7 +135,7 @@ export const HomePage: React.FC = () => {
               initial={{ opacity: 0, y: 30 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.3, duration: 0.8 }}
-              className="text-5xl sm:text-6xl md:text-7xl lg:text-8xl font-bold tracking-tight text-slate-900 mb-6 leading-[0.95]"
+              className="text-5xl sm:text-6xl md:text-7xl lg:text-8xl font-bold tracking-tight text-white mb-6 leading-[0.95]"
             >
               Your Body.{' '}
               <span className="relative">
@@ -143,7 +143,7 @@ export const HomePage: React.FC = () => {
                   Decoded.
                 </span>
                 <svg className="absolute -bottom-2 left-0 w-full" viewBox="0 0 200 12" fill="none">
-                  <path d="M2 8C50 2 150 2 198 8" stroke="url(#gradient)" strokeWidth="4" strokeLinecap="round"/>
+                  <path d="M2 8C50 2 150 2 198 8" stroke="url(#gradient)" strokeWidth="4" strokeLinecap="round" />
                   <defs>
                     <linearGradient id="gradient" x1="0%" y1="0%" x2="100%" y2="0%">
                       <stop offset="0%" stopColor="#7c3aed" />
@@ -159,10 +159,10 @@ export const HomePage: React.FC = () => {
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.5 }}
-              className="text-xl md:text-2xl text-slate-600 max-w-3xl mx-auto mb-12 leading-relaxed"
+              className="text-xl md:text-2xl text-slate-300 max-w-3xl mx-auto mb-12 leading-relaxed"
             >
               Upload 2 photos. Get 21+ precise measurements. Visualize in 3D.
-              <span className="text-slate-900 font-semibold"> Plus FitChecker, Fashion IQ, Body Tracking</span> & more.
+              <span className="text-white font-semibold"> Plus FitChecker, Fashion IQ, Body Tracking</span> & more.
             </motion.p>
 
             {/* CTA Buttons */}
@@ -183,12 +183,12 @@ export const HomePage: React.FC = () => {
                 <span className="relative z-10 text-lg">Start Body Scan</span>
                 <ArrowRight className="w-5 h-5 relative z-10 group-hover:translate-x-1 transition-transform" />
               </motion.button>
-              
+
               <motion.button
                 whileHover={{ scale: 1.03 }}
                 whileTap={{ scale: 0.98 }}
                 onClick={() => navigate('/features')}
-                className="flex items-center gap-3 text-slate-700 hover:text-slate-900 font-semibold py-5 px-8 rounded-2xl bg-white/80 hover:bg-white border border-slate-200 hover:border-slate-300 shadow-lg transition-all"
+                className="flex items-center gap-3 text-slate-300 hover:text-white font-semibold py-5 px-8 rounded-2xl bg-slate-800/50 hover:bg-slate-800 border border-slate-700/50 hover:border-slate-600 shadow-lg transition-all"
               >
                 <Play className="w-5 h-5" />
                 <span className="text-lg">See All Features</span>
@@ -200,7 +200,7 @@ export const HomePage: React.FC = () => {
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               transition={{ delay: 0.8 }}
-              className="mt-16 flex flex-wrap items-center justify-center gap-8 text-sm text-slate-500"
+              className="mt-16 flex flex-wrap items-center justify-center gap-8 text-sm text-slate-400"
             >
               <div className="flex items-center gap-2">
                 <CheckCircle className="w-5 h-5 text-emerald-500" />
@@ -220,9 +220,9 @@ export const HomePage: React.FC = () => {
       </motion.section>
 
       {/* Stats Section */}
-      <section className="relative py-24 bg-gradient-to-b from-slate-50 to-white">
+      <section className="relative py-24 bg-gradient-to-b from-slate-900/50 to-transparent">
         <div className="container mx-auto px-6 max-w-7xl">
-          <motion.div 
+          <motion.div
             initial="hidden"
             whileInView="visible"
             viewport={{ once: true, margin: "-100px" }}
@@ -236,12 +236,12 @@ export const HomePage: React.FC = () => {
                 className="relative group"
               >
                 <div className="absolute inset-0 bg-gradient-to-br from-violet-500/10 to-fuchsia-500/10 rounded-3xl opacity-0 group-hover:opacity-100 transition-opacity blur-xl" />
-                <div className="relative bg-white rounded-3xl p-8 border border-slate-200/60 hover:border-violet-200 shadow-sm hover:shadow-xl transition-all duration-300">
-                  <div className="text-5xl md:text-6xl font-bold bg-gradient-to-br from-violet-600 to-fuchsia-600 bg-clip-text text-transparent mb-2">
+                <div className="relative bento-card p-8 hover:border-violet-500/30 transition-all duration-300">
+                  <div className="text-5xl md:text-6xl font-bold bg-gradient-to-br from-violet-400 to-fuchsia-400 bg-clip-text text-transparent mb-2">
                     {stat.value}
                   </div>
-                  <div className="text-lg font-semibold text-slate-900 mb-1">{stat.label}</div>
-                  <div className="text-sm text-slate-500">{stat.description}</div>
+                  <div className="text-lg font-semibold text-white mb-1">{stat.label}</div>
+                  <div className="text-sm text-slate-400">{stat.description}</div>
                 </div>
               </motion.div>
             ))}
@@ -253,29 +253,29 @@ export const HomePage: React.FC = () => {
       <section ref={featuresRef} className="relative py-32">
         <div className="container mx-auto px-6 max-w-7xl">
           {/* Section Header */}
-          <motion.div 
+          <motion.div
             initial={{ opacity: 0, y: 30 }}
             animate={isFeaturesInView ? { opacity: 1, y: 0 } : {}}
             transition={{ duration: 0.6 }}
             className="text-center mb-20"
           >
-            <span className="inline-flex items-center gap-2 px-4 py-1.5 bg-violet-100 text-violet-700 rounded-full text-sm font-semibold mb-6">
+            <span className="inline-flex items-center gap-2 px-4 py-1.5 bg-violet-500/10 text-violet-400 rounded-full text-sm font-semibold mb-6 border border-violet-500/20">
               <Sparkles className="w-4 h-4" />
               Everything You Need
             </span>
-            <h2 className="text-4xl md:text-5xl lg:text-6xl font-bold tracking-tight text-slate-900 mb-6">
+            <h2 className="text-4xl md:text-5xl lg:text-6xl font-bold tracking-tight text-white mb-6">
               One Platform.{' '}
-              <span className="bg-gradient-to-r from-violet-600 to-fuchsia-600 bg-clip-text text-transparent">
+              <span className="bg-gradient-to-r from-violet-400 to-fuchsia-400 bg-clip-text text-transparent">
                 Endless Possibilities.
               </span>
             </h2>
-            <p className="text-xl text-slate-600 max-w-2xl mx-auto">
+            <p className="text-xl text-slate-400 max-w-2xl mx-auto">
               From precise measurements to fashion intelligence, we've got every aspect of your style journey covered.
             </p>
           </motion.div>
 
           {/* Features Grid - Bento Style */}
-          <motion.div 
+          <motion.div
             initial="hidden"
             animate={isFeaturesInView ? "visible" : "hidden"}
             variants={containerVariants}
@@ -299,22 +299,22 @@ export const HomePage: React.FC = () => {
                   onClick={() => navigate(feature.path)}
                   className="group cursor-pointer"
                 >
-                  <div className="relative bg-white rounded-3xl p-8 border border-slate-200/60 hover:border-slate-300 shadow-sm hover:shadow-2xl transition-all duration-300 h-full">
+                  <div className="relative bento-card p-8 hover:border-slate-600 transition-all duration-300 h-full">
                     {/* Icon */}
                     <div className={`w-14 h-14 rounded-2xl bg-gradient-to-br ${colorClasses[feature.color]} flex items-center justify-center mb-6 shadow-lg group-hover:scale-110 transition-transform duration-300`}>
                       <feature.icon className="w-7 h-7 text-white" />
                     </div>
-                    
+
                     {/* Content */}
-                    <h3 className="text-xl font-bold text-slate-900 mb-3 group-hover:text-violet-700 transition-colors">
+                    <h3 className="text-xl font-bold text-white mb-3 group-hover:text-violet-400 transition-colors">
                       {feature.title}
                     </h3>
-                    <p className="text-slate-600 leading-relaxed mb-6">
+                    <p className="text-slate-400 leading-relaxed mb-6">
                       {feature.description}
                     </p>
-                    
+
                     {/* Arrow */}
-                    <div className="flex items-center gap-2 text-sm font-semibold text-violet-600 opacity-0 group-hover:opacity-100 transition-opacity">
+                    <div className="flex items-center gap-2 text-sm font-semibold text-violet-400 opacity-0 group-hover:opacity-100 transition-opacity">
                       <span>Explore</span>
                       <ArrowUpRight className="w-4 h-4" />
                     </div>
@@ -327,9 +327,9 @@ export const HomePage: React.FC = () => {
       </section>
 
       {/* Social Proof / Testimonials */}
-      <section className="relative py-24 bg-gradient-to-b from-white via-violet-50/30 to-white">
+      <section className="relative py-24 bg-gradient-to-b from-transparent via-slate-900/30 to-transparent">
         <div className="container mx-auto px-6 max-w-7xl">
-          <motion.div 
+          <motion.div
             initial="hidden"
             whileInView="visible"
             viewport={{ once: true }}
@@ -341,10 +341,10 @@ export const HomePage: React.FC = () => {
                 <Star key={i} className="w-6 h-6 fill-amber-400 text-amber-400" />
               ))}
             </motion.div>
-            <motion.h2 variants={itemVariants} className="text-3xl md:text-4xl font-bold text-slate-900 mb-4">
+            <motion.h2 variants={itemVariants} className="text-3xl md:text-4xl font-bold text-white mb-4">
               Loved by Users Worldwide
             </motion.h2>
-            <motion.div variants={itemVariants} className="flex items-center justify-center gap-6 text-slate-500">
+            <motion.div variants={itemVariants} className="flex items-center justify-center gap-6 text-slate-400">
               <div className="flex items-center gap-2">
                 <Users className="w-5 h-5" />
                 <span>10K+ Users</span>
@@ -356,7 +356,7 @@ export const HomePage: React.FC = () => {
             </motion.div>
           </motion.div>
 
-          <motion.div 
+          <motion.div
             initial="hidden"
             whileInView="visible"
             viewport={{ once: true }}
@@ -367,16 +367,16 @@ export const HomePage: React.FC = () => {
               <motion.div
                 key={testimonial.name}
                 variants={itemVariants}
-                className="bg-white rounded-3xl p-8 border border-slate-200/60 shadow-sm hover:shadow-lg transition-all"
+                className="bento-card p-8 hover:border-slate-600 transition-all"
               >
                 <div className="flex items-center gap-1 mb-4">
                   {[...Array(testimonial.rating)].map((_, i) => (
                     <Star key={i} className="w-4 h-4 fill-amber-400 text-amber-400" />
                   ))}
                 </div>
-                <p className="text-slate-700 text-lg mb-6 leading-relaxed">"{testimonial.text}"</p>
+                <p className="text-slate-300 text-lg mb-6 leading-relaxed">"{testimonial.text}"</p>
                 <div>
-                  <div className="font-semibold text-slate-900">{testimonial.name}</div>
+                  <div className="font-semibold text-white">{testimonial.name}</div>
                   <div className="text-sm text-slate-500">{testimonial.role}</div>
                 </div>
               </motion.div>
@@ -402,7 +402,7 @@ export const HomePage: React.FC = () => {
               <div className="absolute top-0 right-0 w-96 h-96 bg-gradient-to-br from-violet-500/20 to-fuchsia-500/20 rounded-full blur-3xl" />
               <div className="absolute bottom-0 left-0 w-72 h-72 bg-gradient-to-br from-purple-500/15 to-indigo-500/15 rounded-full blur-3xl" />
               <div className="absolute inset-0 bg-[linear-gradient(rgba(255,255,255,0.03)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,0.03)_1px,transparent_1px)] bg-[size:32px_32px]" />
-              
+
               <div className="relative z-10 text-center">
                 <motion.div
                   initial={{ scale: 0.8, opacity: 0 }}
@@ -413,26 +413,26 @@ export const HomePage: React.FC = () => {
                 >
                   <Crown className="w-10 h-10 text-white" />
                 </motion.div>
-                
+
                 <h2 className="text-4xl md:text-5xl font-bold text-white mb-6 tracking-tight">
                   Ready to Transform Your Style?
                 </h2>
-                <p className="text-xl text-slate-400 mb-10 max-w-2xl mx-auto leading-relaxed">
+                <p className="text-xl text-slate-300 mb-10 max-w-2xl mx-auto leading-relaxed">
                   Join thousands who've discovered their perfect fit. Start your body intelligence journey today.
                 </p>
-                
+
                 <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
                   <motion.button
                     whileHover={{ scale: 1.03 }}
                     whileTap={{ scale: 0.98 }}
                     onClick={() => navigate('/measurements')}
-                    className="group flex items-center gap-3 bg-white hover:bg-slate-50 text-slate-900 font-bold py-5 px-10 rounded-2xl shadow-2xl transition-all"
+                    className="group flex items-center gap-3 bg-gradient-to-r from-violet-500 to-fuchsia-500 hover:from-violet-600 hover:to-fuchsia-600 text-white font-bold py-5 px-10 rounded-2xl shadow-2xl transition-all"
                   >
                     <Zap className="w-5 h-5" />
                     Get Started Free
                     <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
                   </motion.button>
-                  
+
                   <motion.button
                     whileHover={{ scale: 1.03 }}
                     whileTap={{ scale: 0.98 }}

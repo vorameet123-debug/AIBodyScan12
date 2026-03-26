@@ -62,3 +62,4 @@ class NewClothingFitCheckResponse(BaseModel):
     size_recommendation: Optional[Dict[str, Any]] = None
     all_sizes: Optional[Dict[str, Any]] = None
     user_selected_size: Optional[str] = None
+

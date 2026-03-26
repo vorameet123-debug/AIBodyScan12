@@ -42,26 +42,26 @@ export const Model3DBottomSheet: React.FC<Model3DBottomSheetProps> = ({
             animate={{ y: 0 }}
             exit={{ y: '100%' }}
             transition={{ type: 'spring', damping: 25, stiffness: 200 }}
-            className="fixed bottom-0 left-0 right-0 bg-white rounded-t-2xl shadow-bento z-50 lg:hidden border-t border-slate-200"
+            className="fixed bottom-0 left-0 right-0 bg-slate-900 rounded-t-2xl shadow-bento z-50 lg:hidden border-t border-slate-700"
             style={{ maxHeight: '90vh' }}
           >
             {/* Drag Handle */}
             <div className="flex justify-center pt-4 pb-2">
-              <div className="w-12 h-1.5 bg-slate-200 rounded-full" />
+              <div className="w-12 h-1.5 bg-slate-600 rounded-full" />
             </div>
 
             {/* Header */}
             <div className="flex items-center justify-between px-6 pb-4">
               <div className="flex items-center gap-3">
-                <div className="w-10 h-10 bg-indigo-50 rounded-xl flex items-center justify-center">
-                  <Maximize2 className="text-indigo-600" size={20} />
+                <div className="w-10 h-10 bg-accent-50 rounded-xl flex items-center justify-center">
+                  <Maximize2 className="text-accent-500" size={20} />
                 </div>
                 <div>
-                  <h3 className="text-lg font-bold text-slate-900">
+                  <h3 className="text-lg font-bold text-white">
                     3D Body Model
                   </h3>
                   <p className="text-xs text-slate-500">
-                    {selectedMeasurement 
+                    {selectedMeasurement
                       ? `Viewing: ${selectedMeasurement.replace(/_/g, ' ')}`
                       : 'Interactive 3D visualization'
                     }

@@ -65,6 +65,12 @@ credentials.json
 *.p12
 *.pfx
 
+# Payment Credentials (Razorpay, Stripe, etc.)
+rzp-key.csv
+**/razorpay*.csv
+**/stripe*.csv
+**/payment_keys*
+
 # Database
 *.db
 *.sqlite

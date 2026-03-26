@@ -2,9 +2,7 @@
  * Trend Intelligence API Service
  * Handles all API calls related to trend analysis
  */
-import axios from 'axios';
-
-const API_BASE_URL = process.env.REACT_APP_API_URL || 'http://localhost:8000';
+import api from './api';
 
 // Type Definitions
 export interface TrendingItem {
@@ -85,8 +83,8 @@ export const TrendAPI = {
      * Get currently trending items
      */
     getCurrentTrends: async (days: number = 7, minVelocity: number = 20.0): Promise<CurrentTrendsResponse> => {
-        const response = await axios.get<CurrentTrendsResponse>(
-            `${API_BASE_URL}/api/v1/trends/current`,
+        const response = await api.get<CurrentTrendsResponse>(
+            `/api/v1/trends/current`,
             {
                 params: { days, min_velocity: minVelocity }
             }
@@ -98,8 +96,8 @@ export const TrendAPI = {
      * Get user's alignment with current trends
      */
     getUserAlignment: async (userId: number, days: number = 7): Promise<TrendAlignmentResponse> => {
-        const response = await axios.get<TrendAlignmentResponse>(
-            `${API_BASE_URL}/api/v1/trends/user-alignment/${userId}`,
+        const response = await api.get<TrendAlignmentResponse>(
+            `/api/v1/trends/user-alignment/${userId}`,
             {
                 params: { days }
             }
@@ -111,8 +109,8 @@ export const TrendAPI = {
      * Get trending styles and colors
      */
     getStyleTrends: async (days: number = 30): Promise<StyleTrendsResponse> => {
-        const response = await axios.get<StyleTrendsResponse>(
-            `${API_BASE_URL}/api/v1/trends/styles`,
+        const response = await api.get<StyleTrendsResponse>(
+            `/api/v1/trends/styles`,
             {
                 params: { days }
             }
@@ -124,8 +122,8 @@ export const TrendAPI = {
      * Get trend forecasts
      */
     getTrendForecast: async (days: number = 7): Promise<TrendForecastResponse> => {
-        const response = await axios.get<TrendForecastResponse>(
-            `${API_BASE_URL}/api/v1/trends/forecast`,
+        const response = await api.get<TrendForecastResponse>(
+            `/api/v1/trends/forecast`,
             {
                 params: { days }
             }
@@ -137,8 +135,8 @@ export const TrendAPI = {
      * Get personalized trends for user
      */
     getTrendsForUser: async (userId: number, days: number = 7, minMatch: number = 60): Promise<any> => {
-        const response = await axios.get(
-            `${API_BASE_URL}/api/v1/trends/for-you/${userId}`,
+        const response = await api.get(
+            `/api/v1/trends/for-you/${userId}`,
             {
                 params: { days, min_match: minMatch }
             }
@@ -150,8 +148,8 @@ export const TrendAPI = {
      * Get combined internal and external trends
      */
     getCombinedTrends: async (days: number = 7): Promise<any> => {
-        const response = await axios.get(
-            `${API_BASE_URL}/api/v1/trends/combined`,
+        const response = await api.get(
+            `/api/v1/trends/combined`,
             {
                 params: { days }
             }
@@ -163,8 +161,8 @@ export const TrendAPI = {
      * Get detailed explanation for a trend
      */
     explainTrend: async (userId: number, item: string): Promise<any> => {
-        const response = await axios.get(
-            `${API_BASE_URL}/api/v1/trends/explain/${userId}`,
+        const response = await api.get(
+            `/api/v1/trends/explain/${userId}`,
             {
                 params: { item }
             }
@@ -176,8 +174,8 @@ export const TrendAPI = {
      * Trigger external trend analysis using AI
      */
     analyzeExternalTrends: async (season?: string, category?: string): Promise<any> => {
-        const response = await axios.post(
-            `${API_BASE_URL}/api/v1/trends/analyze-external`,
+        const response = await api.post(
+            `/api/v1/trends/analyze-external`,
             null,
             {
                 params: { season, category }

@@ -21,18 +21,18 @@ COLOR_DEFAULTS = {
 def update_unknown_colors():
     conn = sqlite3.connect('d:/3Dmodel/api/data.db')
     cursor = conn.cursor()
-    
+
     # Get all records with unknown color
     cursor.execute("SELECT id, garment_type FROM fitcheckhistory WHERE color = 'unknown'")
     records = cursor.fetchall()
-    
+
     print(f"Found {len(records)} records with unknown color")
-    
+
     updated = 0
     for record_id, garment_type in records:
         # Get default color for this garment type
         default_color = COLOR_DEFAULTS.get(garment_type.lower(), 'neutral')
-        
+
         # Update the record
         cursor.execute(
             "UPDATE fitcheckhistory SET color = ? WHERE id = ?",
@@ -40,11 +40,12 @@ def update_unknown_colors():
         )
         updated += 1
         print(f"Updated record {record_id} ({garment_type}) -> {default_color}")
-    
+
     conn.commit()
     conn.close()
-    
+
     print(f"\nSUCCESS: Updated {updated} records")
 
 if __name__ == "__main__":
     update_unknown_colors()
+

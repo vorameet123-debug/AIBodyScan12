@@ -12,7 +12,7 @@ export const StyleAnalysisDisplay: React.FC<StyleAnalysisDisplayProps> = ({ anal
     <motion.div
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
-      className="bg-white rounded-2xl p-6 shadow-bento border border-slate-200/60"
+      className="bg-slate-900 rounded-2xl p-6 shadow-bento border border-slate-700/60"
     >
       {/* Header */}
       <div className="flex items-center gap-3 mb-6">
@@ -34,7 +34,7 @@ export const StyleAnalysisDisplay: React.FC<StyleAnalysisDisplayProps> = ({ anal
               {analysis.body_type.replace('_', ' ')}
             </p>
           </div>
-          <Award className="text-indigo-400" size={28} />
+          <Award className="text-accent-400" size={28} />
         </div>
         <p className="text-sm text-slate-600 mt-2">{analysis.body_type_description}</p>
       </div>
@@ -52,13 +52,13 @@ export const StyleAnalysisDisplay: React.FC<StyleAnalysisDisplayProps> = ({ anal
             initial={{ width: 0 }}
             animate={{ width: `${analysis.style_compatibility}%` }}
             transition={{ duration: 1, ease: 'easeOut' }}
-            className="h-full bg-indigo-500"
+            className="h-full bg-accent-500"
           />
         </div>
       </div>
 
       {/* Description */}
-      <div className="mb-5 p-4 bg-white rounded-xl border border-slate-100">
+      <div className="mb-5 p-4 bg-slate-800 rounded-xl border border-slate-700">
         <p className="text-slate-700 text-sm">{analysis.description}</p>
       </div>
 
@@ -118,8 +118,8 @@ export const StyleAnalysisDisplay: React.FC<StyleAnalysisDisplayProps> = ({ anal
       )}
 
       {/* Overall Recommendation */}
-      <div className="p-4 bg-indigo-50 rounded-xl border border-indigo-100">
-        <p className="text-sm font-medium text-indigo-900">{analysis.overall_recommendation}</p>
+      <div className="p-4 bg-accent-50 rounded-xl border border-accent-100">
+        <p className="text-sm font-medium text-accent-900">{analysis.overall_recommendation}</p>
       </div>
     </motion.div>
   );

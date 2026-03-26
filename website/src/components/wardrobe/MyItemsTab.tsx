@@ -19,6 +19,7 @@ import {
     ChevronDown
 } from 'lucide-react';
 import { WardrobeAPI } from '../../services/wardrobeApi';
+import { useSearchParams } from 'react-router-dom';
 import toast from 'react-hot-toast';
 
 interface MyItemsTabProps {
@@ -54,6 +55,30 @@ export const MyItemsTab: React.FC<MyItemsTabProps> = ({ userId }) => {
     const [searchQuery, setSearchQuery] = useState('');
     const [selectedCategory, setSelectedCategory] = useState<string>('all');
     const [showFilters, setShowFilters] = useState(false);
+    const [searchParams] = useSearchParams();
+
+    // Handle URL params for quick actions
+    useEffect(() => {
+        const actionParam = searchParams.get('action');
+        const filterParam = searchParams.get('filter');
+
+        if (filterParam === 'wishlist') {
+            setFilter('wishlist');
+            setShowFilters(true);
+        }
+
+        if (actionParam === 'add') {
+            // NOTE: Add item modal will be implemented in a future phase
+            toast('Add Item feature coming soon!', {
+                icon: '🚧',
+                style: {
+                    borderRadius: '10px',
+                    background: '#1e293b',
+                    color: '#fff',
+                },
+            });
+        }
+    }, [searchParams]);
 
     useEffect(() => {
         loadItems();
@@ -166,11 +191,13 @@ export const MyItemsTab: React.FC<MyItemsTabProps> = ({ userId }) => {
                             value={searchQuery}
                             onChange={(e) => setSearchQuery(e.target.value)}
                             className="w-full pl-10 pr-4 py-2.5 bg-slate-800/50 border border-slate-700 rounded-xl text-white placeholder:text-slate-500 focus:outline-none focus:border-accent-500 transition-colors"
+                            aria-label="Search wardrobe items"
                         />
                         {searchQuery && (
                             <button
                                 onClick={() => setSearchQuery('')}
                                 className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-500 hover:text-white"
+                                aria-label="Clear search"
                             >
                                 <X className="w-4 h-4" />
                             </button>
@@ -181,33 +208,58 @@ export const MyItemsTab: React.FC<MyItemsTabProps> = ({ userId }) => {
                     <div className="flex items-center gap-2 bg-slate-800/50 rounded-xl p-1">
                         <button
                             onClick={() => setViewMode('grid')}
-                            className={`p-2 rounded-lg transition-colors ${
-                                viewMode === 'grid'
-                                    ? 'bg-accent-500 text-white'
-                                    : 'text-slate-400 hover:text-white'
-                            }`}
+                            className={`p-2 rounded-lg transition-colors ${viewMode === 'grid'
+                                ? 'bg-accent-500 text-white'
+                                : 'text-slate-400 hover:text-white'
+                                }`}
+                            aria-label="Grid view"
+                            aria-pressed={viewMode === 'grid'}
                         >
                             <Grid3x3 className="w-4 h-4" />
                         </button>
                         <button
                             onClick={() => setViewMode('list')}
-                            className={`p-2 rounded-lg transition-colors ${
-                                viewMode === 'list'
-                                    ? 'bg-accent-500 text-white'
-                                    : 'text-slate-400 hover:text-white'
-                            }`}
+                            className={`p-2 rounded-lg transition-colors ${viewMode === 'list'
+                                ? 'bg-accent-500 text-white'
+                                : 'text-slate-400 hover:text-white'
+                                }`}
+                            aria-label="List view"
+                            aria-pressed={viewMode === 'list'}
                         >
                             <List className="w-4 h-4" />
                         </button>
                     </div>
 
-                    {/* Filter Toggle */}
+                </div>
+
+                {/* Add Item Button & Filter Toggle */}
+                <div className="flex items-center gap-2">
+                    <button
+                        onClick={() => {
+                            toast('Add Item feature coming soon!', {
+                                icon: '🚧',
+                                style: {
+                                    borderRadius: '10px',
+                                    background: '#1e293b',
+                                    color: '#fff',
+                                },
+                            });
+                        }}
+                        className="flex items-center gap-2 px-4 py-2.5 bg-gradient-to-r from-accent-500 to-purple-500 rounded-xl text-white font-semibold hover:shadow-lg hover:shadow-accent-500/25 transition-all text-sm whitespace-nowrap"
+                    >
+                        <Package className="w-4 h-4" />
+                        Add Item
+                    </button>
+
                     <button
                         onClick={() => setShowFilters(!showFilters)}
-                        className="flex items-center gap-2 px-4 py-2.5 bg-slate-800/50 border border-slate-700 rounded-xl text-white hover:border-accent-500 transition-colors"
+                        className={`flex items-center gap-2 px-4 py-2.5 rounded-xl border transition-colors ${showFilters
+                            ? 'bg-slate-800 text-white border-accent-500'
+                            : 'bg-slate-800/50 text-slate-300 border-slate-700 hover:text-white hover:border-slate-600'
+                            }`}
                     >
                         <Filter className="w-4 h-4" />
-                        <span className="font-medium">Filters</span>
+                        <span className="hidden sm:inline font-medium">Filters</span>
                         <ChevronDown className={`w-4 h-4 transition-transform ${showFilters ? 'rotate-180' : ''}`} />
                     </button>
                 </div>
@@ -232,11 +284,10 @@ export const MyItemsTab: React.FC<MyItemsTabProps> = ({ userId }) => {
                                             <button
                                                 key={type}
                                                 onClick={() => setFilter(type)}
-                                                className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-all ${
-                                                    filter === type
-                                                        ? 'bg-accent-500 text-white'
-                                                        : 'bg-slate-800/50 text-slate-400 hover:text-white'
-                                                }`}
+                                                className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-all ${filter === type
+                                                    ? 'bg-accent-500 text-white'
+                                                    : 'bg-slate-800/50 text-slate-400 hover:text-white'
+                                                    }`}
                                             >
                                                 {type.charAt(0).toUpperCase() + type.slice(1)}
                                             </button>
@@ -293,26 +344,28 @@ export const MyItemsTab: React.FC<MyItemsTabProps> = ({ userId }) => {
             </div>
 
             {/* Items Grid/List */}
-            {filteredAndSortedItems.length === 0 ? (
-                <div className="bg-slate-900/50 backdrop-blur-xl border-2 border-dashed border-slate-700 rounded-2xl p-10 text-center">
-                    <Package className="w-12 h-12 text-slate-600 mx-auto mb-4" />
-                    <h3 className="text-lg font-bold text-white mb-2">No Items Found</h3>
-                    <p className="text-slate-400">Try adjusting your filters or add new items to your wardrobe</p>
-                </div>
-            ) : viewMode === 'grid' ? (
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
-                    {filteredAndSortedItems.map((item, idx) => (
-                        <ItemCard key={item.id} item={item} index={idx} />
-                    ))}
-                </div>
-            ) : (
-                <div className="space-y-2">
-                    {filteredAndSortedItems.map((item, idx) => (
-                        <ItemListRow key={item.id} item={item} index={idx} />
-                    ))}
-                </div>
-            )}
-        </div>
+            {
+                filteredAndSortedItems.length === 0 ? (
+                    <div className="bg-slate-900/50 backdrop-blur-xl border-2 border-dashed border-slate-700 rounded-2xl p-10 text-center">
+                        <Package className="w-12 h-12 text-slate-600 mx-auto mb-4" />
+                        <h3 className="text-lg font-bold text-white mb-2">No Items Found</h3>
+                        <p className="text-slate-400">Try adjusting your filters or add new items to your wardrobe</p>
+                    </div>
+                ) : viewMode === 'grid' ? (
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+                        {filteredAndSortedItems.map((item, idx) => (
+                            <ItemCard key={item.id} item={item} index={idx} />
+                        ))}
+                    </div>
+                ) : (
+                    <div className="space-y-2">
+                        {filteredAndSortedItems.map((item, idx) => (
+                            <ItemListRow key={item.id} item={item} index={idx} />
+                        ))}
+                    </div>
+                )
+            }
+        </div >
     );
 };
 
@@ -337,13 +390,13 @@ const ItemCard: React.FC<{ item: WardrobeItem; index: number }> = ({ item, index
                         Wishlist
                     </div>
                 )}
-                
+
                 {/* Hover Actions */}
                 <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-2">
-                    <button className="w-10 h-10 bg-white/90 rounded-full flex items-center justify-center hover:scale-110 transition-transform">
+                    <button className="w-10 h-10 bg-white/90 rounded-full flex items-center justify-center hover:scale-110 transition-transform" aria-label="View item details">
                         <Eye className="w-5 h-5 text-slate-900" />
                     </button>
-                    <button className="w-10 h-10 bg-white/90 rounded-full flex items-center justify-center hover:scale-110 transition-transform">
+                    <button className="w-10 h-10 bg-white/90 rounded-full flex items-center justify-center hover:scale-110 transition-transform" aria-label="Edit item">
                         <Edit className="w-5 h-5 text-slate-900" />
                     </button>
                 </div>
@@ -433,13 +486,16 @@ const ItemListRow: React.FC<{ item: WardrobeItem; index: number }> = ({ item, in
 
             {/* Actions */}
             <div className="flex items-center gap-2">
-                <button className="p-2 text-slate-400 hover:text-white hover:bg-slate-800 rounded-lg transition-colors">
+                <button className="p-2 text-slate-400 hover:text-white hover:bg-slate-800 rounded-lg transition-colors" aria-label="View item details">
                     <Eye className="w-4 h-4" />
                 </button>
-                <button className="p-2 text-slate-400 hover:text-white hover:bg-slate-800 rounded-lg transition-colors">
+                <button className="p-2 text-slate-400 hover:text-white hover:bg-slate-800 rounded-lg transition-colors" aria-label="Edit item">
                     <Edit className="w-4 h-4" />
                 </button>
-                <button className="p-2 text-slate-400 hover:text-red-400 hover:bg-red-400/10 rounded-lg transition-colors">
+                <button
+                    className="p-2 text-slate-400 hover:text-red-400 hover:bg-red-400/10 rounded-lg transition-colors"
+                    aria-label={`Delete ${item.garment} from wardrobe`}
+                >
                     <Trash2 className="w-4 h-4" />
                 </button>
             </div>

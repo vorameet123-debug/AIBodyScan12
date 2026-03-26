@@ -4,7 +4,7 @@ Script to add automatic Fashion IQ recalculation to fit_check_history_helper.py
 import sys
 
 # Read the file
-with open('d:/3Dmodel/api/fit_check_history_helper.py', 'r', encoding='utf-8') as f:
+with open('d:/3Dmodel/api/fit_check_history_helper.py', encoding='utf-8') as f:
     content = f.read()
 
 # Find the return True line and add recalculation before it
@@ -34,3 +34,4 @@ if old_code in content:
 else:
     print("ERROR: Could not find the code to replace")
     sys.exit(1)
+

@@ -2,21 +2,20 @@
 Gemini AI Service Wrapper
 Provides AI-powered analysis for garment images and generates roasts/recommendations
 """
-import os
-import base64
-import json
-from typing import Dict, List, Optional, Any
-from loguru import logger
-import google.generativeai as genai
-from PIL import Image
 import io
-import numpy as np
+import json
+import os
+from typing import Any
+
+import google.generativeai as genai
+from loguru import logger
+from PIL import Image
 
 
 class GeminiService:
     """Wrapper for Google Gemini 1.5 Flash API"""
-    
-    def __init__(self, api_key: Optional[str] = None):
+
+    def __init__(self, api_key: str | None = None):
         """
         Initialize Gemini service with multiple keys for failover
         
@@ -28,25 +27,25 @@ class GeminiService:
             os.getenv("GEMINI_API_KEY", "AIzaSyD0CFD1RTpXtIKDR7CIcZTfSL1eWUneNBo"),
             "AIzaSyAEWtEN_g9VrktZyPdc8ryiHWLaFPedyew"
         ]
-        
+
         if api_key:
             self.api_keys.insert(0, api_key) # Prioritize passed key
-        
+
         # Remove duplicates
         self.api_keys = list(dict.fromkeys(self.api_keys))
-        
+
         self.current_key_index = 0
         self._configure_active_key()
-        
+
     def _configure_active_key(self):
         """Configure the active API key and refresh models"""
         key = self.api_keys[self.current_key_index]
         genai.configure(api_key=key)
-        
+
         # Initialize models
         self.vision_model = genai.GenerativeModel('gemini-2.5-flash-lite')
         self.text_model = genai.GenerativeModel('gemini-2.5-flash-lite')
-        
+
         masked_key = key[:5] + "..." + key[-5:]
         logger.info(f"Gemini service initialized with key index {self.current_key_index} ({masked_key})")
 
@@ -59,12 +58,12 @@ class GeminiService:
             return True
         logger.error("All API keys exhausted.")
         return False
-        
+
     def _generate_content_safe(self, model, content):
         """Execute generation with automatic key rotation on 429/quota errors"""
         attempts = 0
         max_attempts = len(self.api_keys)
-        
+
         while attempts < max_attempts:
             try:
                 return model.generate_content(content)
@@ -78,8 +77,8 @@ class GeminiService:
                 # If not quota error, or rotation failed, raise
                 raise e
         raise Exception("All API keys exhausted quota limits.")
-    
-    def analyze_garment_image(self, image_data: bytes) -> Dict[str, Any]:
+
+    def analyze_garment_image(self, image_data: bytes) -> dict[str, Any]:
         """
         Analyze garment image to extract type, material, color, style, and pattern
         
@@ -92,7 +91,7 @@ class GeminiService:
         try:
             # Convert bytes to PIL Image
             image = Image.open(io.BytesIO(image_data))
-            
+
             prompt = """Analyze this clothing/garment image and provide detailed information in JSON format.
 
 Extract the following information:
@@ -121,7 +120,7 @@ Example response:
 }"""
 
             response = self._generate_content_safe(self.vision_model, [prompt, image])
-            
+
             # Parse JSON response
             response_text = response.text.strip()
             # Remove markdown code blocks if present
@@ -131,13 +130,13 @@ Example response:
                 response_text = response_text[3:]
             if response_text.endswith("```"):
                 response_text = response_text[:-3]
-            
+
             result = json.loads(response_text.strip())
-            
+
             logger.info(f"Garment analysis FULL RESULT: {json.dumps(result)}")
             logger.info(f"Garment analysis complete: {result.get('garment_type', 'unknown')}")
             return result
-            
+
         except Exception as e:
             logger.error(f"Error analyzing garment image: {e}")
             # Return default values on error
@@ -150,8 +149,8 @@ Example response:
                 "fit_type": "regular fit",
                 "formality_level": 5
             }
-    
-    def generate_fit_roast(self, fit_data: Dict[str, Any], worst_metric: str) -> Dict[str, str]:
+
+    def generate_fit_roast(self, fit_data: dict[str, Any], worst_metric: str) -> dict[str, str]:
         """
         Generate humorous roast based on fit issues
         
@@ -168,7 +167,7 @@ Example response:
             zone = metric_info.get('zone', 'unknown')
             user_measurement = metric_info.get('user_measurement', 0)
             garment_measurement = metric_info.get('garment_measurement', 0)
-            
+
             prompt = f"""Generate a HILARIOUS, SAVAGE but FRIENDLY roast for someone trying on clothes.
 
 Context:
@@ -230,12 +229,12 @@ Now generate a roast in this EXACT style and length for the current fit:"""
                 ),
                 safety_settings=safety_settings
             )
-            
+
             roast_text = response.text.strip()
-            
+
             # Debug: Log the full roast text
             logger.info(f"Generated roast text (length: {len(roast_text)}): {roast_text}")
-            
+
             # Determine verdict stamp
             if zone == 'green':
                 verdict = "PERFECT FIT"
@@ -246,15 +245,15 @@ Now generate a roast in this EXACT style and length for the current fit:"""
             else:  # blue zone
                 verdict = "TENT MODE"
                 stamp_color = "blue"
-            
+
             logger.info(f"Generated fit roast for {worst_metric}")
-            
+
             return {
                 "fit_roast": roast_text,
                 "verdict_stamp": verdict,
                 "stamp_color": stamp_color
             }
-            
+
         except Exception as e:
             logger.error(f"Error generating fit roast: {e}")
             return {
@@ -262,7 +261,7 @@ Now generate a roast in this EXACT style and length for the current fit:"""
                 "verdict_stamp": "TRY IT ON",
                 "stamp_color": "gray"
             }
-    
+
     def generate_color_roast(self, skin_tone: str, garment_color: str, match_score: float) -> str:
         """
         Generate funny commentary on color matching
@@ -304,20 +303,20 @@ Generate the comment now:"""
                     max_output_tokens=100
                 )
             )
-            
+
             return response.text.strip()
-            
+
         except Exception as e:
             logger.error(f"Error generating color roast: {e}")
             return f"{garment_color.capitalize()} looks good on most people!"
-    
+
     def suggest_outfit_pairing(
-        self, 
-        garment_type: str, 
-        color: str, 
-        style: str, 
+        self,
+        garment_type: str,
+        color: str,
+        style: str,
         occasion: str
-    ) -> List[str]:
+    ) -> list[str]:
         """
         Suggest outfit pairings using AI
         
@@ -354,7 +353,7 @@ Example:
 Generate now:"""
 
             response = self.text_model.generate_content(prompt)
-            
+
             # Parse JSON response
             response_text = response.text.strip()
             if response_text.startswith("```json"):
@@ -363,12 +362,12 @@ Generate now:"""
                 response_text = response_text[3:]
             if response_text.endswith("```"):
                 response_text = response_text[:-3]
-            
+
             suggestions = json.loads(response_text.strip())
-            
+
             logger.info(f"Generated {len(suggestions)} outfit suggestions")
             return suggestions
-            
+
         except Exception as e:
             logger.error(f"Error generating outfit suggestions: {e}")
             return [
@@ -376,14 +375,14 @@ Generate now:"""
                 f"Style with neutral colors to let the {color} stand out",
                 f"Keep it simple and let the {garment_type} be the statement piece"
             ]
-    
+
     def analyze_occasion_fit(
-        self, 
-        garment_type: str, 
-        style: str, 
-        formality_level: int, 
+        self,
+        garment_type: str,
+        style: str,
+        formality_level: int,
         occasion: str
-    ) -> Dict[str, Any]:
+    ) -> dict[str, Any]:
         """
         Analyze if garment suits the occasion
         
@@ -419,7 +418,7 @@ Be honest but encouraging. If it's not perfect, suggest when it WOULD work.
 Generate now:"""
 
             response = self.text_model.generate_content(prompt)
-            
+
             # Parse JSON response
             response_text = response.text.strip()
             if response_text.startswith("```json"):
@@ -428,12 +427,12 @@ Generate now:"""
                 response_text = response_text[3:]
             if response_text.endswith("```"):
                 response_text = response_text[:-3]
-            
+
             result = json.loads(response_text.strip())
-            
+
             logger.info(f"Occasion analysis complete: {result.get('occasion_match_score', 0)}/100")
             return result
-            
+
         except Exception as e:
             logger.error(f"Error analyzing occasion fit: {e}")
             return {
@@ -445,12 +444,12 @@ Generate now:"""
 
     def generate_comprehensive_advice(
         self,
-        fit_meters_result: Dict[str, Any],
-        garment_analysis: Dict[str, Any],
+        fit_meters_result: dict[str, Any],
+        garment_analysis: dict[str, Any],
         occasion: str,
         skin_tone: str,
         user_size: str
-    ) -> Dict[str, Any]:
+    ) -> dict[str, Any]:
         """
         Generate comprehensive fit advice in a single call to save API quota.
         Merges functionality of: Fit Roast, Color Roast, Style Recs, Occasion Analysis.
@@ -460,9 +459,9 @@ Generate now:"""
             fit_data = fit_meters_result.get('fit_meters', {})
             worst_metric = fit_meters_result.get('worst_metric', 'unknown')
             fit_summary = ", ".join([f"{k}: {v.get('ease',0)}cm ease ({v.get('status','unknown')})" for k,v in fit_data.items()])
-            
+
             garment_colors = [c.get('name') for c in garment_analysis.get('colors', [])]
-            
+
             prompt = f"""You are a savage but helpful fashion AI. Analyze this fit data and provide a comprehensive report in JSON.
 
 INPUT DATA:
@@ -507,7 +506,7 @@ RESPONSE FORMAT (JSON ONLY):
 """
 
             response = self._generate_content_safe(self.text_model, prompt)
-            
+
             # Parse JSON
             response_text = response.text.strip()
             if response_text.startswith("```json"):
@@ -516,7 +515,7 @@ RESPONSE FORMAT (JSON ONLY):
                 response_text = response_text[3:]
             if response_text.endswith("```"):
                 response_text = response_text[:-3]
-            
+
             result = json.loads(response_text.strip())
             logger.info("Comprehensive advice generated successfully")
             return result
@@ -525,3 +524,4 @@ RESPONSE FORMAT (JSON ONLY):
             logger.error(f"Error generating comprehensive advice: {e}")
             # Return minimal default structure
             return {}
+

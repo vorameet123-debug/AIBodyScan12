@@ -1,15 +1,12 @@
 import axios from 'axios';
-
-// Use environment variable if set, otherwise use relative URL (same domain as frontend)
-// This allows the app to work when served from ngrok (single URL for frontend + backend)
-const API_BASE_URL = import.meta.env.VITE_API_URL || (
-  // If we're in development, use localhost
-  window.location.hostname === 'localhost' ? 'http://localhost:8000' : ''
-);
+import { API_BASE_URL } from '../config/apiConfig';
 
 const api = axios.create({
   baseURL: API_BASE_URL,
   timeout: 300000, // 5 minutes for image processing
+  headers: {
+    'ngrok-skip-browser-warning': 'true',  // Skip ngrok interstitial page
+  },
 });
 
 export interface Measurement {
@@ -36,7 +33,7 @@ export interface MeasurementResponse {
     user_height_cm?: number;
     measurements_extracted?: number;
     gender?: string;
-    scaling_info?: any;
+    scaling_info?: Record<string, number>;
   };
   error?: string;
 }
@@ -46,7 +43,7 @@ export interface SavedMeasurement {
   name: string;
   measurements: Measurement;
   size_recommendations?: SizeRecommendation;
-  metadata?: any;
+  metadata?: Record<string, unknown>;
   created_at: string;
 }
 
@@ -210,6 +207,12 @@ export interface OccasionAnalysisResponse {
   alternative_occasions: string[];
 }
 
+export interface FitDetails {
+  fit_meters: Record<string, FitMeter | null>;
+  overall_fit_score: number;
+  worst_metric: string;
+}
+
 export interface NewClothingFitCheckResponse {
   success: boolean;
   garment_analysis: GarmentAnalysis;
@@ -229,7 +232,7 @@ export interface NewClothingFitCheckResponse {
       score: number;
       difference: number;
     }>;
-    all_size_details?: any; // Full fit data for each size
+    all_size_details?: Record<string, FitDetails>; // Full fit data for each size
   };
   all_sizes?: { [size: string]: number };
   user_selected_size?: string;

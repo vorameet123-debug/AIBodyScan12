@@ -2,7 +2,6 @@
 Clothing Fit Analysis Engine
 Analyzes how well a clothing item will fit based on user measurements and clothing specifications
 """
-from typing import Dict, List, Optional, Tuple
 from loguru import logger
 
 
@@ -10,14 +9,14 @@ class ClothingFitAnalyzer:
     """
     Analyzes clothing fit by comparing user measurements with clothing size charts
     """
-    
+
     def __init__(self):
         """Initialize fit analyzer with size charts"""
         self.size_charts = self._load_size_charts()
         self.clothing_type_mappings = self._load_clothing_type_mappings()
         logger.info("ClothingFitAnalyzer initialized")
-    
-    def _load_size_charts(self) -> Dict:
+
+    def _load_size_charts(self) -> dict:
         """Load size charts for different clothing categories"""
         # Reuse existing size charts from size_recommendation.py
         charts = {
@@ -57,8 +56,8 @@ class ClothingFitAnalyzer:
             }
         }
         return charts
-    
-    def _load_clothing_type_mappings(self) -> Dict:
+
+    def _load_clothing_type_mappings(self) -> dict:
         """Map clothing types to size chart categories and relevant measurements"""
         return {
             # Tops
@@ -68,27 +67,27 @@ class ClothingFitAnalyzer:
             'sweater': {'chart': 'generic_tops', 'primary': 'chest_circumference', 'secondary': 'height'},
             'jacket': {'chart': 'generic_tops', 'primary': 'chest_circumference', 'secondary': 'height'},
             'hoodie': {'chart': 'generic_tops', 'primary': 'chest_circumference', 'secondary': 'height'},
-            
+
             # Bottoms
             'jeans': {'chart': 'numeric_pants', 'primary': 'waist_circumference', 'secondary': 'inside leg height'},
             'pants': {'chart': 'generic_bottoms', 'primary': 'waist_circumference', 'secondary': 'height'},
             'shorts': {'chart': 'generic_bottoms', 'primary': 'waist_circumference', 'secondary': 'height'},
             'trousers': {'chart': 'generic_bottoms', 'primary': 'waist_circumference', 'secondary': 'height'},
             'skirt': {'chart': 'generic_bottoms', 'primary': 'waist_circumference', 'secondary': 'height'},
-            
+
             # Dresses
             'dress': {'chart': 'dresses', 'primary': 'chest_circumference', 'secondary': 'waist_circumference'},
             'gown': {'chart': 'dresses', 'primary': 'chest_circumference', 'secondary': 'waist_circumference'},
             'jumpsuit': {'chart': 'dresses', 'primary': 'chest_circumference', 'secondary': 'waist_circumference'},
         }
-    
+
     def convert_size_to_measurements(
         self,
         size: str,
         clothing_type: str,
         size_system: str = 'US',
-        brand: Optional[str] = None
-    ) -> Dict[str, float]:
+        brand: str | None = None
+    ) -> dict[str, float]:
         """
         Convert clothing size to expected measurements
         
@@ -102,7 +101,7 @@ class ClothingFitAnalyzer:
             Dictionary of expected measurements for that size
         """
         clothing_type_lower = clothing_type.lower()
-        
+
         # Get the appropriate chart and measurement mapping
         if clothing_type_lower not in self.clothing_type_mappings:
             logger.warning(f"Unknown clothing type: {clothing_type}, using generic_tops")
@@ -112,52 +111,52 @@ class ClothingFitAnalyzer:
             mapping = self.clothing_type_mappings[clothing_type_lower]
             chart_name = mapping['chart']
             primary_measurement = mapping['primary']
-        
+
         # Get size chart
         if chart_name not in self.size_charts:
             logger.warning(f"Size chart {chart_name} not found")
             return {}
-        
+
         size_chart = self.size_charts[chart_name]
-        
+
         # Handle numeric sizes (for pants)
         if size.isdigit() and chart_name == 'numeric_pants':
             size_key = size
         else:
             # Handle letter sizes - convert if needed
             size_key = self._normalize_size(size, size_system)
-        
+
         if size_key not in size_chart:
             logger.warning(f"Size {size_key} not found in chart {chart_name}")
             return {}
-        
+
         size_range = size_chart[size_key]
-        
+
         # Convert size range to expected measurements
         expected_measurements = {}
-        
+
         if 'chest_min' in size_range:
             # Average of min and max
             expected_measurements['chest_circumference'] = (size_range['chest_min'] + size_range['chest_max']) / 2
-        
+
         if 'waist_min' in size_range:
             expected_measurements['waist_circumference'] = (size_range['waist_min'] + size_range['waist_max']) / 2
-        
+
         if 'height_min' in size_range:
             expected_measurements['height'] = (size_range['height_min'] + size_range['height_max']) / 2
-        
+
         # Apply brand-specific adjustments if provided
         if brand:
             adjustment = self._get_brand_adjustment(brand, size_key)
             if adjustment and primary_measurement in expected_measurements:
                 expected_measurements[primary_measurement] += adjustment
-        
+
         return expected_measurements
-    
+
     def _normalize_size(self, size: str, size_system: str) -> str:
         """Normalize size to standard format"""
         size_upper = size.upper().strip()
-        
+
         # Handle common variations
         size_map = {
             'XS': 'XS', 'EXTRA SMALL': 'XS',
@@ -167,10 +166,10 @@ class ClothingFitAnalyzer:
             'XL': 'XL', 'EXTRA LARGE': 'XL',
             'XXL': 'XXL', '2XL': 'XXL',
         }
-        
+
         return size_map.get(size_upper, size_upper)
-    
-    def _get_brand_adjustment(self, brand: str, size: str) -> Optional[float]:
+
+    def _get_brand_adjustment(self, brand: str, size: str) -> float | None:
         """Get brand-specific size adjustment (cm)"""
         # Brand fit characteristics (will be expanded)
         brand_fits = {
@@ -179,21 +178,21 @@ class ClothingFitAnalyzer:
             'h&m': {'runs': 'small', 'adjustment': +1},
             'adidas': {'runs': 'true', 'adjustment': 0},
         }
-        
+
         brand_lower = brand.lower().strip()
         if brand_lower in brand_fits:
             return brand_fits[brand_lower]['adjustment']
-        
+
         return None
-    
+
     def analyze_fit(
         self,
-        user_measurements: Dict[str, float],
+        user_measurements: dict[str, float],
         clothing_size: str,
         clothing_type: str,
         size_system: str = 'US',
-        brand: Optional[str] = None
-    ) -> Dict:
+        brand: str | None = None
+    ) -> dict:
         """
         Analyze how well clothing will fit user
         
@@ -211,14 +210,14 @@ class ClothingFitAnalyzer:
         expected_measurements = self.convert_size_to_measurements(
             clothing_size, clothing_type, size_system, brand
         )
-        
+
         if not expected_measurements:
             return {
                 'fit_confidence': 0,
                 'fit_status': 'unknown',
                 'message': 'Could not determine expected measurements for this size'
             }
-        
+
         # Get relevant measurements for this clothing type
         clothing_type_lower = clothing_type.lower()
         if clothing_type_lower in self.clothing_type_mappings:
@@ -227,17 +226,17 @@ class ClothingFitAnalyzer:
         else:
             primary_measurement = 'chest_circumference'
             secondary_measurement = None
-        
+
         # Compare user measurements with expected measurements
         fit_scores = []
         problem_areas = []
-        
+
         # Check primary measurement
         if primary_measurement in expected_measurements and primary_measurement in user_measurements:
             user_value = user_measurements[primary_measurement]
             expected_value = expected_measurements[primary_measurement]
             difference = user_value - expected_value
-            
+
             # Calculate fit score (0-100)
             # Perfect fit: difference = 0 (score = 100)
             # Within 2cm: score = 90-100
@@ -249,9 +248,9 @@ class ClothingFitAnalyzer:
                 score = 90 - ((abs(difference) - 2) * 6.67)  # 70-90
             else:
                 score = max(0, 70 - ((abs(difference) - 5) * 5))  # 0-70
-            
+
             fit_scores.append(score)
-            
+
             # Record problem area if significant
             if abs(difference) > 3:
                 if difference > 0:
@@ -266,28 +265,28 @@ class ClothingFitAnalyzer:
                         'issue': f'Too loose by {abs(difference):.1f}cm',
                         'severity': 'high' if abs(difference) > 5 else 'medium'
                     })
-        
+
         # Check secondary measurement if available
         if secondary_measurement and secondary_measurement in expected_measurements and secondary_measurement in user_measurements:
             user_value = user_measurements[secondary_measurement]
             expected_value = expected_measurements[secondary_measurement]
             difference = user_value - expected_value
-            
+
             if abs(difference) <= 2:
                 score = 100 - (abs(difference) * 5)
             elif abs(difference) <= 5:
                 score = 90 - ((abs(difference) - 2) * 6.67)
             else:
                 score = max(0, 70 - ((abs(difference) - 5) * 5))
-            
+
             fit_scores.append(score * 0.5)  # Secondary measurement weighted less
-        
+
         # Calculate overall fit confidence
         if fit_scores:
             fit_confidence = sum(fit_scores) / len(fit_scores) if fit_scores else 0
         else:
             fit_confidence = 0
-        
+
         # Determine fit status
         if fit_confidence >= 85:
             fit_status = 'perfect'
@@ -297,12 +296,12 @@ class ClothingFitAnalyzer:
             fit_status = 'fair'
         else:
             fit_status = 'poor'
-        
+
         # Find alternative sizes
         alternative_sizes = self._find_alternative_sizes(
             user_measurements, clothing_type, size_system, brand, primary_measurement
         )
-        
+
         return {
             'fit_confidence': round(fit_confidence, 1),
             'fit_status': fit_status,
@@ -311,34 +310,34 @@ class ClothingFitAnalyzer:
             'expected_measurements': expected_measurements,
             'user_measurements_used': {
                 primary_measurement: user_measurements.get(primary_measurement),
-                **(secondary_measurement and {secondary_measurement: user_measurements.get(secondary_measurement)} or {})
+                **((secondary_measurement and {secondary_measurement: user_measurements.get(secondary_measurement)}) or {})
             }
         }
-    
+
     def _find_alternative_sizes(
         self,
-        user_measurements: Dict[str, float],
+        user_measurements: dict[str, float],
         clothing_type: str,
         size_system: str,
-        brand: Optional[str],
+        brand: str | None,
         primary_measurement: str
-    ) -> List[Dict]:
+    ) -> list[dict]:
         """Find alternative sizes that might fit better"""
         clothing_type_lower = clothing_type.lower()
         if clothing_type_lower not in self.clothing_type_mappings:
             return []
-        
+
         mapping = self.clothing_type_mappings[clothing_type_lower]
         chart_name = mapping['chart']
-        
+
         if chart_name not in self.size_charts:
             return []
-        
+
         size_chart = self.size_charts[chart_name]
         user_value = user_measurements.get(primary_measurement, 0)
-        
+
         alternatives = []
-        
+
         for size_key, size_range in size_chart.items():
             # Get expected measurement for this size
             if 'chest_min' in size_range and primary_measurement == 'chest_circumference':
@@ -347,13 +346,13 @@ class ClothingFitAnalyzer:
                 expected = (size_range['waist_min'] + size_range['waist_max']) / 2
             else:
                 continue
-            
+
             # Apply brand adjustment
             if brand:
                 adjustment = self._get_brand_adjustment(brand, size_key)
                 if adjustment:
                     expected += adjustment
-            
+
             # Calculate fit score for this size
             difference = abs(user_value - expected)
             if difference <= 5:  # Only include sizes within 5cm
@@ -363,15 +362,16 @@ class ClothingFitAnalyzer:
                     score = 90 - ((difference - 2) * 6.67)
                 else:
                     score = 0
-                
+
                 alternatives.append({
                     'size': size_key,
                     'fit_confidence': round(score, 1),
                     'difference': round(difference, 1)
                 })
-        
+
         # Sort by fit confidence (best first)
         alternatives.sort(key=lambda x: x['fit_confidence'], reverse=True)
-        
+
         # Return top 3 alternatives
         return alternatives[:3]
+
