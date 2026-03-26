@@ -20,7 +20,7 @@ pytorch-lightning==1.1.8
 numba==0.54.1
 filterpy==1.4.5
 flatten-dict==0.2.0
-fastai==1.0.55
+fastai==2.8.7
 jpeg4py==0.1.4
 chumpy==0.70
 torchgeometry==0.1.2
