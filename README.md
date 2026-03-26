@@ -91,8 +91,8 @@
 
 ### 1. Clone & Setup Backend
 ```bash
-git clone https://github.com/YOUR_USERNAME/AIBodyScan.git
-cd AIBodyScan
+git clone https://github.com/vorameet123-debug/AIBodyScan12.git
+cd AIBodyScan12
 
 python -m venv .venv
 .venv\Scripts\activate        # Windows
