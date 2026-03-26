@@ -2,7 +2,7 @@
 # Hardened for production security
 
 # Stage 1: Build stage with all dependencies
-FROM python:3.11-slim as builder
+FROM python:3.14-slim as builder
 
 WORKDIR /app
 
@@ -21,7 +21,7 @@ RUN pip install --no-cache-dir --user -r requirements.txt
 
 
 # Stage 2: Runtime stage (smaller, hardened image)
-FROM python:3.11-slim
+FROM python:3.14-slim
 
 # Security: Don't run as root
 # Create non-root user for running the application
